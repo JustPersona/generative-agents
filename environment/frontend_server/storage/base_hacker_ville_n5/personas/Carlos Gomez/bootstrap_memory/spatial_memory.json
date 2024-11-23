@@ -1,0 +1,29 @@
+{
+  "hacker Ville": {
+    "Black Hackers's apartment": {
+      "Carlos Gomez's room": [
+        "closet",
+        "bed",
+        "desk",
+        "bookshelf"
+      ],
+      "Carlos Gomez's bathroom": [
+        "shower",
+        "toilet",
+        "bathroom sink"
+      ],
+      "common room": [
+        "refrigerator",
+        "computer desk",
+        "common room sofa"
+      ],
+      "kitchen": [
+        "kitchen sink",
+        "cooking area"
+      ],
+      "garden": [
+        "smoking zone"
+      ]
+    }
+  }
+}

@@ -4,6 +4,11 @@
     "x": 51,
     "y": 45
   },
+  "Abigail Chen": {
+    "maze": "hacker_ville",
+    "x": 47,
+    "y": 45
+  },
   "Isabella Rodriguez": {
     "maze": "hacker_ville",
     "x": 39,
@@ -13,5 +18,10 @@
     "maze": "hacker_ville",
     "x": 10,
     "y": 4
+  },
+  "Carlos Gomez": {
+    "maze": "hacker_ville",
+    "x": 15,
+    "y": 18
   }
 }

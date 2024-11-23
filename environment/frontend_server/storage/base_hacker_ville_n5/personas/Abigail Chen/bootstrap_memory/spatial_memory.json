@@ -1,10 +1,10 @@
 {
   "hacker Ville": {
-    "White Hacker's house": {
-      "bedroom": [
+    "White Hackers's apartment": {
+      "Abigail Chen's room": [
         "closet",
-        "bed",
-        "desk"
+        "desk",
+        "bed"
       ],
       "bathroom": [
         "toilet",

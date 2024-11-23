@@ -6,39 +6,61 @@
 	<input type="text" class="border-0 bg-transparent w-100 lh-lg text-center" style="outline: 0" placeholder="Search..." name="search" value="{{ search }}" oninput="selectPen()">
 </section>
 
-<section class="pt-3 d-flex flex-column gap-4" id="pen_code_container">{% for pen in pen_codes %}
-	<article class="bg-body shadow rounded-4 p-3{% if search and search != pen.pen_code %} d-none{% endif %}" pen_code="{{ pen.pen_code }}" forked="{{ pen.fork_sim_code }}" mode="{{ pen.mode }}"{% if pen.isBase %} hidden{% endif %}>
-		<h3 class="h5 d-flex gap-2">
-			<a class="link-secondary" href="{% url 'pen_test' pen.pen_code %}" data-bs-toggle="tooltip" data-bs-title="Play"><i class="fa-solid fa-play"></i></a>
-			<span class="flex-grow-1">{{ pen.pen_code }}</span>
-			<label role="button" class="link-secondary text-center" style="width: 25px" data-bs-toggle="tooltip" data-bs-title="Pin">
-				<i class="fa-solid fa-thumbtack d-none"></i>
-				<i class="fa-solid fa-thumbtack-slash"></i>
-				<button type="button" onclick="pinBox(this)" hidden></button>
-			</label>
-			<label role="button" class="link-secondary text-center" style="width: 1rem" data-bs-toggle="tooltip" data-bs-title="Information">
-				<i class="fa-solid fa-ellipsis-vertical"></i>
-				<button type="button" onclick="setPenInfoModal(this.closest('[mode]'))" data-bs-toggle="modal" data-bs-target="#penInfoModal" hidden></button>
-			</label>
-		</h3>
-		<hr/>
-		<div id="payload-table-{{ pen.pen_code }}-container">{% if not pen.payloads.data %}
-			No Information
-		{% else %}
-			<script type="text/javascript">
-				document.querySelector(`#payload-table-{{ pen.pen_code }}-container`).append(createPayloadTable("{{ pen.pen_code }}", {style: {"max-height": "65svh"}}));
-				const payloads_{{ forloop.counter }} = {{ pen.payloads.data | safe }};
-				for (let step in payloads_{{ forloop.counter }}) {
-					const x = payloads_{{ forloop.counter }}[step];
-					for (let p_name in x) {
-						const y = x[p_name];
-						insertPayloadTable(document.querySelector("#payload-table-{{ pen.pen_code }}-container table"), {url: y.url, data: y});
+<section class="pt-3 d-flex flex-column gap-4" id="pen_code_container">{% for pen in pen_codes %}{% if not pen.isBase %}
+	<article class="bg-body shadow rounded-4 p-3{% if search and search != pen.pen_code %} d-none{% endif %}" pen_code="{{ pen.pen_code }}" forked="{{ pen.fork_sim_code }}" mode="{{ pen.mode }}">
+		<details>
+			<summary class="position-relative">
+				<h3 class="h5 d-block text-truncate position-absolute top-0 ps-3 pe-5 w-100">{{ pen.pen_code }}</h3>
+				<div class="position-absolute top-0 end-0">
+					<label role="button" class="link-secondary text-center" style="width: 1rem" data-bs-toggle="tooltip" data-bs-title="Results">
+						<i class="fa-solid fa-square-poll-horizontal"></i>
+						<button type="button" onclick="setPenInfoModal(this.closest('[mode]'))" data-bs-toggle="modal" data-bs-target="#penInfoModal" hidden></button>
+					</label>
+					<label role="button" class="link-secondary text-center" style="width: 25px" data-bs-toggle="tooltip" data-bs-title="Pin">
+						<i class="fa-solid fa-thumbtack d-none"></i>
+						<i class="fa-solid fa-thumbtack-slash"></i>
+						<button type="button" onclick="pinBox(this)" hidden></button>
+					</label>
+				</div>
+			</summary>
+			<div class="border-top mt-3">
+				<div class="nav nav-tabs p-3 pb-0" role="tablist">
+					<button class="nav-link active" data-bs-toggle="tab" data-bs-target="#payload-table-{{ pen.pen_code }}-container" type="button" role="tab" aria-controls="payload-table-{{ pen.pen_code }}-container" aria-selected="true">Payloads</button>
+					<button class="nav-link" data-bs-toggle="tab" data-bs-target="#patches-table-{{ pen.pen_code }}-container" type="button" role="tab" aria-controls="patches-table-{{ pen.pen_code }}-container" aria-selected="false">Patches</button>
+				</div>
+				<div class="tab-content border border-top-0 rounded-bottom p-3">
+					<div class="sub tab-pane fade show active" id="payload-table-{{ pen.pen_code }}-container" role="tabpanel" aria-labelledby="payload-table-{{ pen.pen_code }}-container-tab" tabindex="0"></div>
+					<div class="sub tab-pane fade" id="patches-table-{{ pen.pen_code }}-container" role="tabpanel" aria-labelledby="patches-table-{{ pen.pen_code }}-container-tab" tabindex="0"></div>
+				</div>
+				<script type="text/javascript">
+					document.querySelector(`#payload-table-{{ pen.pen_code }}-container`).append(createPayloadTable("{{ pen.pen_code }}", {style: {"max-height": "65svh"}}));
+					document.querySelector(`#patches-table-{{ pen.pen_code }}-container`).append(createPatchTable("{{ pen.pen_code }}", {style: {"max-height": "65svh"}}));
+					const setTableInfo_{{ forloop.counter }} = async function() {
+						const payload_{{ forloop.counter }} = await api("/api/pens/{{ pen.pen_code }}/payloads");
+						const patches_{{ forloop.counter }} = await api("/api/pens/{{ pen.pen_code }}/patches");
+						const steps_{{ forloop.counter }} = [...new Set([...Object.keys(payload_{{ forloop.counter }}), ...Object.keys(patches_{{ forloop.counter }})])].sort((a, b) => a - b);
+						for (let step of steps_{{ forloop.counter }}) {
+							const payload_data = payload_{{ forloop.counter }}[step];
+							if (!payload_data) continue;
+							for (let p_name in payload_data) {
+								const x = payload_data[p_name];
+								insertPayloadTable(document.querySelector("#payload-table-{{ pen.pen_code }}-container table"), {url: x.url, data: x});
+							}
+
+							const patch_data = patches_{{ forloop.counter }}[step];
+							if (!patch_data) continue;
+							for (let p_name in patch_data) {
+								const data = patch_data[p_name];
+								insertPatchTable(document.querySelector("#patches-table-{{ pen.pen_code }}-container table"), {best: data?.best_reason, data: data?.suggestion});
+							}
+						}
 					}
-				}
-			</script>
-		{% endif %}</div>
+					setTableInfo_{{ forloop.counter }}();
+				</script>
+			</div>
+		</details>
 	</article>
-{% endfor %}</section>
+{% endif %}{% endfor %}</section>
 
 {% include 'includes/modals.html' %}
 

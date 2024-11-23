@@ -23,7 +23,17 @@ def processors(request):
                 "icon": "fa-solid fa-play",
                 "name": "Penetration Test",
                 "href": reverse("pen_test"),
-            },
+            }, {
+                "icon": "fa-solid fa-trash",
+                "name": "Trash",
+                "href": reverse("trash"),
+                "staff": True,
+            }, {
+                "icon": "fa-solid fa-gear",
+                "name": "Manage",
+                "href": reverse("manage"),
+                "superuser": True,
+            }
         ],
         "black_hats": black_hats,
         "white_hats": white_hats,

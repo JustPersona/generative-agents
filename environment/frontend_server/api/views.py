@@ -21,18 +21,19 @@ def help(request):
 
     paths = [
         ["/api/running", "Backend Running Status"],
-        ["/api/pens", "list of pen_codes with meta info"],
-        ["/api/pens/<pen_code>", "<pen_code>'s meta info"],
+        ["/api/pens", "List of pen_codes with meta info"],
+        ["/api/pens/<pen_code>", "Metadata of <pen_code>"],
         ["/api/pens/<pen_code>/<step>", "What to do when <step>. If <step> is -1, all steps"],
-        ["/api/pens/<pen_code>/payloads", "list of pen_codes with meta info"],
-        ["/api/pens/<pen_code>/patches", "<pen_code>'s all patches"],
-        ["/api/pens/<pen_code>/best", "<pen_code>'s best patches"],
+        ["/api/pens/<pen_code>/payloads", "All payloads of <pen_code>"],
+        ["/api/pens/<pen_code>/vulnerabilities", "All vulnerabilities of <pen_code>"],
+        ["/api/pens/<pen_code>/patches", "All patches of <pen_code>"],
+        ["/api/pens/<pen_code>/best", "All selection patches of <pen_code>"],
         ["/api/charts", "All Charts"],
         ["/api/charts/pens", "Chart data by pen_codes"],
-        ["/api/charts/pens/<pen_code>", "chart data for <pen_code>"],
+        ["/api/charts/pens/<pen_code>", "chart data of <pen_code>"],
         ["/api/charts/urls", "Chart data by URLs"],
         ["/api/charts/attack", "Chart data by Attacks"],
-        ["/api/charts/attack/<attack_name>", "Chart data for <attack_name>"],
+        ["/api/charts/attack/<attack_name>", "Chart data of <attack_name>"],
     ]
     data["help"] = [{"path": p, "response": d} for p, d in paths]
 
@@ -71,21 +72,39 @@ def get_response(fn, *args, **kwargs):
 
 # Pen Info Functions
 
+def get_laststep(pen_code):
+    step = None
+
+    mode = get_modes(pen_code)[0]
+    if mode == "compressed":
+        with open(pen_files[mode]["meta"] % pen_code) as f:
+            step = json.load(f)["step"]
+    else:
+        step = sorted(map(lambda x: int(x.split(".json")[0]), listdir(f"{pen_files[mode]["root"]}/environment/" % pen_code)))[-1]
+    return step
+
 def running_info():
     data = {
-        "running": bool(),
+        "running": False,
         "pen_code": None,
-        "step": None,
+        "start_step": None,
+        "current_step": None,
     }
 
+    pen_code = None
+    start_step = None
     if exists(pen_files["temp"]["code"]):
         with open(pen_files["temp"]["code"]) as f:
-            data["pen_code"] = json.load(f).get("sim_code")
+            pen_code = json.load(f).get("sim_code")
     if exists(pen_files["temp"]["step"]):
         with open(pen_files["temp"]["step"]) as f:
-            data["step"] = json.load(f).get("step")
+            start_step = json.load(f).get("step")
 
-    data["running"] = data["pen_code"] is not None and data["step"] is not None
+    if pen_code and start_step:
+        data["running"] = True
+        data["pen_code"] = pen_code
+        data["start_step"] = start_step
+        data["current_step"] = get_laststep(pen_code)
     return data
 
 def get_modes(pen_code):
@@ -150,6 +169,18 @@ def next_payload(pen_code, step):
     data = all_payloads(pen_code).get(int(step), dict())
     return data
 
+def all_vulnerabilities(pen_code):
+    data = dict()
+
+    data = {
+        step: {
+            p_name: payload
+        } for step, items in all_payloads(pen_code).items() for p_name, payload in items.items()
+        if payload["observations"] == "exploit_successful"
+    }
+
+    return data
+
 def all_patches(pen_code):
     data = dict()
 
@@ -177,11 +208,13 @@ def all_patches(pen_code):
         for items in patch_data.values():
             step = items["timestamp"]
             if step not in data: data[step] = {}
+            best_reason = best.get(step, {}).get(p_name, [])
             data[step][p_name] = {
                 "urls": list(items["successful_data"].keys()),
                 "attack_name": list(set([y["attack_name"] for x in items["successful_data"].values() for y in x])),
                 "suggestion": items["patch_suggestion"],
-                "best": best.get(step, {}).get(p_name, []) != [],
+                "best": best_reason != [],
+                "best_reason": best_reason,
             }
     return data
 
@@ -407,6 +440,9 @@ def getNextStep(request, pen_code, step):
 
 def getAllPayloads(request, pen_code):
     return get_response(all_payloads, pen_code)
+
+def getAllVulnerabilities(request, pen_code):
+    return get_response(all_vulnerabilities, pen_code)
 
 def getAllPatches(request, pen_code):
     return get_response(all_patches, pen_code)

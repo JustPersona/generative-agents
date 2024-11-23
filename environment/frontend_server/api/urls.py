@@ -13,8 +13,9 @@ urlpatterns = [
     re_path(r"^pens/(?P<pen_code>[\w-]+)/?$", views.getPen, name="pen"),
     re_path(r"^pens/(?P<pen_code>[\w-]+)/-1/?$", views.getAllSteps, name="all_steps"),
     re_path(r"^pens/(?P<pen_code>[\w-]+)/(?P<step>\d+)/?$", views.getNextStep, name="next_step"),
-    re_path(r"^pens/(?P<pen_code>[\w-]+)/payloads/?$", views.getAllPayloads, name="payloads"),
-    re_path(r"^pens/(?P<pen_code>[\w-]+)/patches/?$", views.getAllPatches, name="patches"),
+    re_path(r"^pens/(?P<pen_code>[\w-]+)/payloads?/?$", views.getAllPayloads, name="payloads"),
+    re_path(r"^pens/(?P<pen_code>[\w-]+)/vulnerabilit(y|ies)/?$", views.getAllVulnerabilities, name="vulnerabilities"),
+    re_path(r"^pens/(?P<pen_code>[\w-]+)/patch(es)?/?$", views.getAllPatches, name="patches"),
     re_path(r"^pens/(?P<pen_code>[\w-]+)/best/?$", views.getAllBestPatches, name="best_patches"),
 
     re_path(r"^charts/?$", views.getCharts, name="charts"),

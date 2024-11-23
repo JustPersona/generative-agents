@@ -6,7 +6,7 @@
 {% block content %}
 
 <div id="temp_focus" hidden></div>
-<div class="my-3 fs-5 text-center">
+<div class="my-3 pt-3 fs-5 text-center">
 	<h1 class="fs-5 fw-semibold" pen_code="{{ pen_code }}">
 		<label role="button" class="link-success me-1" data-bs-toggle="tooltip" data-bs-title="Results">
 			<i class="fa-solid fa-square-poll-horizontal"></i>
@@ -15,7 +15,7 @@
 		{{ pen_code }}
 	</h1>
 	{% if running %}<div id="backend_state" class="mt-2 fw-semibold text-success">
-		Running on the backend
+		Running on the Backend
 	</div>{% endif %}
 </div>
 
@@ -31,9 +31,9 @@
 	</li>
 </ul>{% endif %}
 
-<div class="tab-content{% if mode == "preview" %} container-lg{% endif %}" pen_code="{{ pen_code }}">
-	<div class="tab-pane fade show active"{% if mode == "preview" %} style="--width: 100%"{% endif %} id="pen-testing" role="tabpanel" aria-labelledby="pen-testing-tab" tabindex="0">
-		<section class="bg-body shadow rounded-bottom-4 my-3">
+<div class="tab-content{% if mode == "preview" %} container-lg gap-0{% endif %}" pen_code="{{ pen_code }}">
+	<div {% if mode == "preview" %} style="--width: 100%"{% endif %}>
+		<section class="tab-pane fade show active bg-body shadow rounded-bottom-4 my-3" id="pen-testing" role="tabpanel" aria-labelledby="pen-testing-tab" tabindex="0">
 			<div id="game-container" class="text-center"></div>
 			<div id="controller" class="container-lg p-4">
 				<form class="row g-2" onsubmit="formSubmit(event)">
@@ -79,8 +79,21 @@
 			</div>
 		</section>
 
-		<section class="bg-body shadow rounded-4 my-3 p-4">
-			<form id="trigger-container" class="d-flex flex-wrap justify-content-center column-gap-5 row-gap-3" onsubmit="return false">{% for p in persona_names %}
+		{% if mode != "preview" %}<section class="tab-pane fade bg-body shadow rounded-4 my-3" id="table-container" role="tabpanel" aria-labelledby="table-container-tab" tabindex="0">
+			<div class="nav nav-tabs p-3 pb-0" role="tablist">
+				<button class="nav-link active" data-bs-toggle="tab" data-bs-target="#payload-table-container" type="button" role="tab" aria-controls="payload-table-container" aria-selected="true">Payloads</button>
+				<button class="nav-link" data-bs-toggle="tab" data-bs-target="#patch-table-container" type="button" role="tab" aria-controls="patch-table-container" aria-selected="false">Patches</button>
+			</div>
+			<div class="tab-content rounded-bottom overflow-hidden">
+				<div class="sub tab-pane fade p-3 h-100 show active" id="payload-table-container" role="tabpanel" aria-labelledby="payload-table-container" tabindex="0"></div>
+				<div class="sub tab-pane fade p-3 h-100" id="patch-table-container" role="tabpanel" aria-labelledby="patch-table-container" tabindex="0"></div>
+			</div>
+		</section>{% endif %}
+	</div>
+
+	<div {% if mode == "preview" %} style="--width: 100%"{% endif %}>
+		<section class="tab-pane fade show active bg-body shadow rounded-4 my-3 p-4" id="details-container" role="tabpanel" aria-labelledby="pen-testing-tab" tabindex="0">
+			<form id="trigger-container" class="d-flex flex-column flex-wrap align-items-center column-gap-5 row-gap-3 overflow-auto pb-3" style="max-height: 250px" onsubmit="return false">{% for p in persona_names %}
 				<input type="radio" class="btn-check" name="on_screen_det_trigger" id="on_screen_det_trigger-{{p.underscore}}" autocomplete="off" onclick="personaFocus(this)" hidden>
 				<label role="button" class="btn btn-outline-success rounded-4 px-4 py-3" for="on_screen_det_trigger-{{p.underscore}}">
 					<div class="d-flex gap-3">
@@ -105,45 +118,32 @@
 						</div>
 					</div>
 					<div class="flex-grow-1 ps-5">
-						<div class="row">
-							<h2 class="col-md-8 mb-3 fs-2" id="name__{{ p.underscore }}">
-								{{ p.original }}
-								<span class="fs-5">|</span>
-								<a href="{% url 'persona_state' pen_code %}?p={{ p.underscore }}" class="fs-5">State Details</a>
-							</h2>
+						<a href="{% url 'persona_state' pen_code %}?p={{ p.underscore }}" class="fs-5">State Details({{ p.original }})</a>
+						<div class="form-floating mt-3">
+							<input id="name__{{ p.underscore }}" class="form-control" type="text" placeholder="{{ p.original }}" value="{{ p.original }}" disabled/>
+							<label for="name__{{ p.underscore }}">Name</label>
 						</div>
-						<div class="mt-3">
-							<p class="fs-5"><strong>Current Action:</strong> <br><span id="current_action__{{ p.underscore }}"></span></p>
-							<p class="fs-5"><strong>Location:</strong> <br><span id="target_address__{{ p.underscore }}"></span></p>
-							<p class="fs-5"><strong>Current Conversation:</strong> <br><span id="chat__{{ p.underscore }}"></span></p>
+						<div class="form-floating mt-3">
+							<input id="current_action__{{ p.underscore }}" class="form-control" type="text" disabled/>
+							<label for="current_action__{{ p.underscore }}">Current Action</label>
+						</div>
+						<div class="form-floating mt-3">
+							<input id="target_address__{{ p.underscore }}" class="form-control" type="text" disabled/>
+							<label for="target_address__{{ p.underscore }}">Location</label>
+						</div>
+						<div class="form-floating mt-3">
+							<textarea id="chat__{{ p.underscore }}" class="form-control" placeholder="Leave a comment here" disabled style="height: 250px; resize: none"></textarea>
+							<label for="chat__{{ p.underscore }}">Current Conversation</label>
 						</div>
 					</div>
 				</div>
 			{% endfor %}</div>
 		</section>{% endif %}
 
-		{% if mode != "preview" %}<section id="on_screen_det_content-init" class="py-3 text-center">
-			<em>Click on one of the character sprites to see its current state in more detail.</em>
+		{% if mode != "preview" %}<section class="tab-pane fade bg-body shadow rounded-4 my-3" id="pen-chattings" role="tabpanel" aria-labelledby="pen-chattings-tab" tabindex="0" style="--min-width: 500px">
+			{% include 'includes/chattingbox.html' with type="play" %}
 		</section>{% endif %}
 	</div>
-
-	{% if mode != "preview" %}
-		<div>
-			<section class="tab-pane fade bg-body shadow rounded-4 my-3" id="pen-chattings" role="tabpanel" aria-labelledby="pen-chattings-tab" tabindex="0" style="--min-width: 500px">
-				{% include 'includes/chattingbox.html' with type="play" %}
-			</section>
-			<section class="tab-pane fade bg-body shadow rounded-4 my-3" id="table-container" role="tabpanel" aria-labelledby="table-container-tab" tabindex="0">
-				<div class="nav nav-tabs p-3 pb-0" role="tablist">
-					<button class="nav-link active" data-bs-toggle="tab" data-bs-target="#payload-table-container" type="button" role="tab" aria-controls="payload-table-container" aria-selected="true">Payloads</button>
-					<button class="nav-link" data-bs-toggle="tab" data-bs-target="#patch-table-container" type="button" role="tab" aria-controls="patch-table-container" aria-selected="false">Patches</button>
-				</div>
-				<div class="tab-content rounded-bottom overflow-hidden">
-					<div class="sub tab-pane fade p-3 h-100 show active" id="payload-table-container" role="tabpanel" aria-labelledby="payload-table-container" tabindex="0"></div>
-					<div class="sub tab-pane fade p-3 h-100" id="patch-table-container" role="tabpanel" aria-labelledby="patch-table-container" tabindex="0"></div>
-				</div>
-			</section>
-		</div>
-	{% endif %}
 </div>
 
 {% include 'includes/modals.html' %}
@@ -156,8 +156,27 @@
 
 <script src='https://cdn.jsdelivr.net/npm/phaser@3.85.2/dist/phaser.js'></script>
 <script type="text/javascript">
+	const penTabBtn = document.querySelector(`button[data-bs-toggle="pill"][data-bs-target="#pen-testing"]`);
+	const detailBox = document.querySelector("#details-container");
+	const multiFade = function(e) {
+		const type = e.type.split(".")[0];
+		if (type.startsWith("show")) {
+			detailBox.classList.add("active");
+			setTimeout(function() {
+				detailBox.classList.add("show");
+			}, 150);
+		} else if (type.startsWith("hid")) {
+			detailBox.classList.remove("active");
+			setTimeout(function() {
+				detailBox.classList.remove("show");
+			}, 150);
+		}
+	}
+
 	document.querySelector(`#payload-table-container`)?.append(createPayloadTable("{{ pen_code }}", {style: {"height": "650px"}}));
 	document.querySelector(`#patch-table-container`)?.append(createPatchTable("{{ pen_code }}", {style: {"height": "650px"}}));
+	penTabBtn?.addEventListener("shown.bs.tab", multiFade);
+	penTabBtn?.addEventListener("hidden.bs.tab", multiFade);
 
 	{% include "includes/pen_test_play.js" %}
 </script>

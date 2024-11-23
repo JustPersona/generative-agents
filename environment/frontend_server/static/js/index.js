@@ -36,6 +36,11 @@ const asyncPost = async function(url, data={}) {
 	return await response.json();
 }
 
+const api = async function(url="/api/") {
+	const response = await fetch(url);
+	return await response.json();
+}
+
 const sortBtnClick = function(btn) {
 	const tbody = btn.closest("table").querySelector("tbody");
 	const th = btn.closest("th");
@@ -118,8 +123,10 @@ const insertPayloadTable = function(table, {url, data, reverse=false}) {
 		<td field="url"><a href="${url}" target="_blank" data-bs-toggle="tooltip" data-bs-title="${origin.host}" onclick="event.stopPropagation()">${origin.pathname}</a></td>
 		<td field="attack" class="text-center">${data.attack_name}</td>
 		<td field="method" class="text-center">${data.method}</td>
-		<td field="payload" class="text-truncate" style="max-width: 0px;" payload="${data.payload}">${data.payload}</td>
+		<td field="payload" class="text-truncate" style="max-width: 0px;"></td>
 	`;
+	tr.querySelector("[field=payload]").setAttribute("payload", data.payload);
+	tr.querySelector("[field=payload]").innerText = data.payload;
 	new bootstrap.Tooltip(tr.querySelector("td[field=url] a"));
 
 	if (reverse) {
@@ -179,7 +186,8 @@ const createSubTable = function(data, {border=true, index=true, isMarkdown=true,
 			<td class="p-0 align-middle"></td>
 		`;
 		if (typeof data[key] !== "object") {
-			tr.querySelector("td:last-child").innerHTML = `<div class="px-2 py-1">${isMarkdown ? mdToHTML(data[key]) : data[key]}</div>`;
+			tr.querySelector("td:last-child").innerHTML = `<div class="px-2 py-1"></div>`;
+			tr.querySelector("td:last-child div").innerText = isMarkdown ? mdToHTML(data[key]) : data[key];
 		} else {
 			tr.querySelector("td:last-child").append(createSubTable(data[key], {border: false}));
 		}

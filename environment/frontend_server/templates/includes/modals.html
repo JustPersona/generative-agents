@@ -4,7 +4,7 @@
 			<form class="modal-content" onsubmit="penInfoUpdate(event);">
 				<div class="modal-header pb-0">
 					<div class="nav nav-tabs w-100 border-0" id="nav-tab" role="tablist">
-						<button class="nav-link disabled" hidden aria-disabled="true" id="pen-summary-tab" data-bs-toggle="tab" data-bs-target="#pen-summary" type="button" role="tab" aria-controls="pen-summary" aria-selected="false">Summary</button>
+						<button class="nav-link disabled" hidden aria-disabled="true" id="pen-chart-tab" data-bs-toggle="tab" data-bs-target="#pen-chart" type="button" role="tab" aria-controls="pen-chart" aria-selected="false">Chart</button>
 						<button class="nav-link" id="pen-payloads-tab" data-bs-toggle="tab" data-bs-target="#pen-payloads" type="button" role="tab" aria-controls="pen-payloads" aria-selected="false">Payloads</button>
 						<button class="nav-link" id="pen-patches-tab" data-bs-toggle="tab" data-bs-target="#pen-patches" type="button" role="tab" aria-controls="pen-patches" aria-selected="false">Patches</button>
 						<button class="nav-link" id="pen-vulnFiles-tab" data-bs-toggle="tab" data-bs-target="#pen-vulnFiles" type="button" role="tab" aria-controls="pen-vulnFiles" aria-selected="false">Vuln Files</button>
@@ -16,6 +16,12 @@
 					<div class="tab-content" id="nav-tabContent">
 						<div class="d-flex flex-column gap-2 mb-2">
 							<div class="d-flex gap-2 px-1">
+								<a field="preview" href="#" class="me-1 link-success text-center" style="width: 1rem" data-bs-toggle="tooltip" data-bs-title="Preview">
+									<i class="fa-solid fa-play"></i>
+								</a>
+								<a field="play" href="#" class="me-1 link-success text-center" style="width: 1rem" data-bs-toggle="tooltip" data-bs-title="Play">
+									<i class="fa-solid fa-play"></i>
+								</a>
 								<div field="forkable" class="form-check form-check-inline">
 									<input class="form-check-input" type="checkbox" id="forkable" onclick="this.blur(); return false;">
 									<label class="form-check-label" for="forkable" data-bs-toggle="tooltip" data-bs-title="Available as base">Forkable</label>
@@ -70,7 +76,7 @@
 								</div>
 							</div>
 						</div>
-						<div class="tab-pane fade" id="pen-summary" role="tabpanel" aria-labelledby="pen-summary-tab" tabindex="0">
+						<div class="tab-pane fade" id="pen-chart" role="tabpanel" aria-labelledby="pen-chart-tab" tabindex="0">
 							<div>
 								<canvas id="sub-type-chart"></canvas>
 							</div>
@@ -218,6 +224,10 @@
 			const pen_description = form.description;
 			post("{% url 'pen_info' %}", {pen_code: pen_code}, function(xhr) {
 				data = JSON.parse(xhr.responseText);
+
+				penModal.querySelector("[field=preview]").classList.toggle("d-none", !data.isBase);
+				penModal.querySelector("[field=play]").classList.toggle("d-none", data.isBase);
+				penModal.querySelector(`[field="${data.isBase ? "preview" : "play"}"]`).href = "{% url 'pen_test' %}" + pen_code;
 
 				form.setAttribute("pen_code", pen_code);
 				alertbox.classList.add("d-none");

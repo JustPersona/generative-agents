@@ -20,9 +20,9 @@
 <section class="bg-body shadow rounded-4 my-2 p-3">
 	<div class="d-flex gap-2 align-items-center">
 		<input class="flex-grow-1 px-2 w-100" type="text" name="search" placeholder="Search..." oninput="selectPen(this.value)"/>
-		<a href="{% url 'pen_test' %}" class="text-nowrap">All Payloads &gt;</a>
+		<a href="{% url 'pen_test' %}" class="text-nowrap">All Details &gt;</a>
 	</div>
-	<div class="table-responsive mt-2" style="max-height: 500px;">
+	<div class="table-responsive mt-2" style="max-height: 510px;">
 		<table id="pen_code_container" class="table table-sm table-bordered table-hover m-0 position-relative text-nowrap">
 			<thead class="sticky-top z-1">
 				<tr>
@@ -55,7 +55,7 @@
 				</tr>
 			</tfoot>
 			<tbody class="table-group-divider">
-				{% for pen in pen_codes %}<tr class="position-relative" pen_code="{{ pen.pen_code }}" forked="{{ pen.fork_sim_code }}" mode="{{ pen.mode }}" role="button" onclick="this.querySelector('[data-bs-title=Information]').click()">
+				{% for pen in pen_codes %}<tr class="position-relative" pen_code="{{ pen.pen_code }}" forked="{{ pen.fork_sim_code }}" mode="{{ pen.mode }}">
 					<th field="num" class="text-end" scope="row"><span{% if backend.pen_code == pen.pen_code %} class="text-success" data-bs-toggle="tooltip" data-bs-title="Running"{% endif %}>{{ forloop.counter }}</span></th>
 					<td field="pen_code">{{ pen.pen_code }}</td>
 					<td field="description">{% if not pen.description %}-{% else %}{{ pen.description }}{% endif %}</td>
@@ -69,11 +69,8 @@
 						<a class="link-secondary text-center" style="width: 1rem" href="{% url 'pen_test' pen.pen_code %}" data-bs-toggle="tooltip" data-bs-title="{% if pen.isBase %}Preview{% else %}Play{% endif %}" onclick="event.stopPropagation()">
 							<i class="fa-solid fa-play"></i>
 						</a>
-						<a class="link-secondary text-center{% if pen.isBase %} invisible{% endif %}" style="width: 1rem" href="{% url 'pen_test' %}?search={{ pen.pen_code }}" data-bs-toggle="tooltip" data-bs-title="Payloads" onclick="event.stopPropagation()">
-							<i class="fa-solid fa-list-ul"></i>
-						</a>
-						<label role="button" class="link-secondary text-center" style="width: 1rem" data-bs-toggle="tooltip" data-bs-title="Information" hidden>
-							<i class="fa-solid fa-ellipsis-vertical"></i>
+						<label role="button" class="link-secondary text-center{% if pen.isBase %} invisible{% endif %}" style="width: 1rem" data-bs-toggle="tooltip" data-bs-title="Results">
+							<i class="fa-solid fa-square-poll-horizontal"></i>
 							<button type="button" onclick="event.stopPropagation(); setPenInfoModal(this.closest('[mode]'))" data-bs-toggle="modal" data-bs-target="#penInfoModal" hidden></button>
 						</label>
 					</div></td>

@@ -72,7 +72,12 @@ const personaFocus = function(radio) {
 	document.querySelector("#on_screen_det_content-init")?.classList.toggle("d-none", !isActive);
 	for (let x of document.querySelector("#trigger-container")["on_screen_det_trigger"]) if (x != radio) x.classList.remove("active");
 	if (box) for (let x of box.parentNode.children) x.classList.toggle("d-none", x !== box || isActive);
-	document.querySelector(`[data-bs-target="#${["payload", "patch"][black_hats.includes(curr_focused_persona.replace(/_/g, " ")) ? 0 : 1]}-table-container"]`)?.click();
+	if (!isActive) {
+		document.querySelector(`[data-bs-target="#${["payload", "patch"][black_hats.includes(curr_focused_persona.replace(/_/g, " ")) ? 0 : 1]}-table-container"]`)?.click();
+		for (let x of document.querySelectorAll(`#pen-chattings .chat-container`)) {
+			x.classList.toggle("mychat", x.getAttribute("chat") == curr_focused_persona);
+		}
+	}
 }
 
 
@@ -532,9 +537,6 @@ const pen_test_play = async function(container) {
 		if (player.x > maxX) player.x = maxX;
 		if (player.y > maxY) player.y = maxY;
 
-		for (let x of document.querySelectorAll(`#pen-chattings .chat-container`)) {
-			x.classList.toggle("mychat", x.getAttribute("chat") == curr_focused_persona);
-		}
 		if (curr_focused_persona) {
 			player.setPosition(personas[curr_focused_persona].body.x, personas[curr_focused_persona].body.y)
 		}
@@ -720,9 +722,9 @@ const pen_test_play = async function(container) {
 					}
 
 					// Filling in the action description.
-					document.getElementById("current_action__" + curr_persona_name_os).innerHTML = description_content.split("@")[0];
-					document.getElementById("target_address__" + curr_persona_name_os).innerHTML = description_content.split("@")[1];
-					document.getElementById("chat__" + curr_persona_name_os).innerHTML = chat_content;
+					document.getElementById("current_action__" + curr_persona_name_os).value = description_content.split("@")[0];
+					document.getElementById("target_address__" + curr_persona_name_os).value = description_content.split("@")[1].split(":").slice(1).join(' > ');
+					document.getElementById("chat__" + curr_persona_name_os).value = chat_content;
 					insertChatting(chatContainer, pen_code, curr_chat, {focus: curr_focused_persona, time: curr_time, suffix: "-play"});
 				}
 

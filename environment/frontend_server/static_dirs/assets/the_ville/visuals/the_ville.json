@@ -1900,7 +1900,7 @@
         {
          "columns":16,
          "firstgid":1,
-         "image":"map_assets\/cute_rpg_word_VXAce\/tilesets\/CuteRPG_Field_B.png",
+         "image":"..\/..\/map\/cute_rpg_word_VXAce\/tilesets\/CuteRPG_Field_B.png",
          "imageheight":512,
          "imagewidth":512,
          "margin":0,
@@ -1914,7 +1914,7 @@
         {
          "columns":16,
          "firstgid":257,
-         "image":"map_assets\/cute_rpg_word_VXAce\/tilesets\/CuteRPG_Field_C.png",
+         "image":"..\/..\/map\/cute_rpg_word_VXAce\/tilesets\/CuteRPG_Field_C.png",
          "imageheight":512,
          "imagewidth":512,
          "margin":0,
@@ -1928,7 +1928,7 @@
         {
          "columns":16,
          "firstgid":513,
-         "image":"map_assets\/cute_rpg_word_VXAce\/tilesets\/CuteRPG_Harbor_C.png",
+         "image":"..\/..\/map\/cute_rpg_word_VXAce\/tilesets\/CuteRPG_Harbor_C.png",
          "imageheight":512,
          "imagewidth":512,
          "margin":0,
@@ -1942,7 +1942,7 @@
         {
          "columns":76,
          "firstgid":769,
-         "image":"map_assets\/v1\/Room_Builder_32x32.png",
+         "image":"..\/..\/map\/v1\/Room_Builder_32x32.png",
          "imageheight":3488,
          "imagewidth":2432,
          "margin":0,
@@ -1956,7 +1956,7 @@
         {
          "columns":16,
          "firstgid":9053,
-         "image":"map_assets\/cute_rpg_word_VXAce\/tilesets\/CuteRPG_Village_B.png",
+         "image":"..\/..\/map\/cute_rpg_word_VXAce\/tilesets\/CuteRPG_Village_B.png",
          "imageheight":512,
          "imagewidth":512,
          "margin":0,
@@ -1970,7 +1970,7 @@
         {
          "columns":16,
          "firstgid":9309,
-         "image":"map_assets\/cute_rpg_word_VXAce\/tilesets\/CuteRPG_Forest_B.png",
+         "image":"..\/..\/map\/cute_rpg_word_VXAce\/tilesets\/CuteRPG_Forest_B.png",
          "imageheight":512,
          "imagewidth":512,
          "margin":0,
@@ -1984,7 +1984,7 @@
         {
          "columns":16,
          "firstgid":9565,
-         "image":"map_assets\/cute_rpg_word_VXAce\/tilesets\/CuteRPG_Desert_C.png",
+         "image":"..\/..\/map\/cute_rpg_word_VXAce\/tilesets\/CuteRPG_Desert_C.png",
          "imageheight":512,
          "imagewidth":512,
          "margin":0,
@@ -1998,7 +1998,7 @@
         {
          "columns":16,
          "firstgid":9821,
-         "image":"map_assets\/cute_rpg_word_VXAce\/tilesets\/CuteRPG_Mountains_B.png",
+         "image":"..\/..\/map\/cute_rpg_word_VXAce\/tilesets\/CuteRPG_Mountains_B.png",
          "imageheight":512,
          "imagewidth":512,
          "margin":0,
@@ -2012,7 +2012,7 @@
         {
          "columns":16,
          "firstgid":10077,
-         "image":"map_assets\/cute_rpg_word_VXAce\/tilesets\/CuteRPG_Desert_B.png",
+         "image":"..\/..\/map\/cute_rpg_word_VXAce\/tilesets\/CuteRPG_Desert_B.png",
          "imageheight":512,
          "imagewidth":512,
          "margin":0,
@@ -2026,7 +2026,7 @@
         {
          "columns":16,
          "firstgid":10333,
-         "image":"map_assets\/cute_rpg_word_VXAce\/tilesets\/CuteRPG_Forest_C.png",
+         "image":"..\/..\/map\/cute_rpg_word_VXAce\/tilesets\/CuteRPG_Forest_C.png",
          "imageheight":512,
          "imagewidth":512,
          "margin":0,
@@ -2040,7 +2040,7 @@
         {
          "columns":16,
          "firstgid":10589,
-         "image":"map_assets\/v1\/interiors_pt01.png",
+         "image":"..\/..\/map\/v1\/interiors_pt01.png",
          "imageheight":2048,
          "imagewidth":512,
          "margin":0,
@@ -2054,7 +2054,7 @@
         {
          "columns":16,
          "firstgid":11613,
-         "image":"map_assets\/v1\/interiors_pt02.png",
+         "image":"..\/..\/map\/v1\/interiors_pt02.png",
          "imageheight":2048,
          "imagewidth":512,
          "margin":0,
@@ -2068,7 +2068,7 @@
         {
          "columns":16,
          "firstgid":12637,
-         "image":"map_assets\/v1\/interiors_pt03.png",
+         "image":"..\/..\/map\/v1\/interiors_pt03.png",
          "imageheight":2048,
          "imagewidth":512,
          "margin":0,
@@ -2082,7 +2082,7 @@
         {
          "columns":16,
          "firstgid":13661,
-         "image":"map_assets\/v1\/interiors_pt04.png",
+         "image":"..\/..\/map\/v1\/interiors_pt04.png",
          "imageheight":2048,
          "imagewidth":512,
          "margin":0,
@@ -2096,7 +2096,7 @@
         {
          "columns":16,
          "firstgid":14685,
-         "image":"map_assets\/v1\/interiors_pt05.png",
+         "image":"..\/..\/map\/v1\/interiors_pt05.png",
          "imageheight":2048,
          "imagewidth":512,
          "margin":0,
@@ -2110,7 +2110,7 @@
         {
          "columns":16,
          "firstgid":15709,
-         "image":"map_assets\/v1\/interiors_pt06.png",
+         "image":"..\/..\/map\/v1\/interiors_pt06.png",
          "imageheight":2048,
          "imagewidth":512,
          "margin":0,
@@ -2124,7 +2124,7 @@
         {
          "columns":16,
          "firstgid":16733,
-         "image":"map_assets\/v1\/interiors_pt07.png",
+         "image":"..\/..\/map\/v1\/interiors_pt07.png",
          "imageheight":2048,
          "imagewidth":512,
          "margin":0,
@@ -2138,7 +2138,7 @@
         {
          "columns":16,
          "firstgid":17757,
-         "image":"map_assets\/v1\/interiors_pt08.png",
+         "image":"..\/..\/map\/v1\/interiors_pt08.png",
          "imageheight":2048,
          "imagewidth":512,
          "margin":0,
@@ -2152,7 +2152,7 @@
         {
          "columns":16,
          "firstgid":18781,
-         "image":"map_assets\/v1\/interiors_pt09.png",
+         "image":"..\/..\/map\/v1\/interiors_pt09.png",
          "imageheight":2048,
          "imagewidth":512,
          "margin":0,
@@ -2166,7 +2166,7 @@
         {
          "columns":16,
          "firstgid":19805,
-         "image":"map_assets\/v1\/interiors_pt10.png",
+         "image":"..\/..\/map\/v1\/interiors_pt10.png",
          "imageheight":2048,
          "imagewidth":512,
          "margin":0,
@@ -2180,7 +2180,7 @@
         {
          "columns":16,
          "firstgid":20829,
-         "image":"map_assets\/v1\/interiors_pt11.png",
+         "image":"..\/..\/map\/v1\/interiors_pt11.png",
          "imageheight":2048,
          "imagewidth":512,
          "margin":0,
@@ -2194,7 +2194,7 @@
         {
          "columns":16,
          "firstgid":21853,
-         "image":"map_assets\/v1\/interiors_pt12.png",
+         "image":"..\/..\/map\/v1\/interiors_pt12.png",
          "imageheight":2048,
          "imagewidth":512,
          "margin":0,
@@ -2208,7 +2208,7 @@
         {
          "columns":16,
          "firstgid":22877,
-         "image":"map_assets\/v1\/interiors_pt13.png",
+         "image":"..\/..\/map\/v1\/interiors_pt13.png",
          "imageheight":2048,
          "imagewidth":512,
          "margin":0,
@@ -2222,7 +2222,7 @@
         {
          "columns":16,
          "firstgid":23901,
-         "image":"map_assets\/v1\/interiors_pt14.png",
+         "image":"..\/..\/map\/v1\/interiors_pt14.png",
          "imageheight":2048,
          "imagewidth":512,
          "margin":0,
@@ -2236,7 +2236,7 @@
         {
          "columns":16,
          "firstgid":24925,
-         "image":"map_assets\/v1\/interiors_pt15.png",
+         "image":"..\/..\/map\/v1\/interiors_pt15.png",
          "imageheight":2048,
          "imagewidth":512,
          "margin":0,
@@ -2250,7 +2250,7 @@
         {
          "columns":16,
          "firstgid":25949,
-         "image":"map_assets\/v1\/interiors_pt16.png",
+         "image":"..\/..\/map\/v1\/interiors_pt16.png",
          "imageheight":2048,
          "imagewidth":512,
          "margin":0,
@@ -2264,7 +2264,7 @@
         {
          "columns":16,
          "firstgid":26973,
-         "image":"map_assets\/v1\/interiors_pt17.png",
+         "image":"..\/..\/map\/v1\/interiors_pt17.png",
          "imageheight":1280,
          "imagewidth":512,
          "margin":0,
@@ -2278,7 +2278,7 @@
         {
          "columns":10,
          "firstgid":27613,
-         "image":"map_assets\/blocks\/blocks_1.png",
+         "image":"..\/..\/map\/blocks\/blocks_1.png",
          "imageheight":256,
          "imagewidth":320,
          "margin":0,
@@ -2292,7 +2292,7 @@
         {
          "columns":10,
          "firstgid":27693,
-         "image":"map_assets\/blocks\/blocks_2.png",
+         "image":"..\/..\/map\/blocks\/blocks_2.png",
          "imageheight":256,
          "imagewidth":320,
          "margin":0,
@@ -2306,7 +2306,7 @@
         {
          "columns":10,
          "firstgid":27773,
-         "image":"map_assets\/blocks\/blocks_3.png",
+         "image":"..\/..\/map\/blocks\/blocks_3.png",
          "imageheight":128,
          "imagewidth":320,
          "margin":0,

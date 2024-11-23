@@ -4,94 +4,94 @@
   <export target="the_ville.json" format="json"/>
  </editorsettings>
  <tileset firstgid="1" name="CuteRPG_Field_B" tilewidth="32" tileheight="32" tilecount="256" columns="16">
-  <image source="map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Field_B.png" trans="ff00ff" width="512" height="512"/>
+  <image source="../../map/cute_rpg_word_VXAce/tilesets/CuteRPG_Field_B.png" trans="ff00ff" width="512" height="512"/>
  </tileset>
  <tileset firstgid="257" name="CuteRPG_Field_C" tilewidth="32" tileheight="32" tilecount="256" columns="16">
-  <image source="map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Field_C.png" trans="ff00ff" width="512" height="512"/>
+  <image source="../../map/cute_rpg_word_VXAce/tilesets/CuteRPG_Field_C.png" trans="ff00ff" width="512" height="512"/>
  </tileset>
  <tileset firstgid="513" name="CuteRPG_Harbor_C" tilewidth="32" tileheight="32" tilecount="256" columns="16">
-  <image source="map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Harbor_C.png" trans="ff00ff" width="512" height="512"/>
+  <image source="../../map/cute_rpg_word_VXAce/tilesets/CuteRPG_Harbor_C.png" trans="ff00ff" width="512" height="512"/>
  </tileset>
  <tileset firstgid="769" name="Room_Builder_32x32" tilewidth="32" tileheight="32" tilecount="8284" columns="76">
-  <image source="map_assets/v1/Room_Builder_32x32.png" trans="ff00ff" width="2432" height="3488"/>
+  <image source="../../map/v1/Room_Builder_32x32.png" trans="ff00ff" width="2432" height="3488"/>
  </tileset>
  <tileset firstgid="9053" name="CuteRPG_Village_B" tilewidth="32" tileheight="32" tilecount="256" columns="16">
-  <image source="map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Village_B.png" trans="ff00ff" width="512" height="512"/>
+  <image source="../../map/cute_rpg_word_VXAce/tilesets/CuteRPG_Village_B.png" trans="ff00ff" width="512" height="512"/>
  </tileset>
  <tileset firstgid="9309" name="CuteRPG_Forest_B" tilewidth="32" tileheight="32" tilecount="256" columns="16">
-  <image source="map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Forest_B.png" trans="ff00ff" width="512" height="512"/>
+  <image source="../../map/cute_rpg_word_VXAce/tilesets/CuteRPG_Forest_B.png" trans="ff00ff" width="512" height="512"/>
  </tileset>
  <tileset firstgid="9565" name="CuteRPG_Desert_C" tilewidth="32" tileheight="32" tilecount="256" columns="16">
-  <image source="map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Desert_C.png" trans="ff00ff" width="512" height="512"/>
+  <image source="../../map/cute_rpg_word_VXAce/tilesets/CuteRPG_Desert_C.png" trans="ff00ff" width="512" height="512"/>
  </tileset>
  <tileset firstgid="9821" name="CuteRPG_Mountains_B" tilewidth="32" tileheight="32" tilecount="256" columns="16">
-  <image source="map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Mountains_B.png" trans="ff00ff" width="512" height="512"/>
+  <image source="../../map/cute_rpg_word_VXAce/tilesets/CuteRPG_Mountains_B.png" trans="ff00ff" width="512" height="512"/>
  </tileset>
  <tileset firstgid="10077" name="CuteRPG_Desert_B" tilewidth="32" tileheight="32" tilecount="256" columns="16">
-  <image source="map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Desert_B.png" trans="ff00ff" width="512" height="512"/>
+  <image source="../../map/cute_rpg_word_VXAce/tilesets/CuteRPG_Desert_B.png" trans="ff00ff" width="512" height="512"/>
  </tileset>
  <tileset firstgid="10333" name="CuteRPG_Forest_C" tilewidth="32" tileheight="32" tilecount="256" columns="16">
-  <image source="map_assets/cute_rpg_word_VXAce/tilesets/CuteRPG_Forest_C.png" trans="ff00ff" width="512" height="512"/>
+  <image source="../../map/cute_rpg_word_VXAce/tilesets/CuteRPG_Forest_C.png" trans="ff00ff" width="512" height="512"/>
  </tileset>
  <tileset firstgid="10589" name="interiors_pt01" tilewidth="32" tileheight="32" tilecount="1024" columns="16">
-  <image source="map_assets/v1/interiors_pt01.png" trans="ff00ff" width="512" height="2048"/>
+  <image source="../../map/v1/interiors_pt01.png" trans="ff00ff" width="512" height="2048"/>
  </tileset>
  <tileset firstgid="11613" name="interiors_pt02" tilewidth="32" tileheight="32" tilecount="1024" columns="16">
-  <image source="map_assets/v1/interiors_pt02.png" trans="ff00ff" width="512" height="2048"/>
+  <image source="../../map/v1/interiors_pt02.png" trans="ff00ff" width="512" height="2048"/>
  </tileset>
  <tileset firstgid="12637" name="interiors_pt03" tilewidth="32" tileheight="32" tilecount="1024" columns="16">
-  <image source="map_assets/v1/interiors_pt03.png" trans="ff00ff" width="512" height="2048"/>
+  <image source="../../map/v1/interiors_pt03.png" trans="ff00ff" width="512" height="2048"/>
  </tileset>
  <tileset firstgid="13661" name="interiors_pt04" tilewidth="32" tileheight="32" tilecount="1024" columns="16">
-  <image source="map_assets/v1/interiors_pt04.png" trans="ff00ff" width="512" height="2048"/>
+  <image source="../../map/v1/interiors_pt04.png" trans="ff00ff" width="512" height="2048"/>
  </tileset>
  <tileset firstgid="14685" name="interiors_pt05" tilewidth="32" tileheight="32" tilecount="1024" columns="16">
-  <image source="map_assets/v1/interiors_pt05.png" trans="ff00ff" width="512" height="2048"/>
+  <image source="../../map/v1/interiors_pt05.png" trans="ff00ff" width="512" height="2048"/>
  </tileset>
  <tileset firstgid="15709" name="interiors_pt06" tilewidth="32" tileheight="32" tilecount="1024" columns="16">
-  <image source="map_assets/v1/interiors_pt06.png" trans="ff00ff" width="512" height="2048"/>
+  <image source="../../map/v1/interiors_pt06.png" trans="ff00ff" width="512" height="2048"/>
  </tileset>
  <tileset firstgid="16733" name="interiors_pt07" tilewidth="32" tileheight="32" tilecount="1024" columns="16">
-  <image source="map_assets/v1/interiors_pt07.png" trans="ff00ff" width="512" height="2048"/>
+  <image source="../../map/v1/interiors_pt07.png" trans="ff00ff" width="512" height="2048"/>
  </tileset>
  <tileset firstgid="17757" name="interiors_pt08" tilewidth="32" tileheight="32" tilecount="1024" columns="16">
-  <image source="map_assets/v1/interiors_pt08.png" trans="ff00ff" width="512" height="2048"/>
+  <image source="../../map/v1/interiors_pt08.png" trans="ff00ff" width="512" height="2048"/>
  </tileset>
  <tileset firstgid="18781" name="interiors_pt09" tilewidth="32" tileheight="32" tilecount="1024" columns="16">
-  <image source="map_assets/v1/interiors_pt09.png" trans="ff00ff" width="512" height="2048"/>
+  <image source="../../map/v1/interiors_pt09.png" trans="ff00ff" width="512" height="2048"/>
  </tileset>
  <tileset firstgid="19805" name="interiors_pt10" tilewidth="32" tileheight="32" tilecount="1024" columns="16">
-  <image source="map_assets/v1/interiors_pt10.png" trans="ff00ff" width="512" height="2048"/>
+  <image source="../../map/v1/interiors_pt10.png" trans="ff00ff" width="512" height="2048"/>
  </tileset>
  <tileset firstgid="20829" name="interiors_pt11" tilewidth="32" tileheight="32" tilecount="1024" columns="16">
-  <image source="map_assets/v1/interiors_pt11.png" trans="ff00ff" width="512" height="2048"/>
+  <image source="../../map/v1/interiors_pt11.png" trans="ff00ff" width="512" height="2048"/>
  </tileset>
  <tileset firstgid="21853" name="interiors_pt12" tilewidth="32" tileheight="32" tilecount="1024" columns="16">
-  <image source="map_assets/v1/interiors_pt12.png" trans="ff00ff" width="512" height="2048"/>
+  <image source="../../map/v1/interiors_pt12.png" trans="ff00ff" width="512" height="2048"/>
  </tileset>
  <tileset firstgid="22877" name="interiors_pt13" tilewidth="32" tileheight="32" tilecount="1024" columns="16">
-  <image source="map_assets/v1/interiors_pt13.png" trans="ff00ff" width="512" height="2048"/>
+  <image source="../../map/v1/interiors_pt13.png" trans="ff00ff" width="512" height="2048"/>
  </tileset>
  <tileset firstgid="23901" name="interiors_pt14" tilewidth="32" tileheight="32" tilecount="1024" columns="16">
-  <image source="map_assets/v1/interiors_pt14.png" trans="ff00ff" width="512" height="2048"/>
+  <image source="../../map/v1/interiors_pt14.png" trans="ff00ff" width="512" height="2048"/>
  </tileset>
  <tileset firstgid="24925" name="interiors_pt15" tilewidth="32" tileheight="32" tilecount="1024" columns="16">
-  <image source="map_assets/v1/interiors_pt15.png" trans="ff00ff" width="512" height="2048"/>
+  <image source="../../map/v1/interiors_pt15.png" trans="ff00ff" width="512" height="2048"/>
  </tileset>
  <tileset firstgid="25949" name="interiors_pt16" tilewidth="32" tileheight="32" tilecount="1024" columns="16">
-  <image source="map_assets/v1/interiors_pt16.png" trans="ff00ff" width="512" height="2048"/>
+  <image source="../../map/v1/interiors_pt16.png" trans="ff00ff" width="512" height="2048"/>
  </tileset>
  <tileset firstgid="26973" name="interiors_pt17" tilewidth="32" tileheight="32" tilecount="640" columns="16">
-  <image source="map_assets/v1/interiors_pt17.png" trans="ff00ff" width="512" height="1280"/>
+  <image source="../../map/v1/interiors_pt17.png" trans="ff00ff" width="512" height="1280"/>
  </tileset>
  <tileset firstgid="27613" name="blocks_1" tilewidth="32" tileheight="32" tilecount="80" columns="10">
-  <image source="map_assets/blocks/blocks_1.png" trans="ff00ff" width="320" height="256"/>
+  <image source="../../map/blocks/blocks_1.png" trans="ff00ff" width="320" height="256"/>
  </tileset>
  <tileset firstgid="27693" name="blocks_2" tilewidth="32" tileheight="32" tilecount="80" columns="10">
-  <image source="map_assets/blocks/blocks_2.png" trans="ff00ff" width="320" height="256"/>
+  <image source="../../map/blocks/blocks_2.png" trans="ff00ff" width="320" height="256"/>
  </tileset>
  <tileset firstgid="27773" name="blocks_3" tilewidth="32" tileheight="32" tilecount="40" columns="10">
-  <image source="map_assets/blocks/blocks_3.png" trans="ff00ff" width="320" height="128"/>
+  <image source="../../map/blocks/blocks_3.png" trans="ff00ff" width="320" height="128"/>
  </tileset>
  <layer id="1" name="Bottom Ground" width="140" height="100" locked="1">
   <data encoding="csv">

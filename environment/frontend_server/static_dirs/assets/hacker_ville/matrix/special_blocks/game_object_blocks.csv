@@ -2,45 +2,45 @@
 27725, hacker Ville, <all>, desk
 27735, hacker Ville, <all>, closet
 27745, hacker Ville, <all>, shelf
-27755, hacker Ville, <all>, easel
+27755, hacker Ville, <all>, server
 27765, hacker Ville, <all>, bathroom sink
 27696, hacker Ville, <all>, shower
 27706, hacker Ville, <all>, toilet
 27716, hacker Ville, <all>, kitchen sink
 27726, hacker Ville, <all>, refrigerator
-27736, hacker Ville, <all>, toaster
+27736, hacker Ville, <all>, coffee machine
 27746, hacker Ville, <all>, cooking area
 27756, hacker Ville, <all>, common room table
 27766, hacker Ville, <all>, common room sofa
-27697, hacker Ville, <all>, guitar
-27707, hacker Ville, <all>, microphone
-27717, hacker Ville, <all>, bar customer seating
-27727, hacker Ville, <all>, behind the bar counter
-27737, hacker Ville, <all>, behind the cafe counter
-27747, hacker Ville, <all>, cafe customer seating
-27757, hacker Ville, <all>, piano
-27767, hacker Ville, <all>, blackboard
-27698, hacker Ville, <all>, game console
+27697, hacker Ville, <all>, guitar (disabled)
+27707, hacker Ville, <all>, microphone (disabled)
+27717, hacker Ville, <all>, bar customer seating (disabled)
+27727, hacker Ville, <all>, behind the bar counter (disabled)
+27737, hacker Ville, <all>, behind the cafe counter (disabled)
+27747, hacker Ville, <all>, cafe customer seating (disabled)
+27757, hacker Ville, <all>, piano (disabled)
+27767, hacker Ville, <all>, blackboard (disabled)
+27698, hacker Ville, <all>, game console (disabled)
 27708, hacker Ville, <all>, computer desk
-27718, hacker Ville, <all>, computer
-27728, hacker Ville, <all>, library sofa
+27718, hacker Ville, <all>, computer (disabled)
+27728, hacker Ville, <all>, library sofa (disabled)
 27738, hacker Ville, <all>, bookshelf
-27748, hacker Ville, <all>, library table
-27758, hacker Ville, <all>, classroom student seating
-27768, hacker Ville, <all>, classroom podium
-27699, hacker Ville, <all>, behind the pharmacy counter
-27709, hacker Ville, <all>, behind the grocery counter
-27719, hacker Ville, <all>, pharmacy store shelf
-27729, hacker Ville, <all>, grocery store shelf
-27739, hacker Ville, <all>, pharmacy store counter
-27749, hacker Ville, <all>, grocery store counter
-27759, hacker Ville, <all>, supply store product shelf
-27769, hacker Ville, <all>, behind the supply store counter
-27700, hacker Ville, <all>, supply store counter
-27710, hacker Ville, <all>, dorm garden
-27720, hacker Ville, <all>, house garden
+27748, hacker Ville, <all>, library table (disabled)
+27758, hacker Ville, <all>, classroom student seating (disabled)
+27768, hacker Ville, <all>, classroom podium (disabled)
+27699, hacker Ville, <all>, behind the market counter
+27709, hacker Ville, <all>, market counter
+27719, hacker Ville, <all>, frozen food
+27729, hacker Ville, <all>, snack shelf
+27739, hacker Ville, <all>, instant food
+27749, hacker Ville, <all>, miscellaneous shelf
+27759, hacker Ville, <all>, dining table
+27769, hacker Ville, <all>, behind the supply store counter (disabled)
+27700, hacker Ville, <all>, supply store counter (disabled)
+27710, hacker Ville, <all>, control screen
+27720, hacker Ville, <all>, smoking zone
 27730, hacker Ville, <all>, garden chair
 27740, hacker Ville, <all>, park garden
-27750, hacker Ville, <all>, harp
-27760, hacker Ville, <all>, lifting weight
-27770, hacker Ville, <all>, pool table
+27750, hacker Ville, <all>, harp (disabled)
+27760, hacker Ville, <all>, lifting weight (disabled)
+27770, hacker Ville, <all>, pool table (disabled)

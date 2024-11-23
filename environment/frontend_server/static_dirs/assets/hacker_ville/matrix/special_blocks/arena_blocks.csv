@@ -1,63 +1,64 @@
-27626, hacker Ville, artist's co-living space, Latoya Williams's room
-27636, hacker Ville, artist's co-living space, Latoya Williams's bathroom
-27646, hacker Ville, artist's co-living space, Rajiv Patel's room
-27656, hacker Ville, artist's co-living space, Rajiv Patel's bathroom
-27666, hacker Ville, artist's co-living space, Abigail Chen's room
-27676, hacker Ville, artist's co-living space, Abigail Chen's bathroom
-27686, hacker Ville, artist's co-living space, Francisco Lopez's room
-27627, hacker Ville, artist's co-living space, Francisco Lopez's bathroom
-27637, hacker Ville, artist's co-living space, Hailey Johnson's room
-27647, hacker Ville, artist's co-living space, Hailey Johnson's bathroom
-27667, hacker Ville, artist's co-living space, common room
-27677, hacker Ville, artist's co-living space, kitchen
-27687, hacker Ville, White Hacker's house, main room
+27626, hacker Ville, The security company, control room
+27636, hacker Ville, The security company, serve room
+27646, hacker Ville, The security company, meeting room
+27656, hacker Ville, The security company, rest area
+27666, hacker Ville, The security company, bathroom
+27676, hacker Ville, The security company, warehouse
+27686, hacker Ville, The security company, common room
+27627, hacker Ville, The security company, Francisco Lopez's bathroom (disabled)
+27637, hacker Ville, The security company, Hailey Johnson's room (disabled)
+27647, hacker Ville, The security company, Hailey Johnson's bathroom (disabled)
+27657, hacker Ville, The security company, ? (disabled)
+27667, hacker Ville, The security company, common room (disabled)
+27677, hacker Ville, White Hacker's house, guest room
+27687, hacker Ville, White Hacker's house, bedroom
 27628, hacker Ville, White Hacker's house, bathroom
-27638, hacker Ville, White Hacker's house, kitchen
-27648, hacker Ville, White Hacker's house, living room
-27658, hacker Ville, Isabella Rodriguez's house, main room
+27638, hacker Ville, White Hacker's house, common room
+27648, hacker Ville, White Hacker's house, kitchen
+27658, hacker Ville, Isabella Rodriguez's house, bedroom
 27668, hacker Ville, Isabella Rodriguez's house, bathroom
-27678, hacker Ville, Isabella Rodriguez's house, kitchen
-27688, hacker Ville, Giorgio Rossi's house, bathroom
-27629, hacker Ville, Carlos Gomez's house, main room
-27639, hacker Ville, Carlos Gomez's house, bathroom
-27649, hacker Ville, The Rose and Crown Pub, pub
-27659, hacker Ville, Hobbs Cafe, cafe
-27669, hacker Ville, Public Bathroom, bathroom
-27679, hacker Ville, Oak Hill College, library
-27689, hacker Ville, Oak Hill College, hallway
+27678, hacker Ville, Isabella Rodriguez's house, common room
+27688, hacker Ville, Isabella Rodriguez's house, kitchen
+27629, hacker Ville, Isabella Rodriguez's house, workroom
+27639, hacker Ville, Carlos Gomez's house, bathroom (disabled)
+27649, hacker Ville, The Rose and Crown Pub, pub (disabled)
+27659, hacker Ville, Hobbs Cafe, cafe (disabled)
+27669, hacker Ville, Oak Hill College, classroom (disabled)
+27679, hacker Ville, Oak Hill College, library (disabled)
+27689, hacker Ville, Oak Hill College, hallway (disabled)
 27630, hacker Ville, Johnson Park, park
-27640, hacker Ville, Harvey Oak Supply Store, supply store
-27650, hacker Ville, The Willows Market and Pharmacy, store
-27681, hacker Ville, Adam Smith's house, main room
-27691, hacker Ville, Adam Smith's house, bathroom
-27662, hacker Ville, Black Hacker's house, main room
-27672, hacker Ville, Black Hacker's house, bathroom
-27682, hacker Ville, Black Hacker's house, kitchen
-27692, hacker Ville, Black Hacker's house, living room
-27660, hacker Ville, Dorm for Oak Hill College, Klaus Mueller's room
-27670, hacker Ville, Dorm for Oak Hill College, Maria Lopez's room
-27680, hacker Ville, Dorm for Oak Hill College, Ayesha Khan's room
-27690, hacker Ville, Dorm for Oak Hill College, Wolfgang Schulz's room
-27631, hacker Ville, Dorm for Oak Hill College, man's bathroom
-27641, hacker Ville, Dorm for Oak Hill College, woman's bathroom
-27651, hacker Ville, Dorm for Oak Hill College, common room
-27661, hacker Ville, Dorm for Oak Hill College, kitchen
-27671, hacker Ville, Dorm for Oak Hill College, garden
-27693, hacker Ville, Tamara Taylor and Carmen Ortiz's house, Tamara Taylor's room
-27703, hacker Ville, Tamara Taylor and Carmen Ortiz's house, Carmen Ortiz's room
-27713, hacker Ville, Tamara Taylor and Carmen Ortiz's house, common room
-27723, hacker Ville, Tamara Taylor and Carmen Ortiz's house, kitchen
-27733, hacker Ville, Tamara Taylor and Carmen Ortiz's house, bathroom
-27743, hacker Ville, Tamara Taylor and Carmen Ortiz's house, garden
-27753, hacker Ville, Moreno family's house, Tom and Jane Moreno's bedroom
-27763, hacker Ville, Moreno family's house, empty bedroom
-27694, hacker Ville, Moreno family's house, common room
-27704, hacker Ville, Moreno family's house, kitchen
-27714, hacker Ville, Moreno family's house, bathroom
-27724, hacker Ville, Moreno family's house, garden
-27734, hacker Ville, Lin family's house, Mei and John Lin's bedroom
-27744, hacker Ville, Lin family's house, Eddy Lin's bedroom
-27754, hacker Ville, Lin family's house, common room
-27764, hacker Ville, Lin family's house, kitchen
-27695, hacker Ville, Lin family's house, bathroom
-27705, hacker Ville, Lin family's house, garden
+27640, hacker Ville, Harvey Oak Supply Store, supply store (disabled)
+27650, hacker Ville, The Willows Market, store
+27660, hacker Ville, Black Hacker's apartment, Black Hacker's room
+27670, hacker Ville, Black Hacker's apartment, Black Hacker's bathroom
+27680, hacker Ville, Black Hacker's apartment, guest room 1
+27690, hacker Ville, Black Hacker's apartment, bathroom 1
+27631, hacker Ville, Black Hacker's apartment, guest room 2
+27641, hacker Ville, Black Hacker's apartment, bathroom 2
+27651, hacker Ville, Black Hacker's apartment, guest room 3
+27661, hacker Ville, Black Hacker's apartment, bathroom 3
+27671, hacker Ville, Black Hacker's apartment, guest room 4
+27681, hacker Ville, Black Hacker's apartment, bathroom 4
+27691, hacker Ville, Black Hacker's apartment, common room
+27662, hacker Ville, Black Hacker's apartment, kitchen
+27672, hacker Ville, Black Hacker's apartment, garden
+27682, hacker Ville, Moore family's house, main room (disabled)
+27692, hacker Ville, Moore family's house, bathroom (disabled)
+27693, hacker Ville, Tamara Taylor and Carmen Ortiz's house, Tamara Taylor's room (disabled)
+27703, hacker Ville, Tamara Taylor and Carmen Ortiz's house, Carmen Ortiz's room (disabled)
+27713, hacker Ville, Tamara Taylor and Carmen Ortiz's house, common room (disabled)
+27723, hacker Ville, Tamara Taylor and Carmen Ortiz's house, kitchen (disabled)
+27733, hacker Ville, Tamara Taylor and Carmen Ortiz's house, bathroom (disabled)
+27743, hacker Ville, Tamara Taylor and Carmen Ortiz's house, garden (disabled)
+27753, hacker Ville, Moreno family's house, Tom and Jane Moreno's bedroom (disabled)
+27763, hacker Ville, Moreno family's house, empty bedroom (disabled)
+27694, hacker Ville, Moreno family's house, common room (disabled)
+27704, hacker Ville, Moreno family's house, kitchen (disabled)
+27714, hacker Ville, Moreno family's house, bathroom (disabled)
+27724, hacker Ville, Moreno family's house, garden (disabled)
+27734, hacker Ville, Lin family's house, Mei and John Lin's bedroom (disabled)
+27744, hacker Ville, Lin family's house, Eddy Lin's bedroom (disabled)
+27754, hacker Ville, Lin family's house, common room (disabled)
+27764, hacker Ville, Lin family's house, kitchen (disabled)
+27695, hacker Ville, Lin family's house, bathroom (disabled)
+27705, hacker Ville, Lin family's house, garden (disabled)

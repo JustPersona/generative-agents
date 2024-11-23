@@ -1,0 +1,7 @@
+{
+  "world_name": "old ville",
+  "maze_width": 90,
+  "maze_height": 70,
+  "sq_tile_size": 32,
+  "special_constraint": ""
+}

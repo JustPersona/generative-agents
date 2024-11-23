@@ -143,6 +143,10 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # CORS_ORIGIN_ALLOW_ALL = True
 # CORS_ALLOW_CREDENTIALS = False
 
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+CSRF_TRUSTED_ORIGINS = ["https://domain.com"]
+
 
 
 # SASS/SCSS
@@ -156,6 +160,8 @@ STATICFILES_FINDERS = [
 ]
 
 # Login
+### Login Session
+SESSION_COOKIE_AGE = 60 * 60 * 6
 LOGIN_URL = "signin"
 LOGIN_REDIRECT_URL = "dashboard"
 LOGIN_REQUIRED = False

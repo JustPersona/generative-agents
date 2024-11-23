@@ -19,8 +19,8 @@ def processors(request):
                 "href": reverse("dashboard"),
             }, {
                 "icon": "fa-solid fa-play",
-                "name": "Pen Testing",
-                "href": reverse("pen_testing"),
+                "name": "Penetration Test",
+                "href": reverse("pen_test"),
             },
         ],
     }

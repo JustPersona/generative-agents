@@ -15,11 +15,11 @@
 							<span user="username">{{ user.username }}</span>
 						</a>
 						<ul class="dropdown-menu dropdown-menu-end">
-							{% if user.is_superuser %}
-								<li><a href="{% url 'manage' %}" class="dropdown-item">Manage</a></li>
-							{% endif %}
 							{% if user.is_staff %}
 								<li><a href="{% url 'trash' %}" class="dropdown-item">Trash</a></li>
+							{% endif %}
+							{% if user.is_superuser %}
+								<li><a href="{% url 'manage' %}" class="dropdown-item">Manage</a></li>
 							{% endif %}
 							<li><button type="button" class="dropdown-item" onclick="post('{% url 'signout' %}', null, function() { location.reload(); })">Sign Out</button></li>
 						</ul>

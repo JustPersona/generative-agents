@@ -5,7 +5,7 @@
 {% block content %}
 
 <style type="text/css">
-	table tbody tr.active td:first-child:before {
+	table#pen_code_container tbody tr.active td:first-child:before {
 		content: "";
 		display: block;
 		position: absolute;
@@ -13,51 +13,48 @@
 		top: -1px;
 		height: calc(100% + 2px);
 		width: 0px;
-		border-left: 2px solid green;
+		border-left: 2px solid var(--bs-success);
 	}
 </style>
 
-{% if backend.step %}<section class="bg-body shadow rounded-4 my-3 p-3">
+{% if backend.step %}<section class="bg-body shadow rounded-4 my-2 p-3">
 	<div class="text-center">
 		Backend is Running, <a href="{% url 'backend' %}">See</a>
 	</div>
 </section>{% endif %}
 
-<section class="bg-body shadow rounded-4 my-3 p-3">
+<section class="bg-body shadow rounded-4 my-2 p-3">
 	<div class="d-flex gap-2 align-items-center">
 		<input class="flex-grow-1 px-2" type="text" name="search" placeholder="Search..." oninput="selectPen(this.value)"/>
-		<a href="{% url 'pen_testing' %}">Details &gt;</a>
+		<a href="{% url 'pen_test' %}">Details &gt;</a>
 	</div>
 	<div class="table-responsive mt-2" style="max-height: 500px;">
-		<table class="table table-sm table-bordered table-hover m-0 position-relative" style="border-width: 2px;">
+		<table id="pen_code_container" class="table table-sm table-bordered table-hover m-0 position-relative text-nowrap">
 			<thead class="sticky-top z-1">
 				<tr>
-					<th scope="col" class="text-end minimum" style="width: {{ pen_codes | length | stringformat:'d' | length | add:1 }}rem">#</th>
-					<th scope="col">Name</th>
-					<th scope="col" class="text-center minimum">Step</th>
-					<th scope="col" class="text-center minimum">Vulnerability</th>
-					<th scope="col" class="text-center minimum">Forkable</th>
-					<th scope="col" class="text-center minimum">Compressed</th>
-					<th scope="col" class="text-center minimum">Control</th>
+					<th scope="col" rowspan="2" class="text-center minimum align-middle sorted" sort="num">#</th>
+					<th scope="col" rowspan="2" class="align-middle" sort="pen_code">Penetration Test Name</th>
+					<th scope="col" colspan="3" class="text-center minimum">Number of</th>
+					<th scope="col" rowspan="2" class="text-center minimum align-middle">Control</th>
+				</tr>
+				<tr>
+					<th scope="col" class="text-center minimum" sort="step">Steps</th>
+					<th scope="col" class="text-center minimum" sort="payloads">Payloads</th>
+					<th scope="col" class="text-center minimum" sort="vulnerabilities">Vulnerabilities</th>
 				</tr>
 			</thead>
-			<tbody class="table-group-divider" id="pen_code_container">
+			<tbody class="table-group-divider">
 				{% for pen in pen_codes %}<tr class="position-relative" pen_code="{{ pen.pen_code }}" forked="{{ pen.fork_sim_code }}" mode="{{ pen.mode }}">
 					<td field="num" class="text-end">{{ forloop.counter }}</td>
 					<td field="pen_code">{{ pen.pen_code }}</td>
 					<td field="step" class="text-center">{% if not pen.step %}-{% else %}{{ pen.step }}{% endif %}</td>
-					<td field="vulnerability" class="text-center">{% if not pen.payload %}-{% else %}{{ pen.payload.count }}/{{ pen.payload.total }}{% endif %}</td>
-					<td field="forkable" class="text-center"><input class="form-check-input" type="checkbox" onclick="this.blur(); return false;"{% if pen.forkable %} checked{% endif %}></td>
-					<td field="compressed" class="text-center"><input class="form-check-input" type="checkbox" onclick="this.blur(); return false;"{% if pen.compressed %} checked{% endif %}></td>
+					<td field="payloads" class="text-center">{% if not pen.payloads.count.payloads %}-{% else %}{{ pen.payloads.count.payloads }}{% endif %}</td>
+					<td field="vulnerabilities" class="text-center">{% if not pen.payloads.count.vulnerabilities %}-{% else %}{{ pen.payloads.count.vulnerabilities }}{% endif %}</td>
 					<td field="control"><div class="d-flex gap-2">
-						<a class="link-secondary text-center" style="width: 1rem" href="{% if not pen.step %}{% url 'path_tester' pen.maze_name %}{% else %}{% url 'pen_testing' pen.pen_code %}{% endif %}" data-bs-toggle="tooltip" data-bs-title="{% if not pen.step %}Preview{% else %}Play{% endif %}">
+						<a class="link-secondary text-center" style="width: 1rem" href="{% if not pen.step %}{% url 'path_tester' pen.maze_name %}{% else %}{% url 'pen_test' pen.pen_code %}{% endif %}" data-bs-toggle="tooltip" data-bs-title="{% if not pen.step %}Preview{% else %}Play{% endif %}">
 							<i class="fa-solid fa-play"></i>
 						</a>
-						{% if user.is_staff %}<label role="button" class="link-secondary{% if not pen.step or pen.mode == 'compressed' %} invisible{% endif %}" data-bs-toggle="tooltip" data-bs-title="Compress">
-							<i class="fa-solid fa-minimize"></i>
-							<button type="button" onclick="setSubModal(event, this.closest('[mode]'), 'Close')" data-bs-toggle="modal" data-bs-target="#compressModal" hidden></button>
-						</label>{% endif %}
-						<a class="link-secondary text-center{% if not pen.step %} invisible{% endif %}" style="width: 1rem" href="{% url 'pen_testing' %}?search={{ pen.pen_code }}" data-bs-toggle="tooltip" data-bs-title="Payloads">
+						<a class="link-secondary text-center{% if not pen.step %} invisible{% endif %}" style="width: 1rem" href="{% url 'pen_test' %}?search={{ pen.pen_code }}" data-bs-toggle="tooltip" data-bs-title="Payloads">
 							<i class="fa-solid fa-list-ul"></i>
 						</a>
 						<label role="button" class="link-secondary text-center" style="width: 1rem" data-bs-toggle="tooltip" data-bs-title="Information">
@@ -73,131 +70,29 @@
 </section>
 
 <section class="row">
-	<div class="col-md-6">
-		<div class="bg-body shadow rounded-4 my-3 p-3">
-			<canvas id="doughnut-chart" class="w-100" height="300"></canvas>
-			<script type="text/javascript">
-				const randomInt = function() {
-					return Math.round(Math.random() * 8) + 2;
-				}
-
-				const dcanvas = document.querySelector("#doughnut-chart").getContext("2d");
-				const dchart = new Chart(dcanvas, {
-					type: "doughnut",
-					data: {
-						labels: ["Safely", "Suspicious", "Warning", "Danger"],
-						datasets: [{
-							label: "Total",
-							data: [
-								8,
-								5,
-								7,
-								4,
-							],
-							backgroundColor: [
-								"rgb(54, 162, 235)",
-								"rgb(255, 205, 86)",
-								"rgb(255, 159, 64)",
-								"rgb(255, 99, 132)",
-							],
-							hoverOffset: 25,
-						}],
-					},
-				});
-			</script>
+	<div class="col-md-6 my-2">
+		<div class="bg-body shadow rounded-4 p-3 h-100">
+			<div class="table-responsive">
+				<table id="url-table" class="table table-sm table-bordered table-hover m-0 position-relative text-nowrap" style="border-width: 2px;">
+					<thead class="sticky-top z-1">
+						<tr>
+							<th scope="col" rowspan="2" class="text-center minimum align-middle sorted" sort="num">#</th>
+							<th scope="col" rowspan="2" class="align-middle" sort="url">URL</th>
+							<th scope="col" colspan="2" class="text-center minimum">Number of</th>
+						</tr>
+						<tr>
+							<th scope="col" class="text-center minimum" sort="payloads">Payloads</th>
+							<th scope="col" class="text-center minimum" sort="vulnerabilities">Vulnerabilities</th>
+						</tr>
+					</thead>
+					<tbody></tbody>
+				</table>
+			</div>
 		</div>
 	</div>
-	<div class="col-md-6">
-		<div class="bg-body shadow rounded-4 my-3 p-3">
-			<canvas id="bar-chart"></canvas>
-			<script type="text/javascript">
-				const bcanvas = document.querySelector("#bar-chart").getContext("2d");
-				const bchart = new Chart(bcanvas, {
-					type: "bar",
-					data: {
-						labels: ["SQLi", "XSS", "CSRF", "LFI"],
-						datasets: [{
-							data: [
-								7,
-								10,
-								6,
-								4,
-							],
-							backgroundColor: "rgb(255, 99, 132)",
-						}],
-					},
-					options: {
-						plugins: {
-							title: {
-								text: "Vulnerability by Type",
-								display: true,
-							},
-							legend: {
-								display: false,
-							},
-						},
-						scales: {
-							y: {
-								beginAtZero: true,
-							},
-						},
-					},
-				});
-			</script>
-		</div>
-		<div class="bg-body shadow rounded-4 my-3 p-3">
-			<canvas id="line-chart"></canvas>
-			<script type="text/javascript">
-				const timestamp = (new Date()).getTime();
-				const lcanvas = document.querySelector("#line-chart").getContext("2d");
-				const lchart = new Chart(lcanvas, {
-					type: "line",
-					data: {
-						labels: [
-							timestamp - 86400000 * 5,
-							timestamp - 86400000 * 4,
-							timestamp - 86400000 * 3,
-							timestamp - 86400000 * 2,
-							timestamp - 86400000 * 1,
-						],
-						datasets: [{
-							data: [
-								4,
-								8,
-								3,
-								4,
-								3,
-								9,
-							],
-							borderColor: "rgb(255, 99, 132)",
-							backgroundColor: "rgb(255, 99, 132)",
-						}],
-					},
-					options: {
-						plugins: {
-							title: {
-								text: "Number of Pen Testing",
-								display: true,
-							},
-							legend: {
-								display: false,
-							},
-						},
-						scales: {
-							x: {
-								type: "time",
-								time: {
-									tooltipFormat: "DD",
-									unit: "day",
-								},
-							},
-							y: {
-								beginAtZero: true,
-							},
-						},
-					},
-				});
-			</script>
+	<div class="col-md-6 my-2">
+		<div class="bg-body shadow rounded-4">
+			<canvas id="type-chart" class="p-3 h-100"></canvas>
 		</div>
 	</div>
 </section>
@@ -208,12 +103,59 @@
 
 {% block js_content %}
 <script type="text/javascript">
-	const table = document.querySelector("table tbody");
-	const trs = table.querySelectorAll("tr");
+	const randomInt = function() {
+		return Math.round(Math.random() * 8) + 2;
+	}
+
+	const type_chart = getCanvas({
+		canvas: document.querySelector("#type-chart"),
+		config: {
+			type: "bar",
+			data: {
+				labels: {{ chart.attack.labels | safe }},
+				datasets: [{
+					data: {{ chart.attack.datasets | safe }},
+					backgroundColor: "rgb(255, 99, 132)",
+				}],
+			},
+			options: {
+				plugins: {
+					title: {
+						text: "Number of Vulnerabilities by Attack",
+						display: true,
+					},
+					legend: {
+						display: false,
+					},
+				},
+				scales: {
+					y: {
+						beginAtZero: true,
+					},
+				},
+			},
+		}
+	});
+
+
+
+	const urlTable = document.querySelector("#url-table");
+	for (let url of {{ chart.url.labels | safe }}) {
+		const idx = {{ chart.url.labels | safe }}.indexOf(url);
+		try {
+			let [payloads, vulnerabilities] = {{ chart.url.datasets | safe }}[idx];
+			insertURLTable(urlTable, {url, data: {payloads, vulnerabilities}});
+		} catch {}
+	}
+
+
+
+	const penTbody = document.querySelector("table#pen_code_container tbody");
+	const trs = penTbody.querySelectorAll("tr");
 
 	const selectPen = function(input) {
 		for (let box of trs) {
-			box.classList.toggle("d-none", !box.getAttribute("pen_code").toLowerCase().includes(input.toLowerCase()));
+			box.classList.toggle("d-none", !box.getAttribute("pen_code").toLowerCase().trim().includes(input.toLowerCase().trim()));
 		}
 	}
 
@@ -223,7 +165,7 @@
 		tr?.classList.toggle("active", bool);
 	}
 	const hideTree = function() {
-		for (let tr of table.querySelectorAll("tr")) {
+		for (let tr of penTbody.querySelectorAll("tr")) {
 			activeTree(tr, false);
 		}
 	}
@@ -237,17 +179,17 @@
 		activeTree(tr);
 
 		const pen_code = tr.getAttribute("pen_code");
-		if (!type || type == "up") for (let x of table.querySelectorAll(`tr[pen_code=${tr.getAttribute("forked")}]:not([pen_code=${pen_code}])`)) {
+		if (!type || type == "up") for (let x of penTbody.querySelectorAll(`tr[pen_code=${tr.getAttribute("forked")}]:not([pen_code=${pen_code}])`)) {
 			showTree(x, "up");
 		}
-		if (!type || type == "down") for (let x of table.querySelectorAll(`tr[forked="${pen_code}"]:not([pen_code=${pen_code}])`)) {
+		if (!type || type == "down") for (let x of penTbody.querySelectorAll(`tr[forked="${pen_code}"]:not([pen_code=${pen_code}])`)) {
 			showTree(x, "down");
 		}
 	}
 
-	table.addEventListener("mouseover", function(e) {
+	penTbody.addEventListener("mouseover", function(e) {
 		showTree(e.target.closest("tr"));
 	});
-	table.addEventListener("mouseout", hideTree);
+	penTbody.addEventListener("mouseout", hideTree);
 </script>
 {% endblock %}

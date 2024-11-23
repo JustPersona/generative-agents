@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<section class="border-bottom">
+	<input type="text" class="border-0 bg-transparent w-100 lh-lg text-center" style="outline: 0" placeholder="Search..." name="search" value="{{ search }}" oninput="selectPen()">
+</section>
+
+<section class="pt-3" id="pen_code_container">{% for pen in pen_codes %}
+	<article class="bg-body shadow rounded-4 my-4 p-3" pen_code="{{ pen.pen_code }}" forked="{{ pen.fork_sim_code }}" mode="{{ pen.mode }}"{% if pen.step == 0 %} hidden{% endif %}>
+		<h3 class="h5 d-flex gap-2">
+			<a class="link-secondary" href="{% url 'pen_test' pen.pen_code %}" data-bs-toggle="tooltip" data-bs-title="Play"><i class="fa-solid fa-play"></i></a>
+			<span class="flex-grow-1">{{ pen.pen_code }}</span>
+			<label role="button" class="link-secondary text-center" style="width: 25px" data-bs-toggle="tooltip" data-bs-title="Pin">
+				<i class="fa-solid fa-thumbtack d-none"></i>
+				<i class="fa-solid fa-thumbtack-slash"></i>
+				<button type="button" onclick="pinBox(this)" hidden></button>
+			</label>
+			<label role="button" class="link-secondary" data-bs-toggle="tooltip" data-bs-title="Information">
+				<i class="fa-solid fa-ellipsis-vertical"></i>
+				<button type="button" onclick="setPenInfoModal(event, this.closest('[mode]'))" data-bs-toggle="modal" data-bs-target="#penInfoModal" hidden></button>
+			</label>
+		</h3>
+		<hr/>
+		<div>{% if not pen.payloads.data %}
+			No Information
+		{% else %}
+			<div class="form-check">
+				<input class="form-check-input" type="checkbox" id="only-vuln" onclick="this.parentNode.classList.toggle('only-vuln', this.checked)">
+				<label class="form-check-label" for="only-vuln">Only Show Vulnerabilities</label>
+			</div>
+			<div class="table-responsive mt-2" style="max-height: 500px;">
+				<table class="table table-sm table-bordered table-hover m-0 position-relative text-nowrap" style="border-width: 2px;">
+					<thead class="sticky-top z-1">
+						<tr>
+							<th scope="col" class="text-center minimum" sort="num">#</th>
+							<th scope="col" class="text-center minimum">Method</th>
+							<th scope="col" class="text-center minimum">URL</th>
+							<th scope="col">Payload</th>
+						</tr>
+					</thead>
+					<tbody></tbody>
+				</table>
+			</div>
+			<script type="text/javascript">
+				for (let x of {{ pen.payloads.data | safe }}) {
+					for (let y of x.basic) {
+						insertPayloadTable(document.querySelector("[pen_code={{ pen.pen_code }}] table"), {url: x.url, data: y});
+					}
+				}
+			</script>
+		{% endif %}</div>
+	</article>
+{% endfor %}</section>
+{% include 'includes/modals.html' %}
+
+{% endblock %}
+
+
+
+{% block js_content %}
+<script type="text/javascript">
+	const boxs = document.querySelectorAll("article");
+	const selectPen = function(isContains=true) {
+		const input = document.querySelector("input[name=search]").value.trim();
+		for (let box of boxs) {
+			const pen_code = box.getAttribute("pen_code");
+			box.classList.toggle("d-none", (box.classList.contains("pin") || !input) ? false : isContains ? !pen_code.toLowerCase().trim().includes(input.toLowerCase().trim()) : pen_code != input);
+		}
+	}
+	selectPen(false);
+
+	const pinBox = function(elem) {
+		const isPin = elem.closest('article').classList.toggle('pin');
+		const label = elem.closest("label");
+		for (let x of label.querySelectorAll('i')) x.classList.toggle('d-none');
+		label.classList.toggle("link-secondary", !isPin);
+		label.classList.toggle("link-success", isPin);
+		selectPen();
+	}
+</script>
+{% endblock %}

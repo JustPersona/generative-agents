@@ -40,10 +40,20 @@
 		border-left: 2px solid var(--bs-link-color);
 	}
 } table {
-	th, td {
+	thead [sort] {
+		i {
+			transform: rotateX(var(--deg, 0deg)) translateY(-.2rem);
+		} &.sorted.reverse {
+			--deg: 180deg;
+		} &:not(.sorted) label:hover i {
+			--bs-secondary-rgb: var(--bs-body-color);
+		}
+	} th, td {
 		padding-left: .75rem !important;
 		padding-right: .75rem !important;
 	} .minimum {
 		width: 0;
 	}
+} .only-vuln + * table tbody tr:not(.table-danger) {
+	display: none;
 }

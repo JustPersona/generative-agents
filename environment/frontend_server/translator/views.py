@@ -21,15 +21,16 @@ from compress_pen_storage import compress
 
 
 pen_files = {
+    "memory": {
+        "payload": "/personas/Black Hacker/bootstrap_memory/payload.json",
+    },
     "compressed": {
         "root": "compressed_storage/%s",
-        "payload": "compressed_storage/%s/payload.json",
         "meta": "compressed_storage/%s/meta.json",
         "move": "compressed_storage/%s/master_movement.json",
     },
     "forkable": {
         "root": "storage/%s",
-        "payload": "storage/%s/reverie/payload.json",
         "meta": "storage/%s/reverie/meta.json",
         "move": "storage/%s/movement/%s.json",
         "env": "storage/%s/environment/%s.json",
@@ -96,20 +97,33 @@ def getMapData(maze_name="the_ville"):
         "layers": json.dumps(layers),
     }
 
-def getPayload(mode=None, pen_code=None):
-    data = {}
-    payload_file = pen_files[mode]["payload"] % pen_code
+def getPayloadInfo(mode=None, pen_code=None, *, to_list=False):
+    data = {
+        "count": {
+            "vulnerabilities": 0,
+            "payloads": 0
+        },
+        "data": [],
+    }
+    payload_file = (pen_files[mode]["root"] % pen_code) + pen_files["memory"]["payload"]
     if exists(payload_file):
         with open(payload_file) as f:
-            data["content"] = json.load(f)
-        data["count"] = 0
-        data["total"] = 0
-        for url, items in data["content"].items():
-            data["total"] += len(items["basic"])
+            payload_data = json.load(f)
+        for url, items in payload_data.items():
+            data["count"]["payloads"] += len(items["basic"])
             for idx, payload in enumerate(items["basic"]):
                 if payload["observations"] == "exploit_successful":
-                    data["count"] += 1
-                data["content"][url]["basic"][idx]["payload"] = unquote(str(payload["payload"]))
+                    data["count"]["vulnerabilities"] += 1
+                items["basic"][idx] = json.loads(json.dumps(items["basic"][idx]).replace("<", "&lt;").replace(">", "&gt;"))
+            data["data"] += [{"url": url, **items}]
+
+    if to_list is True:
+        tmp = {}
+        for x in data["data"]:
+            for y in x["basic"]:
+                y["url"] = x["url"]
+                tmp[y["timestamp"]] = y
+        data = tmp
     return data
 
 def getPen(pen_code, mode=None):
@@ -126,7 +140,7 @@ def getPen(pen_code, mode=None):
     data["mode"] = mode
     for x in modes: data[x] = True
 
-    data["payload"] = getPayload(mode, pen_code)
+    data["payloads"] = getPayloadInfo(mode, pen_code)
     return data
 
 def getPens():
@@ -147,9 +161,69 @@ def penList(mode=None):
         data["forkable"] = [x for x in listdir("storage") if exists(pen_files["forkable"]["meta"] % x)]
     return data
 
+def getChartData(data=None, *, min=0):
+    if data is None: data = getPens()
+
+    chart_keys = ["attack", "url"]
+    chart_data = {k: {"labels": [], "datasets": []} for k in chart_keys}
+
+    for x in data:
+        if not x["payloads"]["data"]: continue
+        for y in x["payloads"]["data"]:
+            url = y.get("url")
+            for z in y["basic"]:
+                chart_data["attack"] = addChartData(chart_data["attack"], z["attack_name"], z["observations"] == "exploit_successful")
+                chart_data["url"] = addChartData(chart_data["url"], url or z["url"], [1, z["observations"] == "exploit_successful"])
+
+    # basics = [basic for x in data if x["payloads"]["data"] for y in x["payloads"]["data"] for basic in y["basic"]]
+
+    # chart_data["attack"] = {"labels": sorted(set([basic["attack_name"] for basic in basics]))}
+    # chart_data["attack"]["datasets"] = [
+    #     len(list(filter(
+    #         lambda basic: basic["attack_name"] == label and basic["observations"] == "exploit_successful",
+    #         [basic for basic in basics]
+    #     ))) for label in chart_data["attack"]["labels"]
+    # ]
+
+    # chart_data["url"] = {"labels": sorted(set([basic["attack_name"] for basic in basics]))}
+
+    # chart_data = [{
+    #     "pen_code": x["pen_code"],
+    #     "vulnerabilities": x["payloads"]["count"]["vulnerabilities"],
+    #     "payloads": x["payloads"]["count"]["payloads"],
+    # } for x in data if x["step"] != 0]
+
+    for k in chart_keys:
+        a_min = min - len(chart_data[k]["labels"])
+        chart_data[k]["labels"] += [""] * a_min
+        chart_data[k]["datasets"] += [0] * a_min
+
+    return chart_data
+
+def addChartData(data, label, value=0):
+    try:
+        idx = data["labels"].index(label)
+        if type(value) != list:
+            data["datasets"][idx] += value
+        else:
+            for i, x in enumerate(value):
+                data["datasets"][idx][i] += x
+    except:
+        idx = -1
+        data["labels"].append(label)
+        data["datasets"].append(value)
+    return data
+
 
 
 # Views
+
+def robots(request):
+    lines = [
+        "User-agent: *",
+        "Disallow: /",
+    ]
+    return HttpResponse("\n".join(lines), content_type="text/plain")
 
 @require_http_methods(["GET"])
 def dashboard(request):
@@ -157,6 +231,7 @@ def dashboard(request):
         "backend": getBackendInfo(),
         "pen_codes": getPens(),
     }
+    context["chart"] = getChartData(context["pen_codes"], min=4)
     template = "pages/dashboard.html"
     return render(request, template, context)
 
@@ -212,7 +287,7 @@ def path_tester(request, maze_name="hacker_ville"):
         "maze_name": maze_name,
         "mode": "tester",
     }
-    template = "pages/pen_testing_play.html"
+    template = "pages/pen_test_play.html"
     return render(request, template, context)
 
 
@@ -227,18 +302,18 @@ def backend(request):
         return render(request, "pages/backend-error.html")
 
     #remove(pen_files["temp"]["step"])
-    return pen_testing(request, pen_code, step)
+    return pen_test(request, pen_code, step)
 
 
 
 @require_http_methods(["GET"])
-def pen_testing(request, pen_code=None, step=0, speed=2):
+def pen_test(request, pen_code=None, step=0, speed=2):
     if pen_code is None:
         context = {
             "search": request.GET.get("search", ""),
             "pen_codes": reversed(getPens()),
         }
-        return render(request, "pages/pen_testing_details.html", context)
+        return render(request, "pages/pen_test_details.html", context)
 
     step = int(step)
     speed = int(speed) or 2
@@ -253,7 +328,7 @@ def pen_testing(request, pen_code=None, step=0, speed=2):
     else:
         return HttpResponse(status=404)
 
-    payload = getPayload(mode, pen_code)
+    payloads = getPayloadInfo(mode, pen_code, to_list=True)
     with open(pen_files[mode]["meta"] % pen_code) as json_file:
         meta = json.load(json_file)
     max_step = meta["step"]
@@ -320,7 +395,7 @@ def pen_testing(request, pen_code=None, step=0, speed=2):
     } for x in persona_names]
 
     context = {
-        "payload": json.loads(json.dumps(payload).replace("<", "&lt;").replace(">", "&gt;")),
+        "payloads": payloads,
         "pen_code": pen_code,
         "step": step,
         "max_step": max_step,
@@ -336,7 +411,7 @@ def pen_testing(request, pen_code=None, step=0, speed=2):
         "maze_name": maze_name,
         "mode": mode,
     }
-    template = "pages/pen_testing_play.html"
+    template = "pages/pen_test_play.html"
     return render(request, template, context)
 
 
@@ -393,7 +468,7 @@ def replay_persona_state(request, pen_code, step, persona_name):
 
 
 @require_http_methods(["POST"])
-def compress_pen_testing(request):
+def compress_pen_test(request):
     if not request.user.is_staff:
         return HttpResponse(status=404)
 
@@ -414,7 +489,7 @@ def compress_pen_testing(request):
     return HttpResponse()
 
 @require_http_methods(["POST"])
-def delete_pen_testing(request):
+def delete_pen_test(request):
     if not request.user.is_staff:
         return HttpResponse(status=404)
 

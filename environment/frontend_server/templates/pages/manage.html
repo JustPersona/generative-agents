@@ -10,11 +10,11 @@
 	<table class="table table-sm table-bordered table-hover text-nowrap mb-0">
 		<thead>
 			<tr>
-				<th scope="col" class="text-end minimum">#</th>
-				<th scope="col" class="text-start">Name</th>
-				<th scope="col" class="text-start">E-mail</th>
-				<th scope="col" class="text-start minimum">Last Login</th>
-				<th scope="col" class="text-start minimum">Date Joined</th>
+				<th scope="col" class="text-end minimum" sort="id">#</th>
+				<th scope="col" class="text-start" sort="username">Name</th>
+				<th scope="col" class="text-start" sort="email">E-mail</th>
+				<th scope="col" class="text-start minimum" sort="last_login">Last Login</th>
+				<th scope="col" class="text-start minimum" sort="date_joined">Date Joined</th>
 				<th scope="col" class="text-center minimum">Active</th>
 				<th scope="col" class="text-center minimum">Staff</th>
 				<th scope="col" class="text-center minimum">Super</th>
@@ -46,6 +46,7 @@
 				<div class="modal-body">
 					<div class="tab-content" id="nav-tabContent">
 						<div class="tab-pane fade show active" id="user-info" role="tabpanel" aria-labelledby="user-info-tab" tabindex="0">
+							<div class="mb-2 px-1 text-secondary required">* Required</div>
 							<div class="d-flex align-items-start px-1">
 								<div class="d-sm-flex flex-wrap flex-grow-1 column-gap-3">
 									<div class="form-check mb-3">
@@ -68,7 +69,7 @@
 							</div>
 							<div class="form-floating mb-3">
 								<input type="text" class="form-control" id="username" name="username" placeholder="ID">
-								<label for="username">Name</label>
+								<label for="username">Name <span class="required">*</span></label>
 								<div class="invalid-feedback px-1"></div>
 							</div>
 							<div class="form-floating mb-3">
@@ -90,7 +91,7 @@
 							</div>
 							<div class="form-floating mb-3">
 								<input type="password" class="form-control" id="password" name="password" placeholder="Password">
-								<label for="password">Password</label>
+								<label for="password">Password <span class="required">*</span></label>
 								<div class="invalid-feedback px-1"></div>
 							</div>
 							<div class="row">
@@ -244,7 +245,9 @@
 			form.querySelector(".modal-footer button[type=submit]").innerText = user ? "Update" : "Create";
 			form.querySelector("#user-info-tab").innerText = user?.username || "New User";
 			form.setAttribute("userid", user?.id || "create");
-			form.querySelector("#delete-label").classList.toggle("d-none", user ? false : true);
+			form.querySelector("#delete-label").classList.toggle("d-none", !user);
+			form.querySelector("#last_login").closest(".row").classList.toggle("d-none", !user);
+			for (let x of form.querySelectorAll(".required")) x.classList.toggle("d-none", !!user);
 			if (!user) return;
 
 			for (let key in user) {

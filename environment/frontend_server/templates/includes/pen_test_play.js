@@ -34,17 +34,19 @@ let execute_count;
 		const form = e.target;
 		const step = form.step?.value?.trim();
 		const speed = form.speed?.value?.trim() || "";
-		location.replace(`{% url 'pen_testing' pen_code %}${step}/${speed}`);
+		location.replace(`{% url 'pen_test' pen_code %}${step}/${speed}`);
 	}
 
 	const stepChange = function(elem) {
-		elem.value = elem.value.replace(/[^0-9]/g, '');
+		let value = elem.value.replace(/[^0-9]/g, '');
+		value = Math.min(value, elem.getAttribute("max")*1);
+		elem.value = value;
 		if (!pause) return;
-		elem.value = Math.min(elem.value, {{ max_step }});
+		document.querySelector(`input#${elem.id == "step_range" ? "curr_step" : "step_range"}`).value = value;
 
-		apply_btn.classList.toggle('d-none', elem.value == elem.placeholder);
+		apply_btn.classList.toggle('d-none', value == elem.placeholder);
 		const currStep = elem.placeholder;
-		const newStep = elem.value;
+		const newStep = value;
 
 		const curr_datetime =  new Date( Date.parse(timebox.placeholder.replace(" at", ",")) + 10000*(newStep - currStep) );
 		timebox.value = curr_datetime.toLocaleTimeString("en-US", datetime_options);
@@ -60,14 +62,13 @@ const personaFocus = function(radio) {
 	const isActive = !box.classList.contains("d-none");
 	document.getElementById("temp_focus").innerHTML = isActive ? "" : p_name;
 	document.querySelector("#on_screen_det_content-init").classList.toggle("d-none", !isActive);
-	for (let x of box.parentNode.children) x.classList.add("d-none");
-	box.classList.toggle("d-none", isActive);
+	for (let x of box.parentNode.children) x.classList.toggle("d-none", x !== box || isActive);
 	radio.checked = !isActive;
 }
 
 
 
-const pen_testing_play = function(container) {
+const pen_test_play = function(container) {
 	const static = "{% static '' %}";
 	const maze_name = "{{ maze_name }}";
 
@@ -75,16 +76,15 @@ const pen_testing_play = function(container) {
 	const map_height = "{{ map.height }}" * 1;
 	const sec_per_step = "{{ sec_per_step }}" * 1;
 
-	const max_step = "{{ max_step }}" * 1;
+	let max_step = "{{ max_step }}" * 1;
 	const player_width = 40;
 	const playerDepth = mode === "tester" ? 1 : -1;
 
-	{% if mode != "tester" %}
-		const payload = {% if not payload %}{}{% else %}{{ payload.content | safe }}{% endif %};
-		const payload_step_max = 10;
-		let payload_step = payload_step_max;
-		let payload_count = 0;
-	{% endif %}
+	const payloads = {% if mode == "tester" or not payloads %}{}{% else %}{{ payloads | safe }}{% endif %};
+	const vuln_imoji = "\u2757\u2757";
+	let imoji_bak = "";
+	let vuln_imoji_count = 0;
+	const vuln_imoji_count_max = 10;
 
 
 
@@ -163,7 +163,6 @@ const pen_testing_play = function(container) {
 		let speech_bubbles = {};
 		let pronunciatios = {};
 		let anims_direction;
-		let pre_anims_direction;
 		let pre_anims_direction_dict = {};
 
 		// <tile_width> is the width of one individual tile (tiles are square)
@@ -202,15 +201,15 @@ const pen_testing_play = function(container) {
 	const offsets = {
 		"persona": [
 			0,
-			tile_width/2,
+			tile_width/2 - 8,
 		],
 		"speech_bubble": [
 			80,
 			-39,
 		],
 		"pronunciatio": [
-			1,
-			1,
+			0,
+			-1,
 		],
 	};
 
@@ -249,7 +248,7 @@ const pen_testing_play = function(container) {
 		for (let tileset of tilesets) {
 			this.load.image(tileset.name, static + "assets/{{ maze_name }}/visuals/" + tileset.path);
 		}
-		
+
 
 		// Joon: This is the export json file you get from Tiled.
 		this.load.tilemapTiledJSON("map", static + "assets/{{ maze_name }}/visuals/{{ maze_name }}.json");
@@ -360,31 +359,37 @@ const pen_testing_play = function(container) {
 				spawn_tile_loc[persona_name][0] * tile_width,
 				spawn_tile_loc[persona_name][1] * tile_width,
 			];
+
 			let new_sprite = this.physics.add.sprite(start_pos[0], start_pos[1], persona_name, "down").setOffset(offsets["persona"][0], offsets["persona"][1]);
 			// Scale up the sprite
 			new_sprite.displayWidth = player_width;
 			new_sprite.scaleY = new_sprite.scaleX;
 
 			// Here, we are creating the persona and its pronunciatio sprites.
-			personas[persona_name] = new_sprite;
-			speech_bubbles[persona_name] = this.add.image(new_sprite.body.x + offsets["speech_bubble"][0], new_sprite.body.y + offsets["speech_bubble"][1], 'speech_bubble').setDepth(3);
-			speech_bubbles[persona_name].displayWidth = 140;
-			speech_bubbles[persona_name].displayHeight = 58;
+			let new_speech_bubble = this.add.image(new_sprite.body.x + offsets["speech_bubble"][0], new_sprite.body.y + offsets["speech_bubble"][1], 'speech_bubble').setDepth(3);
+			new_speech_bubble.displayWidth = 140;
+			new_speech_bubble.displayHeight = 58;
 
-			pronunciatios[persona_name] = this.add.text(
-				speech_bubbles[persona_name].x - speech_bubbles[persona_name].displayWidth/2 + offsets["pronunciatio"][0],
-				speech_bubbles[persona_name].y - speech_bubbles[persona_name].displayHeight/2 + offsets["pronunciatio"][1],
+			let pronunciatios_size = parseFloat(getComputedStyle(container).getPropertyValue("font-size")) * 1.5;
+			let pronunciatios_padding = (new_speech_bubble.displayHeight/11*8)/2 - pronunciatios_size/2;
+			let new_pronunciatios = this.add.text(
+				new_speech_bubble.x - new_speech_bubble.displayWidth/2 + offsets["pronunciatio"][0],
+				new_speech_bubble.y - new_speech_bubble.displayHeight/2 + offsets["pronunciatio"][1],
 				"🦁", {
-					font: "24px monospace",
+					font: `${pronunciatios_size}px monospace`,
 					fill: "#000000",
 					padding: {
-						x: 8,
-						y: 8,
+						x: pronunciatios_padding,
+						y: pronunciatios_padding,
 					},
 					border: "solid",
 					borderRadius: "10px",
 				},
 			).setDepth(3);
+
+			personas[persona_name] = new_sprite;
+			speech_bubbles[persona_name] = new_speech_bubble;
+			pronunciatios[persona_name] = new_pronunciatios;
 		}
 
 		// Create the player's walking animations from the texture atlas. These are
@@ -427,7 +432,7 @@ const pen_testing_play = function(container) {
 			});
 		}
 
-	
+
 		// A range of coordinates that can be moved by the camera
 		this.minX = camera.width / 2;
 		this.maxX = map.widthInPixels - this.minX;
@@ -465,17 +470,17 @@ const pen_testing_play = function(container) {
 
 
 	function update(time, delta) {
-		// *** SETUP PLAY AND PAUSE BUTTON *** 
+		// *** SETUP PLAY AND PAUSE BUTTON ***
 		// let play_context = this;
-		// function game_resume() {  
+		// function game_resume() {
 		// 	play_context.scene.resume();
-		// }  
+		// }
 		// play_button.onclick = function(){
 		// 	game_resume();
 		// };
-		// function game_pause() {  
+		// function game_pause() {
 		// 	play_context.scene.pause();
-		// }  
+		// }
 		// pause_button.onclick = function(){
 		// 	game_pause();
 		// };
@@ -621,6 +626,22 @@ const pen_testing_play = function(container) {
 	};
 
 
+
+	const setPronunciatio_content = function(curr_persona_name_os, pronunciatio_content) {
+		// This is what gives the pronunciatio balloon the name initials. We
+		// use regex to extract the initials of the personas.
+		// E.g., "Dolores Murphy" -> "DM"
+		let rgx = new RegExp(/(\p{L}{1})\p{L}+/, 'gu');
+		let initials = [...curr_persona_name_os.matchAll(rgx)] || [];
+		initials = (
+			(initials.shift()?.[1] || '') + (initials.pop()?.[1] || '')
+		).toUpperCase();
+
+		pronunciatios[curr_persona_name_os].setText(initials + ": " + pronunciatio_content);
+		document.getElementById("quick_emoji-" + curr_persona_name_os).innerHTML = pronunciatio_content;
+	}
+
+
 	const action = function(movements, curr_time) {
 		if (!movements) return;
 
@@ -649,15 +670,7 @@ const pen_testing_play = function(container) {
 					let description_content = p_movement["description"];
 					let chat_content_raw = p_movement["chat"];
 
-					// This is what gives the pronunciatio balloon the name initials. We
-					// use regex to extract the initials of the personas.
-					// E.g., "Dolores Murphy" -> "DM"
-					let rgx = new RegExp(/(\p{L}{1})\p{L}+/, 'gu');
-					let initials = [...curr_persona_name.matchAll(rgx)] || [];
-					initials = (
-						(initials.shift()?.[1] || '') + (initials.pop()?.[1] || '')
-					).toUpperCase();
-					pronunciatios[curr_persona_name_os].setText(initials + ": " + pronunciatio_content);
+					setPronunciatio_content(curr_persona_name_os, pronunciatio_content);
 
 					let chat_content = "";
 					if (chat_content_raw != null) {
@@ -669,7 +682,6 @@ const pen_testing_play = function(container) {
 					}
 
 					// Filling in the action description.
-					document.getElementById("quick_emoji-" + curr_persona_name_os).innerHTML = pronunciatio_content;
 					document.getElementById("current_action__" + curr_persona_name_os).innerHTML = description_content.split("@")[0];
 					document.getElementById("target_address__" + curr_persona_name_os).innerHTML = description_content.split("@")[1];
 					document.getElementById("chat__" + curr_persona_name_os).innerHTML = chat_content;
@@ -686,6 +698,10 @@ const pen_testing_play = function(container) {
 			} else {
 				animation.stop(curr_persona, curr_persona_name_os);
 			}
+		}
+
+		if (execute_count <= 0) {
+			setPayloadByStep(movements["Black Hacker"]?.["pronunciatio"]);
 		}
 
 		if (mode == "compressed" && execute_count <= 0) {
@@ -710,96 +726,69 @@ const pen_testing_play = function(container) {
 		execute_count = execute_count_max + 1;
 		step = step + 1;
 
-		if (max_step < step) return;
-		document.querySelector("#curr_step").value = step;
-		document.querySelector("#curr_step").placeholder = step;
-		{% if mode != "tester" %}insertPayload();{% endif %}
+		if (mode == "compressed" && max_step < step) return;
+		max_step = Math.max(max_step, step);
+		for (let x of document.querySelectorAll("#curr_step, #step_range")) {
+			x.value = step;
+			x.placeholder = step;
+			x.setAttribute("max", max_step);
+		}
 	}
 
 
 	const animation = {
 		start: function(curr_persona, curr_speech_bubble, curr_pronunciatio, p_name_os) {
+			let anims_direction;
 			if (curr_persona.body.x < movement_target[p_name_os][0]) {
-				curr_persona.body.x += movement_speed;
-				anims_direction = "r";
-				pre_anims_direction = "r"
-				pre_anims_direction_dict[p_name_os] = "r"
+				anims_direction = "right";
 			} else if (curr_persona.body.x > movement_target[p_name_os][0]) {
-				curr_persona.body.x -= movement_speed;
-				anims_direction = "l";
-				pre_anims_direction = "l"
-				pre_anims_direction_dict[p_name_os] = "l"
+				anims_direction = "left";
 			} else if (curr_persona.body.y < movement_target[p_name_os][1]) {
-				curr_persona.body.y += movement_speed;
-				anims_direction = "d";
-				pre_anims_direction = "d"
-				pre_anims_direction_dict[p_name_os] = "d"
+				anims_direction = "down";
 			} else if (curr_persona.body.y > movement_target[p_name_os][1]) {
-				curr_persona.body.y -= movement_speed;
-				anims_direction = "u";
-				pre_anims_direction = "u"
-				pre_anims_direction_dict[p_name_os] = "u"
+				anims_direction = "up";
 			} else {
-				anims_direction = "";
+				return;
 			}
+
+			let isX = ["right", "left"].includes(anims_direction);
+			let isPlus = ["right", "down"].includes(anims_direction);
+			curr_persona.body[isX ? "x" : "y"] += movement_speed * (isPlus ? 1 : -1);
 
 			curr_speech_bubble.x = curr_persona.body.x + offsets["speech_bubble"][0];
 			curr_speech_bubble.y = curr_persona.body.y + offsets["speech_bubble"][1];
 			curr_pronunciatio.x = curr_speech_bubble.x - curr_speech_bubble.displayWidth/2 + offsets["pronunciatio"][0];
 			curr_pronunciatio.y = curr_speech_bubble.y - curr_speech_bubble.displayHeight/2 + offsets["pronunciatio"][1];
 
-			let left_walk_name = p_name_os + "-left-walk";
-			let right_walk_name = p_name_os + "-right-walk";
-			let down_walk_name = p_name_os + "-down-walk";
-			let up_walk_name = p_name_os + "-up-walk";
-			if (anims_direction == "l") {
-				curr_persona.anims.play(left_walk_name, true);
-			} else if (anims_direction == "r") {
-				curr_persona.anims.play(right_walk_name, true);
-			} else if (anims_direction == "u") {
-				curr_persona.anims.play(up_walk_name, true);
-			} else if (anims_direction == "d") {
-				curr_persona.anims.play(down_walk_name, true);
-			} else {
-				return false;
-			}
+			pre_anims_direction_dict[p_name_os] = anims_direction;
+			curr_persona.anims.play(`${p_name_os}-${anims_direction}-walk`, true);
 		},
 		stop: function(curr_persona, p_name_os) {
 			curr_persona.anims.stop();
 
 			// If we were moving, pick an idle frame to use
-			if (pre_anims_direction_dict[p_name_os] == "l") curr_persona.setTexture(p_name_os, "left"); else
-			if (pre_anims_direction_dict[p_name_os] == "r") curr_persona.setTexture(p_name_os, "right"); else
-			if (pre_anims_direction_dict[p_name_os] == "u") curr_persona.setTexture(p_name_os, "up"); else
-			if (pre_anims_direction_dict[p_name_os] == "d") curr_persona.setTexture(p_name_os, "down");
+			curr_persona.setTexture(p_name_os, pre_anims_direction_dict[p_name_os]);
 		}
 	}
 
-	const insertPayload = function() {
-		const pos = [personas["Black_Hacker"].body.x / 32, personas["Black_Hacker"].body.y / 32];
-		if (payload_step == 0) {
-			document.querySelector("#curr_payload").value = "";
-		}
+	const setPayloadByStep = function(pronunciatio_content) {
+		const data = payloads[step];
+		const input = document.querySelector("#curr_payload");
+		const isVuln = data?.observations == "exploit_successful";
+		vuln_imoji_count = isVuln ? vuln_imoji_count_max : Math.max(vuln_imoji_count-1, -1);
 
-		switch(`${pos}`) {
-			case "10,6":
-			case "7,13":
-			case "7,14":
-			case "10,13":
-			case "10,15":
-			// default:
-				if (payload_step <= 0) {
-					const item = payload["http://192.168.10.10/dvwa/vulnerabilities/sqli/"]?.basic;
-					const data = item[payload_count % item.length];
-					document.querySelector("#curr_payload").value = data.payload;
+		input.value = data?.payload || "-";
+		input.classList.toggle("text-danger", isVuln);
+		input.classList.toggle("focus", isVuln);
 
-					setPayload(document.querySelector("table"), data, true);
+		imoji_bak = pronunciatio_content || imoji_bak;
+		if (vuln_imoji_count != -1) setPronunciatio_content("Black_Hacker", vuln_imoji_count != 0 ? vuln_imoji : imoji_bak);
+		insertPayloadTable(document.querySelector("table"), {url: data?.url, data, reverse: true});
+	}
 
-					payload_count += 1;
-					payload_step = payload_step_max;
-				}
-		}
-		payload_step -= 1;
+	for (let i=1; i<step; i++) {
+		const data = payloads[i];
+		insertPayloadTable(document.querySelector("table"), {url: data?.url, data, reverse: true});
 	}
 
 	return game;
@@ -808,7 +797,7 @@ const pen_testing_play = function(container) {
 
 
 const gameContainer = document.querySelector("#game-container");
-const game = pen_testing_play(gameContainer);
+const game = pen_test_play(gameContainer);
 const canvas_resizing = function(size) {
 	const canvas = gameContainer.querySelector("canvas");
 	if (!canvas) return;

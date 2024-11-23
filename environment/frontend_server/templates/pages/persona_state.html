@@ -5,196 +5,223 @@
 
 
 <h3 class="container-lg mx-auto mt-5 px-0 pt-5 pb-3">
-	<a href="{{ request.META.HTTP_REFERER }}">&lt; Return to simulation</a>
+	<a href="{{ request.META.HTTP_REFERER }}"></a>
+	<label role="button" class="link-secondary">
+		&lt; Return to simulation
+		<button type="button" onclick="history.back()" hidden></button>
+	</label>
 </h3>
 
+<section id="state-container" class="container-lg">
+	<select class="form-select" onchange="history.replaceState(null, '', `?p=${this.value}`); for (let x of document.querySelectorAll(`article`)) x.classList.toggle('d-none', x.id != `statebox-${this.value}`)">{% for p in states %}
+		<option value="{{ p.p_name_os }}"{% if not persona_name and forloop.counter == 1 or persona_name and persona_name == p.p_name_os %} selected{% endif %}>{{ p.p_name }}</option>
+	{% endfor %}</select>
 
-<div class="container-lg bg-body d-flex gap-5 mx-auto my-4 p-5 rounded-4">
-	<div class="flex-shrink-0">
-		<a href="#">
-			{% with 'assets/characters/profile/'|add:persona_name_underscore|add:'.png' as image_static %}
-				<img src="{% static image_static %}" style="width: 5em">
-			{% endwith %}
-		</a>
-	</div>
-	<div class="flex-shrink-1 p-0">
-		<div class="row">
-			<h1 class="col-md-8 mb-4 fs-2">
-				{{ persona_name }}
-			</h1>
-		</div>
+	{% for p in states %}<article class="d-flex align-items-start gap-5 bg-body mx-auto shadow rounded-4 my-3 p-4{% if not persona_name and forloop.counter != 1 or persona_name and persona_name != p.p_name_os %} d-none{% endif %}" id="statebox-{{ p.p_name_os }}">
 		<div>
-			<h3 class="fs-3"><strong>Basic information</strong></h3>
-			<table class="w-100 fs-5">
-				<tr>
-					<td class="fw-bolder" style="width: 20%">First name</td>
-					<td>{{ scratch.first_name }}</td>
-				</tr>
-				<tr>
-					<td class="fw-bolder">Last name</td>
-					<td>{{ scratch.last_name }}</td>
-				</tr>
-				<tr>
-					<td class="fw-bolder">Age</td>
-					<td>{{ scratch.age }}</td>
-				</tr>
-				<tr>
-					<td class="fw-bolder">Current time</td>
-					<td>{{ scratch.curr_time }}</td>
-				</tr>
-				<tr>
-					<td class="fw-bolder">Current tile</td>
-					<td>{{ scratch.curr_tile }}</td>
-				</tr>
-			</table>
-
-			<hr>
-
-			<h3 class="fs-3"><strong>Settings</strong></h3>
-			<table class="w-100 fs-5">
-				<tr>
-					<td class="fw-bolder" style="width: 20%">Vision Radius</td>
-					<td>{{ scratch.vision_r }}</td>
-				</tr>
-				<tr>
-					<td class="fw-bolder">Attention Bandwidth</td>
-					<td>{{ scratch.att_bandwidth }}</td>
-				</tr>
-				<tr>
-					<td class="fw-bolder">Retention</td>
-					<td>{{ scratch.retention }}</td>
-				</tr>
-			</table>
-
-			<hr>
-
-			<h3 class="fs-3"><strong>Personality and Lifestyle</strong></h3>
-			<table class="w-100 fs-5">
-				<tr>
-					<td class="fw-bolder">Innate tendency</td>
-					<td>{{ scratch.innate }}</td>
-				</tr>
-				<tr>
-					<td class="fw-bolder">Learned tendency</td>
-					<td>{{ scratch.learned }}</td>
-				</tr>
-				<tr>
-					<td class="fw-bolder">Currently</td>
-					<td>{{ scratch.currently }}</td>
-				</tr>
-				<tr>
-					<td class="fw-bolder">Lifestyle</td>
-					<td>{{ scratch.lifestyle }}</td>
-				</tr>
-			</table>
-
-			<hr>
-
-			<h3 class="fs-3"><strong>Current Action State</strong></h3>
-			<table class="w-100 fs-5">
-				<tr>
-					<td class="fw-bolder" style="width:20%">Daily Requirement</td>
-					<td>
-						<ol>
-							{% for i in scratch.daily_req %}
-								<li>{{ i }}</li>
-							{% endfor %}
-						</ol>
-					</td>
-				</tr>
-				<tr>
-					<td class="fw-bolder">Daily Schedule</td>
-					<td>
-						<ol>
-							{% for i in scratch.f_daily_schedule %}
-								<li>{{ i }}</li>
-							{% endfor %}
-						</ol>
-					</td>
-				</tr>
-				<tr>
-					<td class="fw-bolder">Action Address</td>
-					<td>{{ scratch.act_address }}</td>
-				</tr>
-				<tr>
-					<td class="fw-bolder">Action Start Time</td>
-					<td>{{ scratch.act_start_time }}</td>
-				</tr>
-				<tr>
-					<td class="fw-bolder">Action Duration</td>
-					<td>{{ scratch.act_duration }}</td>
-				</tr>
-				<tr>
-					<td class="fw-bolder">Action Description</td>
-					<td>{{ scratch.act_description }}</td>
-				</tr>
-				<tr>
-					<td class="fw-bolder">Action Pronunciatio</td>
-					<td>{{ scratch.act_pronunciatio }}</td>
-				</tr>
-			</table>
-
-			<hr>
-
-			<h3 class="fs-3"><strong>Agent's Memory</strong></h3>
-			<h4 class="fs-4"><strong>Event</strong></h4>
-			<div class="w-100">
-				{% for node_details in a_mem_event %}
-					<p>
-						<!-- <strong>Node ID: node_{{ node_details.node_count }}</strong><br> -->
-						<!-- Node Count: {{ node_details.node_count }} ||  -->
-						<!-- Type Count: {{ node_details.type_count }}  -->
-						<!-- <br> -->
-						[node_{{ node_details.node_count }}] {{ node_details.created }}: <strong>{{ node_details.description }}</strong>
-						<!-- || -->
-						<!-- Expiration: {{ node_details.expiration }} -->
-						<!-- <br> -->
-						<!-- S, P, O
-							node_details.subject ,
-							node_details.predicate ,
-							node_details.object
-							<br>
-						-->
-						<!-- Description: {{ node_details.description }} -->
-						<!-- <br> -->
-						<!-- Keywords: {{ node_details.keywords }} -->
-						<!-- <br> -->
-						<!-- Filling: {{ node_details.filling }} -->
-					</p>
-				{% endfor %}
-			</div>
-			<br>
-
-
-			<h4 class="fs-4"><strong>Agent's Conversation History</strong></h4>
-			<div class="w-100">
-				{% for node_details in a_mem_chat %}
-					<p>
-						Created: {{ node_details.created }}
-						<br>
-						Description: {{ node_details.description }}
-						<br>
-						Filling: <br>
-						{% for name, utt in node_details.filling %}
-							<span style="font-style: italic;">{{ name }}</span>: {{ utt }}<br>
-						{% endfor %}
-					</p>
-				{% endfor %}
-			</div>
-			<br>
-
-			<h4 class="fs-4"><strong>Agent's Thought</strong></h4>
-			<div class="w-100">
-				{% for node_details in a_mem_thought %}
-					<p>
-						[node_{{ node_details.node_count }}] {{ node_details.created }}: <strong>{{ node_details.description }}</strong>
-						<br>(Depth: {{ node_details.depth }}; Evidence: {{ node_details.filling }})
-					</p>
-				{% endfor %}
-			</div>
-			<br>
+			<img src="{% static 'assets/characters/profile' %}/{{ p.p_name_os }}.png" style="width: 5em">
 		</div>
-	</div>
-</div>
+		<div class="flex-grow-1 p-0">
+			<h2 class="border border-top-0 border-start-0 border-end-0 pb-3">{{ p.p_name }}</h2>
+			<section class="mt-4">
+				<h3>Basic information</h3>
+				<table class="table table-sm table-bordered table-hover m-0 position-relative">
+					<tr>
+						<th class="minimum text-center text-nowrap" scope="row">Pen Code</th>
+						<td>{{ pen_code }}</td>
+					</tr>
+					<tr>
+						<th class="minimum text-center text-nowrap" scope="row">First name</th>
+						<td>{{ p.scratch.first_name }}</td>
+					</tr>
+					<tr>
+						<th class="minimum text-center text-nowrap" scope="row">Last name</th>
+						<td>{{ p.scratch.last_name }}</td>
+					</tr>
+					<tr>
+						<th class="minimum text-center text-nowrap" scope="row">Age</th>
+						<td>{{ p.scratch.age }}</td>
+					</tr>
+					<tr>
+						<th class="minimum text-center text-nowrap" scope="row">Current time</th>
+						<td>{{ p.scratch.curr_time }}</td>
+					</tr>
+					<tr>
+						<th class="minimum text-center text-nowrap" scope="row">Current tile</th>
+						<td>{{ p.scratch.curr_tile }}</td>
+					</tr>
+				</table>
+			</section>
+
+			<section class="mt-4">
+				<h3>Settings</h3>
+				<table class="table table-sm table-bordered table-hover m-0 position-relative">
+					<tr>
+						<th class="minimum text-center text-nowrap" scope="row">Vision Radius</th>
+						<td>{{ p.scratch.vision_r }}</td>
+					</tr>
+					<tr>
+						<th class="minimum text-center text-nowrap" scope="row">Attention Bandwidth</th>
+						<td>{{ p.scratch.att_bandwidth }}</td>
+					</tr>
+					<tr>
+						<th class="minimum text-center text-nowrap" scope="row">Retention</th>
+						<td>{{ p.scratch.retention }}</td>
+					</tr>
+				</table>
+			</section>
+
+			<section class="mt-4">
+				<h3>Personality and Lifestyle</h3>
+				<table class="table table-sm table-bordered table-hover m-0 position-relative">
+					<tr>
+						<th class="minimum text-center text-nowrap" scope="row">Innate tendency</th>
+						<td>{{ p.scratch.innate }}</td>
+					</tr>
+					<tr>
+						<th class="minimum text-center text-nowrap" scope="row">Learned tendency</th>
+						<td>{{ p.scratch.learned }}</td>
+					</tr>
+					<tr>
+						<th class="minimum text-center text-nowrap" scope="row">Currently</th>
+						<td>{{ p.scratch.currently }}</td>
+					</tr>
+					<tr>
+						<th class="minimum text-center text-nowrap" scope="row">Lifestyle</th>
+						<td>{{ p.scratch.lifestyle }}</td>
+					</tr>
+				</table>
+			</section>
+
+			<section class="mt-4">
+				<h3>Current Action State</h3>
+				<table class="table table-sm table-bordered table-hover m-0 position-relative">
+					<tr>
+						<th class="minimum text-center text-nowrap" scope="row">Daily Requirement</th>
+						<td>
+							<ol>
+								{% for i in p.scratch.daily_req %}
+									<li><script type="text/javascript">document.write(mdToHTML(`{{ i }}`))</script></li>
+								{% endfor %}
+							</ol>
+						</td>
+					</tr>
+					<tr>
+						<th class="minimum text-center text-nowrap" scope="row">Daily Schedule</th>
+						<td>
+							<ol>
+								{% for i in p.scratch.f_daily_schedule %}
+									<li>{{ i }}</li>
+								{% endfor %}
+							</ol>
+						</td>
+					</tr>
+					<tr>
+						<th class="minimum text-center text-nowrap" scope="row">Action Address</th>
+						<td>{{ p.scratch.act_address }}</td>
+					</tr>
+					<tr>
+						<th class="minimum text-center text-nowrap" scope="row">Action Start Time</th>
+						<td>{{ p.scratch.act_start_time }}</td>
+					</tr>
+					<tr>
+						<th class="minimum text-center text-nowrap" scope="row">Action Duration</th>
+						<td>{{ p.scratch.act_duration }}</td>
+					</tr>
+					<tr>
+						<th class="minimum text-center text-nowrap" scope="row">Action Description</th>
+						<td>{{ p.scratch.act_description }}</td>
+					</tr>
+					<tr>
+						<th class="minimum text-center text-nowrap" scope="row">Action Pronunciatio</th>
+						<td>{{ p.scratch.act_pronunciatio }}</td>
+					</tr>
+				</table>
+			</section>
+
+			<section class="mt-4">
+				<h3>Agent's Memory</h3>
+				<table class="table table-sm table-bordered table-hover m-0 position-relative mb-4">
+					{% for node_details in p.a_mem_event %}<tr>
+						{% if forloop.counter == 1 %}<th class="minimum text-center text-nowrap" scope="row" rowspan="{{ p.a_mem_event | length }}">Event</th>{% endif %}
+						<td class="p-0"><table class="sub table table-sm table-borderless table-hover m-0 position-relative"><tbody>
+							<tr>
+								<th class="minimum text-center text-nowrap" scope="row">{{ forloop.revcounter }}</th>
+								<td class="p-0"><table class="sub table table-sm table-borderless table-hover m-0 position-relative"><tbody>
+									<tr>
+										<th class="minimum text-center text-nowrap" scope="row">Node ID</th>
+										<td>node_{{ node_details.node_count }}</td>
+									</tr>
+									<tr>
+										<th class="minimum text-center text-nowrap" scope="row">Node Count</th>
+										<td>{{ node_details.node_count }}</td>
+									</tr>
+									<tr>
+										<th class="minimum text-center text-nowrap" scope="row">Type Count</th>
+										<td>{{ node_details.type_count }}</td>
+									</tr>
+									<tr>
+										<th class="minimum text-center text-nowrap" scope="row">Type Count</th>
+										<td>{{ node_details.type_count }}</td>
+									</tr>
+									<tr>
+										<th class="minimum text-center text-nowrap" scope="row">Created</th>
+										<td>{{ node_details.created }}</td>
+									</tr>
+									<tr>
+										<th class="minimum text-center text-nowrap" scope="row">Expiration</th>
+										<td>{{ node_details.expiration }}</td>
+									</tr>
+									<tr>
+										<th class="minimum text-center text-nowrap" scope="row">Description</th>
+										<td>{{ node_details.description }}</td>
+									</tr>
+									<tr>
+										<th class="minimum text-center text-nowrap" scope="row">Keywords</th>
+										<td>{{ node_details.keywords }}</td>
+									</tr>
+									<tr>
+										<th class="minimum text-center text-nowrap" scope="row">Filling</th>
+										<td>{{ node_details.filling }}</td>
+									</tr>
+								</tbody></table></td>
+							</tr>
+						</tbody></table></td>
+					</tr>{% endfor %}
+					{% for node_details in p.a_mem_thought %}<tr>
+						{% if forloop.counter == 1 %}<th class="minimum text-center text-nowrap" scope="row" rowspan="{{ p.a_mem_thought | length }}">Agent's Thought</th>{% endif %}
+						<td class="p-0"><table class="sub table table-sm table-borderless table-hover m-0 position-relative"><tbody>
+							<tr>
+								<th class="minimum text-center text-nowrap" scope="row">{{ forloop.revcounter }}</th>
+								<td class="p-0"><table class="sub table table-sm table-borderless table-hover m-0 position-relative"><tbody>
+									<tr>
+										<th class="minimum text-center text-nowrap" scope="row">Node ID</th>
+										<td>node_{{ node_details.node_count }}</td>
+									</tr>
+									<tr>
+										<th class="minimum text-center text-nowrap" scope="row">Created</th>
+										<td>{{ node_details.created }}</td>
+									</tr>
+									<tr>
+										<th class="minimum text-center text-nowrap" scope="row">Depth</th>
+										<td>{{ node_details.depth }}</td>
+									</tr>
+									<tr>
+										<th class="minimum text-center text-nowrap" scope="row">Evidence</th>
+										<td>{{ node_details.filling }}</td>
+									</tr>
+									<tr>
+										<th class="minimum text-center text-nowrap" scope="row">Description</th>
+										<td><script type="text/javascript">document.write(mdToHTML(`{{ node_details.description }}`))</script></td>
+									</tr>
+								</tbody></table></td>
+							</tr>
+						</tbody></table></td>
+					</tr>{% endfor %}
+				</table>
+			</section>
+		</div>
+	</article>{% endfor %}
+</section>
 
 {% endblock %}

@@ -6,9 +6,9 @@
 {% block content %}
 
 <div id="temp_focus" hidden></div>
-<div class="my-3 fs-5  text-center">
+<div class="my-3 fs-5 text-center">
 	<h1 class="fs-5 fw-semibold">{{ pen_code }}</h1>
-	{% if running %}<div class="mt-2 fw-semibold text-success">
+	{% if running %}<div id="backend_state" class="mt-2 fw-semibold text-success">
 		Running on the backend
 	</div>{% endif %}
 </div>
@@ -25,8 +25,8 @@
 	</li>
 </ul>{% endif %}
 
-<div class="tab-content">
-	<div class="tab-pane fade show active" id="pen-testing" role="tabpanel" aria-labelledby="pen-testing-tab" tabindex="0">
+<div class="tab-content{% if mode == "preview" %} container-lg{% endif %}">
+	<div class="tab-pane fade show active"{% if mode == "preview" %} style="--width: 100%"{% endif %} id="pen-testing" role="tabpanel" aria-labelledby="pen-testing-tab" tabindex="0">
 		<section class="bg-body shadow rounded-bottom-4 my-3">
 			<div id="game-container" class="text-center"></div>
 			<div id="controller" class="container-lg p-4">
@@ -73,65 +73,52 @@
 			</div>
 		</section>
 
-		{% if mode == "preview" %}
-			{% if map.list %}
-				<section class="d-flex justify-content-center align-items-center">
-					<div>
-						List of other maps:
-						<ol>{% for map in map.list %}{% if map != maze_name %}
-							<li><a href="{% url 'pen_preview' map %}">{{ map }}</a></li>
-						{% endif %}{% endfor %}</ol>
+		<section class="bg-body shadow rounded-4 my-3 p-4">
+			<form id="trigger-container" class="d-flex flex-wrap justify-content-center column-gap-5 row-gap-3" onsubmit="return false">{% for p in persona_names %}
+				<input type="radio" class="btn-check" name="on_screen_det_trigger" id="on_screen_det_trigger-{{p.underscore}}" autocomplete="off" onclick="personaFocus(this)" hidden>
+				<label role="button" class="btn btn-outline-success rounded-4 px-4 py-3" for="on_screen_det_trigger-{{p.underscore}}">
+					<div class="d-flex gap-3">
+						<div class="d-flex flex-column align-items-center" id="on_screen_det_trigger_container-{{p.underscore}}">
+							{% with 'assets/characters/profile/'|add:p.underscore|add:'.png' as image_static %}
+								<img src="{% static image_static %}" class="p-0" style="width: 46px">
+							{% endwith %}
+							<span>{{ p.initial }}</span>
+						</div>
+						<div id="quick_emoji-{{p.underscore}}" class="fs-4" style="width: 64px"></div>
 					</div>
-				</section>
-			{% endif %}
-		{% else %}
-			<section class="bg-body shadow rounded-4 my-3 p-4">
-				<div id="trigger-container" class="d-flex flex-wrap justify-content-center column-gap-5 row-gap-3">{% for p in persona_names %}
-					<input type="radio" class="btn-check" name="on_screen_det_trigger" id="on_screen_det_trigger-{{p.underscore}}" autocomplete="off" onclick="personaFocus(this)" hidden>
-					<label role="button" class="btn btn-outline-success rounded-4 px-4 py-3" for="on_screen_det_trigger-{{p.underscore}}">
-						<div class="d-flex gap-3">
-							<div class="d-flex flex-column align-items-center" id="on_screen_det_trigger_container-{{p.underscore}}">
-								{% with 'assets/characters/profile/'|add:p.underscore|add:'.png' as image_static %}
-									<img src="{% static image_static %}" class="p-0" style="width: 46px">
-								{% endwith %}
-								<span>{{ p.initial }}</span>
-							</div>
-							<div id="quick_emoji-{{p.underscore}}" class="fs-4" style="width: 64px"></div>
-						</div>
-					</label>
-				{% endfor %}</div>
+				</label>
+			{% endfor %}</form>
 
-				<div id="persona-container">{% for p in persona_names %}
-					<div class="border-top d-flex align-items-center mt-3 pt-3 d-none" id="on_screen_det_content-{{p.underscore}}">
-						<div class="flex-shrink-0 d-none d-sm-block">
-							<div>
-								{% with 'assets/characters/profile/'|add:p.underscore|add:'.png' as image_static %}
-									<img src="{% static image_static %}" style="width: 5em"> 
-								{% endwith %}
-							</div>
-						</div>
-						<div class="flex-grow-1 ps-5">
-							<div class="row">
-								<h2 class="col-md-8 mb-3 fs-2" id="name__{{ p.underscore }}">
-									{{ p.original }}
-									<span class="fs-5">|</span>
-									<a href="{% url 'replay_persona_state' pen_code step p.underscore %}" class="fs-5">State Details</a>
-								</h2>
-							</div>
-							<div class="mt-3">
-								<p class="fs-5"><strong>Current Action:</strong> <br><span id="current_action__{{ p.underscore }}"></span></p>
-								<p class="fs-5"><strong>Location:</strong> <br><span id="target_address__{{ p.underscore }}"></span></p>
-								<p class="fs-5"><strong>Current Conversation:</strong> <br><span id="chat__{{ p.underscore }}"></span></p>
-							</div>
+			{% if mode != "preview" %}<div id="persona-container">{% for p in persona_names %}
+				<div class="border-top d-flex align-items-center mt-3 pt-3 d-none" id="on_screen_det_content-{{p.underscore}}">
+					<div class="flex-shrink-0 d-none d-sm-block">
+						<div>
+							{% with 'assets/characters/profile/'|add:p.underscore|add:'.png' as image_static %}
+								<img src="{% static image_static %}" style="width: 5em"> 
+							{% endwith %}
 						</div>
 					</div>
-				{% endfor %}</div>
-			</section>
+					<div class="flex-grow-1 ps-5">
+						<div class="row">
+							<h2 class="col-md-8 mb-3 fs-2" id="name__{{ p.underscore }}">
+								{{ p.original }}
+								<span class="fs-5">|</span>
+								<a href="{% url 'persona_state' pen_code %}?p={{ p.underscore }}" class="fs-5">State Details</a>
+							</h2>
+						</div>
+						<div class="mt-3">
+							<p class="fs-5"><strong>Current Action:</strong> <br><span id="current_action__{{ p.underscore }}"></span></p>
+							<p class="fs-5"><strong>Location:</strong> <br><span id="target_address__{{ p.underscore }}"></span></p>
+							<p class="fs-5"><strong>Current Conversation:</strong> <br><span id="chat__{{ p.underscore }}"></span></p>
+						</div>
+					</div>
+				</div>
+			{% endfor %}</div>
+		</section>{% endif %}
 
-			<section id="on_screen_det_content-init" class="py-3 text-center">
-				<em>Click on one of the character sprites to see its current state in more detail.</em>
-			</section>
-		{% endif %}
+		{% if mode != "preview" %}<section id="on_screen_det_content-init" class="py-3 text-center">
+			<em>Click on one of the character sprites to see its current state in more detail.</em>
+		</section>{% endif %}
 	</div>
 
 	{% if mode != "preview" %}
@@ -152,7 +139,7 @@
 
 <script src='https://cdn.jsdelivr.net/npm/phaser@3.85.2/dist/phaser.js'></script>
 <script type="text/javascript">
-	document.querySelector(`#payload-table-container`).append(createPayloadTable("{{ pen_code }}", {style: {"min-height": "500px"}}));
+	document.querySelector(`#payload-table-container`)?.append(createPayloadTable("{{ pen_code }}", {style: {"min-height": "500px", "max-height": "750px"}}));
 
 	{% include "includes/pen_test_play.js" %}
 </script>

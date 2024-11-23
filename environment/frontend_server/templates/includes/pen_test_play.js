@@ -9,15 +9,11 @@ const mode = ["forkable", "compressed"].includes("{{ mode }}") ? "{{ mode }}" : 
 const canvas_ratio = 8/15;
 const tile_width = "{{ tile_width }}" * 1;
 const timebox = document.getElementById("game-time-content");
-const datetime_options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
 let camera_zoom = 1;
 let movement_speed;
 let execute_count_max;
 let execute_count;
-
-const toLocaleTimeString = function(datetime) {
-	return datetime.toLocaleTimeString("en-US", datetime_options)
-}
+let curr_focused_persona;
 
 const apply_speed = function(speed=2, min=1, max=6) {
 	if (!speed || speed < min) speed = min;
@@ -60,21 +56,24 @@ const apply_speed = function(speed=2, min=1, max=6) {
 {% endif %}
 
 const personaFocus = function(radio) {
-	let p_name = radio.id.split("-");
-	p_name = p_name[p_name.length-1];
 	radio.blur();
 
-	const box = document.querySelector(`#on_screen_det_content-${p_name}`);
-	const isActive = !box.classList.contains("d-none");
-	document.getElementById("temp_focus").innerHTML = isActive ? "" : p_name;
-	document.querySelector("#on_screen_det_content-init").classList.toggle("d-none", !isActive);
-	for (let x of box.parentNode.children) x.classList.toggle("d-none", x !== box || isActive);
+	const p_name = radio.id.split("-").slice(1).join("-");
+	const isActive = !radio.classList.toggle("active");
+	curr_focused_persona = isActive ? "" : p_name;
 	radio.checked = !isActive;
+
+	const box = document.querySelector(`#on_screen_det_content-${p_name}`);
+	document.querySelector("#on_screen_det_content-init")?.classList.toggle("d-none", !isActive);
+	for (let x of document.querySelector("#trigger-container")["on_screen_det_trigger"]) if (x != radio) x.classList.remove("active");
+	if (box) for (let x of box.parentNode.children) x.classList.toggle("d-none", x !== box || isActive);
 }
 
 
 
 const pen_test_play = function(container) {
+	document.querySelector("#on_screen_det_trigger-Isabella_Rodriguez")?.click();
+	let isRunning = "{{ running }}".toLowerCase() == "true";
 	const maze_name = "{{ maze_name }}";
 
 	const map_width = "{{ map.width }}" * 1;
@@ -162,7 +161,6 @@ const pen_test_play = function(container) {
 	// 	spawn_tile_loc[key] = persona_names[key];
 	// }
 	const spawn_tile_loc = {{ persona_init_pos | safe }};
-	let curr_focused_persona;
 
 	let personas = {};
 	let speech_bubbles = {};
@@ -205,7 +203,7 @@ const pen_test_play = function(container) {
 	const layers = {{ map.layers | safe }};
 	const offsets = {
 		"persona": [
-			0,
+			4,
 			tile_width/2 - 8,
 		],
 		"speech_bubble": [
@@ -523,7 +521,6 @@ const pen_test_play = function(container) {
 		if (player.x > maxX) player.x = maxX;
 		if (player.y > maxY) player.y = maxY;
 
-		curr_focused_persona = document.getElementById("temp_focus").innerText.trim();
 		for (let x of document.querySelectorAll(`#pen-chattings .chat-container`)) {
 			x.classList.toggle("mychat", x.getAttribute("chat") == curr_focused_persona);
 		}
@@ -583,7 +580,7 @@ const pen_test_play = function(container) {
 		compressed: function() {
 			// *** MOVING PERSONAS ***
 			if (execute_count <= 0) start_datetime = new Date(start_datetime.getTime() + step_size);
-			action(all_movement[step], chats[step], start_datetime);
+			action(all_movement[step], chats[step], payloads[step], start_datetime);
 		},
 
 
@@ -592,15 +589,7 @@ const pen_test_play = function(container) {
 			// Moving personas take place in three distinct phases: "update" "await"
 			// and "execute". These phases are determined by the value of <phase>.
 			// Only one of the three phases is incurred in each update cycle.
-			if (phase == "payload") {
-				// Wait for a response from the WebSocket.
-				const data = ws_responses["get_payload_info"];
-				delete ws_responses["get_payload_info"];
-				if (!data) return;
-				max_step = data.max_step;
-				payloads = data.payloads || payloads;
-				phase = "update";
-			} else if (phase == "update") {
+			if (phase == "update") {
 				if (ws_connected !== true) return;
 				// Update is where we * wait * for the backend server to finish
 				// computing about what the personas will do next given their current
@@ -615,6 +604,7 @@ const pen_test_play = function(container) {
 					const data = {
 						"step": step,
 						"pen_code": pen_code,
+						"running": isRunning,
 					}
 					ws_send("update_environment", data);
 					phase = "await";
@@ -623,9 +613,21 @@ const pen_test_play = function(container) {
 			} else if (phase === "await") {
 				// Wait for a response from the WebSocket.
 				const data = ws_responses["update_environment"];
-				if (data?.step == step) {
-					execute_movement = data;
-					phase = "execute";
+				if (data?.step !== undefined) {
+					if (isRunning && data?.running !== true) {
+						isRunning = false;
+						play_button.click();
+						if (backend_state) {
+							backend_state.classList.add("text-danger");
+							backend_state.innerHTML = `Backend is Stopped`;
+						}
+					} else if (data.step == -1) {
+						phase = "update";
+					} else if (data.step === step) {
+						execute_movement = data;
+						max_step = data?.max_step || max_step;
+						phase = "execute";
+					}
 				}
 				timer = timer_max;
 			} else { // phase == execute
@@ -635,7 +637,7 @@ const pen_test_play = function(container) {
 				// The execute_count_max is computed by tile_width/movement_speed, which
 				// defines a one step sequence in this world.
 				let curr_time = new Date(execute_movement["meta"]["curr_time"]);
-				action(execute_movement["persona"], execute_movement["chats"][step], curr_time);
+				action(execute_movement["persona"], execute_movement["chats"], execute_movement["payload"], curr_time);
 			}
 		},
 	};
@@ -653,18 +655,24 @@ const pen_test_play = function(container) {
 			(initials.shift()?.[1] || '') + (initials.pop()?.[1] || '')
 		).toUpperCase();
 
+		pronunciatio_content = 0 < vuln_imoji_count[curr_persona_name] ? vuln_imoji : pronunciatio_content;
 		pronunciatios[curr_persona_name_os].setText(initials + ": " + pronunciatio_content);
 		document.getElementById("quick_emoji-" + curr_persona_name_os).innerHTML = pronunciatio_content;
 	}
 
 
-	const action = function(movements, curr_chat, curr_time) {
+	const action = function(movements, curr_chat, curr_payload, curr_time) {
 		if (!movements) return;
 
 		if (curr_time) {
 			const time = toLocaleTimeString(curr_time);
 			timebox.placeholder = time;
 			timebox.value = time;
+		}
+		if (execute_count == 0) {
+			for (let p_name of {{ black_hats | safe }}) {
+				setPayloadByStep(p_name, curr_payload?.[p_name], movements?.[p_name]?.["pronunciatio"]);
+			}
 		}
 		for (let i=0; i<Object.keys(personas).length; i++) {
 			let curr_persona_name_os = Object.keys(personas)[i];
@@ -701,7 +709,7 @@ const pen_test_play = function(container) {
 					document.getElementById("current_action__" + curr_persona_name_os).innerHTML = description_content.split("@")[0];
 					document.getElementById("target_address__" + curr_persona_name_os).innerHTML = description_content.split("@")[1];
 					document.getElementById("chat__" + curr_persona_name_os).innerHTML = chat_content;
-					setChatting_content(curr_persona_name, curr_chat?.[curr_persona_name]?.chat, curr_time);
+					insertChatting(pen_code, curr_chat, curr_focused_persona, curr_time);
 				}
 
 				if (execute_count > 0) {
@@ -710,16 +718,10 @@ const pen_test_play = function(container) {
 					};
 				} else if (mode != "compressed") {
 					move_personas();
-					if (phase != "payload") phase = "update";
+					phase = "update";
 				}
 			} else {
 				animation.stop(curr_persona, curr_persona_name_os);
-			}
-		}
-
-		if (execute_count <= 0) {
-			for (let p_name of {{ black_hats | safe }}) {
-				setPayloadByStep(p_name, payloads?.[step]?.[p_name], movements?.[p_name]?.["pronunciatio"]);
 			}
 		}
 
@@ -742,17 +744,18 @@ const pen_test_play = function(container) {
 		execute_count = execute_count_max + 1;
 		step = step + 1;
 
-		if (max_step < step) {
-			if (mode == "compressed") return;
-			if (mode == "forkable") {
-				phase = "payload";
-				ws_send("get_payload_info", {mode, pen_code, max_step});
-			}
-		}
 		for (let x of document.querySelectorAll("#curr_step, #step_range")) {
 			x.value = step;
 			x.placeholder = step;
-			x.setAttribute("max", max_step);
+			x.setAttribute("max", Math.max(step, max_step));
+		}
+
+		if (max_step <= step) {
+			if (mode == "compressed" || mode == "forkable" && !isRunning) {
+				play_button.click();
+				return;
+			}
+			max_step = step;
 		}
 	}
 
@@ -802,17 +805,17 @@ const pen_test_play = function(container) {
 		input.classList.toggle("focus", isVuln);
 
 		imoji_bak[p_name] = pronunciatio_content || imoji_bak[p_name] || "";
-		if (vuln_imoji_count[p_name] != -1) setPronunciatio_content(p_name, vuln_imoji_count[p_name] != 0 ? vuln_imoji : imoji_bak[p_name]);
+		if (vuln_imoji_count[p_name] != -1) setPronunciatio_content(p_name, imoji_bak[p_name]);
 		insertPayloadTable(document.querySelector("table"), {url: data?.url, data, reverse: true});
 	}
 
 	for (let i=1; i<step; i++) {
-		insertPayloadTable(document.querySelector("table"), {url: payloads[i]?.url, data: payloads[i], reverse: true});
-		for (let p in chats[i]) {
-			c_content = chats[i][p];
-			if (!c_content) continue;
-			setChatting_content(p, c_content.chat, new Date(Date.parse(c_content.datetime)));
+		for (let p_name in payloads[i]) {
+			const x = payloads[i][p_name];
+			insertPayloadTable(document.querySelector("table"), {url: x?.url, data: x, reverse: true});
 		}
+
+		insertChatting(pen_code, chats[i], curr_focused_persona);
 	}
 
 	return game;
@@ -833,6 +836,3 @@ const canvas_resizing = function(size) {
 }
 window.addEventListener("DOMContentLoaded", canvas_resizing);
 window.addEventListener("resize", canvas_resizing);
-window.addEventListener("DOMContentLoaded", function() {
-	document.querySelector("#on_screen_det_trigger-Isabella_Rodriguez")?.click();
-});

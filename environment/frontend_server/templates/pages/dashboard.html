@@ -38,22 +38,22 @@
 				</tr>
 			</thead>
 			<tbody class="table-group-divider">
-				{% for pen in pen_codes %}<tr class="position-relative" pen_code="{{ pen.pen_code }}" forked="{{ pen.fork_sim_code }}" mode="{{ pen.mode }}">
+				{% for pen in pen_codes %}<tr class="position-relative" pen_code="{{ pen.pen_code }}" forked="{{ pen.fork_sim_code }}" mode="{{ pen.mode }}" role="button" onclick="this.querySelector('[data-bs-title=Information]').click()">
 					<td field="num" class="text-end"><span{% if backend.pen_code == pen.pen_code %} class="text-success" data-bs-toggle="tooltip" data-bs-title="Running"{% endif %}>{{ forloop.counter }}</span></td>
 					<td field="pen_code">{{ pen.pen_code }}</td>
-					<td field="step" class="text-center">{% if not pen.step %}-{% else %}{{ pen.step }}{% endif %}</td>
+					<td field="step" class="text-center">{% if pen.isBase %}-{% else %}{{ pen.step }}{% endif %}</td>
 					<td field="payloads" class="text-center">{% if not pen.payloads.count.payloads %}-{% else %}{{ pen.payloads.count.payloads }}{% endif %}</td>
 					<td field="vulnerabilities" class="text-center">{% if not pen.payloads.count.vulnerabilities %}-{% else %}{{ pen.payloads.count.vulnerabilities }}{% endif %}</td>
 					<td field="control"><div class="d-flex gap-2">
-						<a class="link-secondary text-center" style="width: 1rem" href="{% url 'pen_test' pen.pen_code %}" data-bs-toggle="tooltip" data-bs-title="{% if not pen.step %}Preview{% else %}Play{% endif %}">
+						<a class="link-secondary text-center" style="width: 1rem" href="{% url 'pen_test' pen.pen_code %}" data-bs-toggle="tooltip" data-bs-title="{% if pen.isBase %}Preview{% else %}Play{% endif %}" onclick="event.stopPropagation()">
 							<i class="fa-solid fa-play"></i>
 						</a>
-						<a class="link-secondary text-center{% if not pen.step %} invisible{% endif %}" style="width: 1rem" href="{% url 'pen_test' %}?search={{ pen.pen_code }}" data-bs-toggle="tooltip" data-bs-title="Payloads">
+						<a class="link-secondary text-center{% if pen.isBase %} invisible{% endif %}" style="width: 1rem" href="{% url 'pen_test' %}?search={{ pen.pen_code }}" data-bs-toggle="tooltip" data-bs-title="Payloads" onclick="event.stopPropagation()">
 							<i class="fa-solid fa-list-ul"></i>
 						</a>
-						<label role="button" class="link-secondary text-center" style="width: 1rem" data-bs-toggle="tooltip" data-bs-title="Information">
+						<label role="button" class="link-secondary text-center" style="width: 1rem" data-bs-toggle="tooltip" data-bs-title="Information" hidden>
 							<i class="fa-solid fa-ellipsis-vertical"></i>
-							<button type="button" onclick="setPenInfoModal(event, this.closest('[mode]'))" data-bs-toggle="modal" data-bs-target="#penInfoModal" hidden></button>
+							<button type="button" onclick="event.stopPropagation(); setPenInfoModal(event, this.closest('[mode]'))" data-bs-toggle="modal" data-bs-target="#penInfoModal" hidden></button>
 						</label>
 					</div></td>
 				</tr>{% endfor %}
@@ -173,10 +173,10 @@
 		activeTree(tr);
 
 		const pen_code = tr.getAttribute("pen_code");
-		if (!type || type == "up") for (let x of penTbody.querySelectorAll(`tr[pen_code=${tr.getAttribute("forked")}]:not([pen_code=${pen_code}])`)) {
+		if (!type || type == "up") for (let x of penTbody.querySelectorAll(`tr[pen_code="${tr.getAttribute("forked")}"]:not([pen_code="${pen_code}"])`)) {
 			showTree(x, "up");
 		}
-		if (!type || type == "down") for (let x of penTbody.querySelectorAll(`tr[forked="${pen_code}"]:not([pen_code=${pen_code}])`)) {
+		if (!type || type == "down") for (let x of penTbody.querySelectorAll(`tr[forked="${pen_code}"]:not([pen_code="${pen_code}"])`)) {
 			showTree(x, "down");
 		}
 	}

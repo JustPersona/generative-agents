@@ -3,8 +3,9 @@
 		<form class="modal-content" onsubmit="penInfoUpdate(event);">
 			<div class="modal-header pb-0">
 				<div class="nav nav-tabs w-100 border-0" id="nav-tab" role="tablist">
-					<button class="nav-link active" id="pen-summary-tab" data-bs-toggle="tab" data-bs-target="#pen-summary" type="button" role="tab" aria-controls="pen-summary" aria-selected="true">Summary</button>
-					<button class="nav-link" id="pen-details-tab" data-bs-toggle="tab" data-bs-target="#pen-details" type="button" role="tab" aria-controls="pen-details" aria-selected="false">Details</button>
+					<button class="nav-link disabled" hidden aria-disabled="true" id="pen-summary-tab" data-bs-toggle="tab" data-bs-target="#pen-summary" type="button" role="tab" aria-controls="pen-summary" aria-selected="false">Summary</button>
+					<button class="nav-link" id="pen-payloads-tab" data-bs-toggle="tab" data-bs-target="#pen-payloads" type="button" role="tab" aria-controls="pen-payloads" aria-selected="false">Payloads</button>
+					<button class="nav-link" id="pen-chats-tab" data-bs-toggle="tab" data-bs-target="#pen-chats" type="button" role="tab" aria-controls="pen-chats" aria-selected="false">Chats</button>
 					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 				</div>
 			</div>
@@ -62,12 +63,14 @@
 							</div>
 						</div>
 					</div>
-					<div class="tab-pane fade show active" id="pen-summary" role="tabpanel" aria-labelledby="pen-summary-tab" tabindex="0">
+					<div class="tab-pane fade" id="pen-summary" role="tabpanel" aria-labelledby="pen-summary-tab" tabindex="0">
 						<div>
 							<canvas id="sub-type-chart"></canvas>
 						</div>
 					</div>
-					<div class="tab-pane fade" id="pen-details" role="tabpanel" aria-labelledby="pen-details-tab" tabindex="0">
+					<div class="tab-pane fade" id="pen-payloads" role="tabpanel" aria-labelledby="pen-payloads-tab" tabindex="0"></div>
+					<div class="tab-pane fade" id="pen-chats" role="tabpanel" aria-labelledby="pen-chats-tab" tabindex="0">
+						{% include 'includes/chattingbox.html' %}
 					</div>
 				</div>
 				<div class="alert alert-danger mt-3 text-center d-none"></div>
@@ -121,8 +124,8 @@
 
 
 <script type="text/javascript">
-	document.querySelector(`#pen-details`).append(createPayloadTable("model"));
-	const table = document.querySelector(`#pen-details table`);
+	document.querySelector(`#pen-payloads`).append(createPayloadTable("model"));
+	const table = document.querySelector(`#pen-payloads table`);
 
 	const container = document.querySelector("#pen_code_container");
 	const penModal = document.querySelector("#penInfoModal");
@@ -163,7 +166,7 @@
 
 	penModal.addEventListener("show.bs.modal", function(e) {
 		if (!e.relatedTarget.closest(".modal")) {
-			penModal.querySelector("#pen-summary-tab").click();
+			penModal.querySelector("#nav-tab > button:not(.disabled)").click();
 		}
 	});
 	const setPenInfoModal = function(e, target) {
@@ -185,7 +188,7 @@
 			new_pen_code.setAttribute("placeholder", pen_code);
 			form.forked.setAttribute("pen_code", data.fork_sim_code);
 			form.forked.innerText = data.fork_sim_code;
-			form.forked.toggleAttribute("disabled", new_pen_code.value.trim() == form.forked.innerText.trim() || !container.querySelector(`[pen_code=${data.fork_sim_code}]`));
+			form.forked.toggleAttribute("disabled", new_pen_code.value.trim() == form.forked.innerText.trim() || !container.querySelector(`[pen_code="${data.fork_sim_code}"]`));
 			selectbox.setAttribute("disabled", "");
 			for (let option of options) option.remove();
 			for (let box of pen_codes) {
@@ -207,11 +210,11 @@
 			form.querySelector(".btn-forkable-delete")?.toggleAttribute("disabled", !data.forkable);
 			form.querySelector(".btn-compressed-delete")?.toggleAttribute("disabled", !data.compressed);
 
-			sub_type_chart.data.labels = data.chart?.attack.labels || [];
+			sub_type_chart.data.labels = data.chart?.attack?.labels || [];
 			sub_type_chart.data.datasets[0].data = data.chart?.attack?.datasets || [];
 			sub_type_chart.update();
 
-			const onlyVuln = document.querySelector("#only-vuln-model")
+			const onlyVuln = penModal.querySelector("#only-vuln-model");
 			if (onlyVuln.checked) onlyVuln.click();
 			table.querySelector("tbody").innerHTML = "";
 			try {
@@ -223,6 +226,11 @@
 					}
 				}
 			} catch {}
+
+			for (let x of penModal.querySelectorAll("#chattingbox-container article ul")) x.innerHTML = "";
+			for (let i in data.chats) {
+				insertChatting(pen_code, data.chats[i]);
+			}
 		}, function(xhr) {
 			alertbox.innerText = xhr.responseText;
 			alertbox.classList.remove("d-none");
@@ -308,9 +316,9 @@
 		btn.setAttribute("disabled", "");
 		post("{% url 'delete_pen_test' %}", {pen_code, mode}, function(xhr) {
 			form.querySelector(`[field=compress]`).classList.toggle("d-none", mode === "compressed");
-			form.querySelector(`[field=${mode}]`).classList.add("d-none");
+			form.querySelector(`[field="${mode}"]`).classList.add("d-none");
 			form.querySelector(`.btn-${mode}-delete`).setAttribute("disabled", "");
-			modal.querySelector(`[aria-label=${form.querySelectorAll("[class$=-delete]:not([disabled])").length ? "Back" : "Close"}]`).click();
+			modal.querySelector(`[aria-label="${form.querySelectorAll('[class$=-delete]:not([disabled])').length ? 'Back' : 'Close'}"]`).click();
 			btn.removeAttribute("disabled");
 		}, function(xhr) {
 			btn.removeAttribute("disabled");

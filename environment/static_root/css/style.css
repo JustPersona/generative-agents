@@ -26,11 +26,17 @@ table thead [sort]:not(.sorted) label:hover i { --bs-secondary-rgb: var(--bs-bod
 
 table tr.details:not(.show) { display: none; }
 
-table tr.details p { margin: 0; }
-
 table th, table td { padding-left: .75rem !important; padding-right: .75rem !important; }
 
 table .minimum { width: 0; }
+
+p { margin: 0; }
+
+#chattingbox-container article ul:empty:before { content: "Empty"; display: block; text-align: center; font-style: italic; color: var(--bs-secondary); }
+
+#chattingbox-container .chat-container.mychat { flex-direction: row-reverse; }
+
+#chattingbox-container .chat-container.mychat .chat-content { align-items: flex-end !important; }
 
 .only-vuln ~ * table:not(.sub) > tbody > tr:not(.table-danger):not(.table-danger + .details) { display: none; }
 
@@ -40,11 +46,9 @@ table .minimum { width: 0; }
 /* play page */
 #temp_focus ~ * .tab-pane:not(.active) { display: none; }
 
-#temp_focus ~ * [id$=chatting] p { margin: 0; }
+#temp_focus ~ * #persona-container p { margin-bottom: 1rem; }
 
-#temp_focus ~ * .chat-container.mychat { flex-direction: row-reverse; }
-
-#temp_focus ~ * .chat-container.mychat .chat-content { align-items: flex-end !important; }
+#temp_focus ~ * #chattingbox-container .tab-content { border: 0 !important; }
 
 @media (min-width: 1200px) { #temp_focus ~ *.nav-pills { display: none; } #temp_focus ~ *.tab-content { --gap: 1rem; display: flex; flex-wrap: wrap; gap: var(--gap); } #temp_focus ~ *.tab-content > * { --width: calc((100% - var(--gap)) / 2); width: var(--width); min-width: var(--width); max-width: var(--width); } #temp_focus ~ *.tab-content .tab-pane:not(.sub) { display: block; opacity: 1; } }
 

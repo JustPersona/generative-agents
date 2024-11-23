@@ -63,14 +63,32 @@
 	} tr.details {
 		&:not(.show) {
 			display: none;
-		} p {
-			margin: 0;
 		}
 	} th, td {
 		padding-left: .75rem !important;
 		padding-right: .75rem !important;
 	} .minimum {
 		width: 0;
+	}
+} p {
+	margin: 0;
+}
+
+
+
+#chattingbox-container {
+	article ul:empty:before {
+		content: "Empty";
+		display: block;
+		text-align: center;
+		font-style: italic;
+		color: var(--bs-secondary);
+	} .chat-container.mychat {
+		flex-direction: row-reverse;
+
+		.chat-content {
+			align-items: flex-end !important;
+		}
 	}
 } .only-vuln ~ * table:not(.sub) > tbody > tr:not(.table-danger):not(.table-danger + .details) {
 	display: none;
@@ -91,14 +109,10 @@
 #temp_focus ~ * {
 	.tab-pane:not(.active) {
 		display: none;
-	} [id$=chatting] p {
-		margin: 0;
-	} .chat-container.mychat {
-		flex-direction: row-reverse;
-
-		.chat-content {
-			align-items: flex-end !important;
-		}
+	} #persona-container p {
+		margin-bottom: 1rem;
+	} #chattingbox-container .tab-content {
+		border: 0 !important;
 	}
 
 	@media (min-width: 1200px) {

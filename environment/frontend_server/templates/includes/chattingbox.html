@@ -1,10 +1,12 @@
+{% load static %}
+
 <div id="chattingbox-container">
 	<div class="nav nav-tabs p-3 pb-0" role="tablist">
 		<button class="nav-link active" data-bs-toggle="tab" data-bs-target="#all-chatting" type="button" role="tab" aria-controls="all-chatting" aria-selected="true">All</button>
 		<button class="nav-link" data-bs-toggle="tab" data-bs-target="#blacks-chatting" type="button" role="tab" aria-controls="blacks-chatting" aria-selected="false">Blacks</button>
 		<button class="nav-link" data-bs-toggle="tab" data-bs-target="#whites-chatting" type="button" role="tab" aria-controls="whites-chatting" aria-selected="false">Whites & Owner</button>
 	</div>
-	<div class="tab-content overflow-hidden" style="height: 500px;">
+	<div class="tab-content border border-top-0 rounded-bottom overflow-hidden" style="height: 500px;">
 		<div class="sub tab-pane fade p-3 h-100 overflow-auto show active" id="all-chatting" role="tabpanel" aria-labelledby="all-chatting-tab" tabindex="0">
 			<article id="all-chatting-container"><ul class="list-unstyled"></ul></article>
 		</div>
@@ -18,27 +20,40 @@
 </div>
 
 <script type="text/javascript">
-	const lastChat = {};
-	const setChatting_content = function(p_name, c_content, c_datetime, chatbox="all-chatting") {
+	const setChatting_content = function(pen_code, p_name, c_content, c_datetime, mychat, chatbox="all-chatting") {
 		if (!c_content || c_content == "<em>None at the moment</em>") return;
-		if (chatbox == "all-chatting" && lastChat?.[p_name] == c_content) return;
-		lastChat[p_name] = c_content;
-		const autoScrollOffset = 10;
-		const p_name_os = p_name.replace(/ /g, "_");
+
 		const box = document.getElementById(chatbox);
+		const p_name_os = p_name.replace(/ /g, "_");
+		let lastchat = box.querySelectorAll(`ul .chat-container[chat="${p_name_os}"] .chat-content .c_content`);
+		lastchat = lastchat[lastchat.length-1];
+		c_content = mdToHTML(c_content);
+		if (lastchat && lastchat?.innerHTML == c_content) return;
+
+		const date = c_datetime.toLocaleDateString();
+		const h = c_datetime.getHours();
+		const wm = h < 12 ? "AM" : "PM";
+		const time = `${h % 12}:${c_datetime.getMinutes()}:${c_datetime.getSeconds()} ${wm}`;
+		if (!box.querySelector(`li[date="${date}"]`)) {
+			box.querySelector(`ul`).innerHTML += `<li class="my-1 text-center text-secondary" date="${date}">${date}</li>`;
+		}
+		const autoScrollOffset = 10;
 		const li = document.createElement("li");
+		const href = `{% url 'persona_state' 'PenCode' %}?p=${p_name_os}`.replace("PenCode", pen_code);
 		li.innerHTML = `
-			<div class="chat-container d-flex gap-2 mb-3" chat="${p_name_os}">
-				<div class="chat-profile">
-					<img src="${static}/assets/characters/profile/${p_name_os}.png"/>
-				</div>
-				<div class="chat-content d-flex flex-column align-items-start">
+			<div class="chat-container d-flex gap-2 align-items-start mb-3" chat="${p_name_os}">
+				<a href="${href}" class="chat-profile bg-body-tertiary p-1 border rounded-circle" data-bs-toggle="tooltip" data-bs-title="State Details">
+					<img src="{% static 'assets/characters/profile' %}/${p_name_os}.png"/>
+				</a>
+				<div class="chat-content d-flex flex-column align-items-start" style="max-width: calc(100% - 8.5rem)">
 					<p class="p_name fw-semibold">${p_name}</p>
-					<div class="c_content border rounded bg-body-tertiary px-2 py-1">${mdToHTML(c_content)}</div>
-					<p class="c_datetime text-secondary" style="font-size: .85rem">${toLocaleTimeString(c_datetime)}</p>
+					<div class="c_content border rounded bg-body-tertiary px-2 py-1">${c_content}</div>
+					<p class="c_datetime text-secondary" style="font-size: .85rem">${time}</p>
 				</div>
 			</div>
 		`;
+		li.querySelector(".chat-container").classList.toggle("mychat", mychat === true);
+		new bootstrap.Tooltip(li.querySelector("a.chat-profile"));
 
 		const clientHeight = box.querySelector("article").clientHeight;
 		const autoScroll = clientHeight - autoScrollOffset < box.clientHeight + box.scrollTop;
@@ -47,7 +62,15 @@
 	
 		if (chatbox == "all-chatting") {
 			isBlack = {{ black_hats | safe }}.includes(p_name);
-			setChatting_content(p_name, c_content, c_datetime, `${isBlack ? "blacks" : "whites"}-chatting`);
+			setChatting_content(pen_code, p_name, c_content, c_datetime, mychat, `${isBlack ? "blacks" : "whites"}-chatting`);
+		}
+	}
+
+	const insertChatting = function(pen_code, data, focus=false, time=undefined) {
+		if (!data) return;
+		for (let c_content of data) {
+			const {name, chat, datetime} = c_content;
+			setChatting_content(pen_code, name, chat, time || (typeof datetime !== "string" ? datetime : new Date(Date.parse(datetime))), name == focus?.replace?.(/_/g, " "));
 		}
 	}
 
@@ -57,7 +80,7 @@
 		target = document.querySelector(target.getAttribute("data-bs-target"));
 		target.scrollTop = target.querySelector("article").clientHeight;
 	}
-	for (let x of document.querySelectorAll(`button[data-bs-toggle="tab"]`)) {
+	for (let x of document.querySelectorAll(`#chattingbox-container button[data-bs-toggle="tab"]`)) {
 		x.addEventListener("shown.bs.tab", chattingScroll);
 	}
 </script>

@@ -1,0 +1,58 @@
+:root {
+	--sb-color: var(--bs-success);
+	--sb-color-dark: var(--bs-success-text-emphasis);
+	--sb-height: 10px;
+	--sb-width: 10px;
+
+	--sb-thumb-radius: 0px;
+	--sb-button-height: 10px;
+	--sb-button-width: 10px;
+} body> * {
+	--sb-thumb-radius: 1rem;
+	--sb-button-height: 0px;
+	--sb-button-width: 0px;
+}
+
+
+
+::-webkit-scrollbar {
+	width: var(--sb-width);
+	height: var(--sb-height);
+} ::-webkit-scrollbar-thumb {
+	background-color: var(--sb-color);
+	border-radius: var(--sb-thumb-radius, 0);
+} ::-webkit-scrollbar-thumb:hover {
+	background-color: var(--sb-color-dark);
+}
+
+
+
+/* scrollbar button */
+
+::-webkit-scrollbar-button:vertical:start:increment,
+::-webkit-scrollbar-button:vertical:end:decrement,
+::-webkit-scrollbar-button:horizontal:start:increment,
+::-webkit-scrollbar-button:horizontal:end:decrement {
+	display: none;
+} ::-webkit-scrollbar-button {
+	background-color: var(--sb-color);
+	border-radius: var(--sb-width);
+	height: var(--sb-button-height);
+	width: var(--sb-button-width);
+} ::-webkit-scrollbar-button:hover {
+	background-color: var(--sb-color-dark);
+} ::-webkit-scrollbar-button:vertical:start {
+	border-bottom-left-radius: 0;
+	border-bottom-right-radius: 0;
+} ::-webkit-scrollbar-button:vertical:end {
+	border-top-left-radius: 0;
+	border-top-right-radius: 0;
+} ::-webkit-scrollbar-button:horizontal:start {
+	border-top-right-radius: 0;
+	border-bottom-right-radius: 0;
+} ::-webkit-scrollbar-button:horizontal:end {
+	border-top-left-radius: 0;
+	border-bottom-left-radius: 0;
+} ::-webkit-scrollbar-corner {
+	background-color: transparent;
+}

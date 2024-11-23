@@ -7,7 +7,7 @@
 </section>
 
 <section class="pt-3 d-flex flex-column gap-4" id="pen_code_container">{% for pen in pen_codes %}
-	<article class="bg-body shadow rounded-4 p-3" pen_code="{{ pen.pen_code }}" forked="{{ pen.fork_sim_code }}" mode="{{ pen.mode }}"{% if pen.step == 0 %} hidden{% endif %}>
+	<article class="bg-body shadow rounded-4 p-3" pen_code="{{ pen.pen_code }}" forked="{{ pen.fork_sim_code }}" mode="{{ pen.mode }}"{% if pen.isBase %} hidden{% endif %}>
 		<h3 class="h5 d-flex gap-2">
 			<a class="link-secondary" href="{% url 'pen_test' pen.pen_code %}" data-bs-toggle="tooltip" data-bs-title="Play"><i class="fa-solid fa-play"></i></a>
 			<span class="flex-grow-1">{{ pen.pen_code }}</span>
@@ -47,12 +47,12 @@
 
 {% block js_content %}
 <script type="text/javascript">
-	const boxs = document.querySelectorAll("article");
+	const boxs = document.querySelectorAll("article:not([hidden])");
 	const selectPen = function(isContains=true) {
 		const input = document.querySelector("input[name=search]").value.trim();
 		for (let box of boxs) {
 			const pen_code = box.getAttribute("pen_code");
-			box.classList.toggle("d-none", (box.classList.contains("pin") || !input) ? false : isContains ? !pen_code.toLowerCase().trim().includes(input.toLowerCase().trim()) : pen_code != input);
+			box.classList.toggle("d-none", (box.classList.contains("pin") || !input) ? false : isContains ? !pen_code?.toLowerCase().trim().includes(input.toLowerCase().trim()) : pen_code != input);
 		}
 	}
 	selectPen(false);

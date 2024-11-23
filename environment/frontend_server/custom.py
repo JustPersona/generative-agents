@@ -2,6 +2,8 @@ from django.shortcuts import redirect
 from django.conf import settings
 from django.urls import reverse, resolve
 
+from utils import black_hats, white_hats
+
 
 
 def processors(request):
@@ -23,6 +25,8 @@ def processors(request):
                 "href": reverse("pen_test"),
             },
         ],
+        "black_hats": black_hats,
+        "white_hats": white_hats,
     }
 
 

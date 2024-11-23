@@ -27,7 +27,11 @@ from utils import black_hats
 
 pen_files = {
     "memory": {
+        "root": "/personas/%s/bootstrap_memory",
         "payload": "/personas/%s/bootstrap_memory/payload.json",
+        "scratch": "/personas/%s/bootstrap_memory/scratch.json",
+        "spatial": "/personas/%s/bootstrap_memory/spatial_memory.json",
+        "associative": "/personas/%s/bootstrap_memory/associative_memory/nodes.json",
     },
     "compressed": {
         "root": "compressed_storage/%s",
@@ -61,11 +65,11 @@ pen_files = {
 # Functions
 
 def backendIsRunning():
-    return exists(pen_files["temp"]["step"]) and exists(pen_files["temp"]["code"])
+    return exists(pen_files["temp"]["code"])
 
 def backendStep():
     step = None
-    if backendIsRunning():
+    if backendIsRunning() and exists(pen_files["temp"]["step"]):
         with open(pen_files["temp"]["step"]) as f:
             step = json.load(f).get("step")
     return step
@@ -102,7 +106,7 @@ def getMapData(maze_name="hacker_ville"):
         "layers": json.dumps(layers),
     }
 
-def getPayloadInfo(mode=None, pen_code=None, *, to_list=False):
+def getPayloadInfo(mode=None, pen_code=None):
     data = {
         "count": {
             "vulnerabilities": 0,
@@ -128,18 +132,35 @@ def getPayloadInfo(mode=None, pen_code=None, *, to_list=False):
                 data["data"][step][p_name] = items["basic"][idx]
     return data
 
+def getMode(pen_code, *, mode=None, all=False):
+    ls = list()
+    for x in ["compressed", "forkable"]:
+        if exists(pen_files[x]["meta"] % pen_code):
+            if mode is None and all is False: return x
+            ls += [x]
+    if all is True:
+        return ls
+    if mode is not None:
+        return mode in ls
+
+
+def isBase(pen_code):
+    mode = getMode(pen_code)
+    with open(pen_files[mode]["meta"] % pen_code) as f:
+        meta = json.load(f)
+    if mode == "forkable" and meta["step"] == 0 and meta["fork_sim_code"] == pen_code:
+        return True
+    return False
+
 def getPen(pen_code, mode=None):
-    modes = []
-    if exists(pen_files["compressed"]["meta"] % pen_code):
-        modes += ["compressed"]
-    if exists(pen_files["forkable"]["meta"] % pen_code):
-        modes += ["forkable"]
+    modes = getMode(pen_code, all=True)
     if len(modes) == 0: return
     mode = mode or modes[0]
 
     with open(pen_files[mode]["meta"] % pen_code) as f:
         data = json.load(f)
     data["mode"] = mode
+    data["isBase"] = isBase(pen_code)
     for x in modes: data[x] = True
 
     data["payloads"] = getPayloadInfo(mode, pen_code)
@@ -153,7 +174,7 @@ def getPens():
             if pen_code in data: continue
             pen_data = getPen(pen_code, mode)
             if pen_data: data[pen_code] = pen_data
-    return [{"pen_code": k, **v} for k, v in sorted(data.items(), key=lambda x: datetime.strptime(x[1]["curr_time"], "%B %d, %Y, %H:%M:%S").timestamp())]
+    return [{"pen_code": k, **v} for k, v in sorted(data.items(), key=lambda x: datetime.strptime(x[1].get("created_at", x[1]["curr_time"]), "%B %d, %Y, %H:%M:%S").timestamp())]
 
 def penList(mode=None):
     data = {}
@@ -167,17 +188,20 @@ def getChatting(pen_code, *, start_datetime=None, sec_per_step=10, first_step=0,
     chats = dict()
     last_chats = dict()
 
-    if exists(pen_files["compressed"]["meta"] % pen_code):
-        mode = "compressed"
-    elif exists(pen_files["forkable"]["meta"] % pen_code):
-        mode = "forkable"
-    else:
+    mode = getMode(pen_code)
+    if mode is None:
         return {}
+    
+    if start_datetime is None:
+        with open(pen_files[mode]["meta"] % pen_code) as f:
+            start_datetime = json.load(f)["start_date"]
+        start_datetime = datetime.strptime(start_datetime + " 00:00:00", '%B %d, %Y %H:%M:%S')
 
     if last_step is None:
         with open(pen_files[mode]["meta"] % pen_code) as f:
             last_step = json.load(f)["step"]
 
+    curr_datetime = start_datetime
     if mode == "compressed":
         with open(pen_files[mode]["move"] % pen_code) as f:
             data = json.load(f)
@@ -186,7 +210,8 @@ def getChatting(pen_code, *, start_datetime=None, sec_per_step=10, first_step=0,
                 personas = data[str(step)]
             except:
                 break
-            x = parseChat(personas, start_datetime, sec_per_step*(step-first_step), last_chats)
+            x = parseChat(personas, curr_datetime, last_chats)
+            curr_datetime += timedelta(seconds=sec_per_step)
             if x: chats[step] = x
     else:
         for step in range(first_step, last_step+1):
@@ -195,13 +220,13 @@ def getChatting(pen_code, *, start_datetime=None, sec_per_step=10, first_step=0,
                     personas = json.load(f)["persona"]
             except:
                 break
-            x = parseChat(personas, start_datetime, sec_per_step*(step-first_step), last_chats)
+            x = parseChat(personas, curr_datetime, last_chats)
+            curr_datetime += timedelta(seconds=sec_per_step)
             if x: chats[step] = x
     return chats
 
-def parseChat(personas, datetime, delta, last_chats={}):
-    if datetime: datetime += timedelta(seconds=delta)
-    data = dict()
+def parseChat(personas, curr_datetime, last_chats={}):
+    data = list()
     for p_name, p_data in personas.items():
         chat = p_data["chat"]
         if chat is None: continue
@@ -209,8 +234,11 @@ def parseChat(personas, datetime, delta, last_chats={}):
             if c[0] != p_name: continue
             if last_chats.get(p_name) == c[1]: continue
             last_chats[p_name] = c[1]
-            data[p_name] = {"chat": c[1]}
-            if datetime: data[p_name]["datetime"] = datetime.strftime("%Y-%m-%dT%H:%M:%S")
+            data += [{
+                "name": p_name,
+                "chat": c[1],
+                "datetime": curr_datetime.strftime("%Y-%m-%dT%H:%M:%S"),
+            }]
     return data
 
 def getChartData(data=None, *, min=0):
@@ -294,6 +322,7 @@ def pen_info(request):
     if not data:
         return HttpResponse("Not found", status=404)
     data["chart"] = getChartData([data], min=4)
+    data["chats"] = getChatting(pen_code)
     return JsonResponse(data)
 
 @require_http_methods(["POST"])
@@ -339,14 +368,13 @@ def pen_test(request, pen_code=None, step=0, speed=2):
     speed = int(speed) or 2
     play_speed = 2 ** (min(6, speed)-1)
 
-    if exists(pen_files["compressed"]["meta"] % pen_code):
-        mode = "compressed"
-    elif exists(pen_files["forkable"]["meta"] % pen_code):
-        mode = "forkable"
+    mode = getMode(pen_code)
+    if mode is None:
+        return HttpResponse(status=404)
+    elif mode == "forkable":
         speed = 6
         play_speed = 32
-    else:
-        return HttpResponse(status=404)
+
 
     payloads = getPayloadInfo(mode, pen_code)
     with open(pen_files[mode]["meta"] % pen_code) as json_file:
@@ -355,12 +383,12 @@ def pen_test(request, pen_code=None, step=0, speed=2):
     maze_name = meta["maze_name"]
     sec_per_step = meta["sec_per_step"]
     persona_names = meta["persona_names"]
-    if max_step == 0:
+    if isBase(pen_code):
         mode = "preview"
     step = min(step, max_step)
 
     start_datetime = datetime.strptime(meta["start_date"] + " 00:00:00", '%B %d, %Y %H:%M:%S')
-    chats = getChatting(pen_code, start_datetime=start_datetime, sec_per_step=sec_per_step, last_step=[step, None][mode == "compressed"])
+    chats = getChatting(pen_code, last_step=[step, None][mode == "compressed"])
     start_datetime += timedelta(seconds=step * sec_per_step)
     start_datetime = start_datetime.strftime("%Y-%m-%dT%H:%M:%S")
 
@@ -379,7 +407,7 @@ def pen_test(request, pen_code=None, step=0, speed=2):
                     persona_init_pos[key.replace(" ", "_")] = [val["x"], val["y"]]
     else: # mode == "compressed"
         # Loading the movement file
-        move_file = pen_files["compressed"]["move"] % pen_code
+        move_file = pen_files[mode]["move"] % pen_code
         with open(move_file) as json_file:
             raw_all_movement = json.load(json_file)
             raw_all_movement[str(max_step)] = {}
@@ -424,7 +452,6 @@ def pen_test(request, pen_code=None, step=0, speed=2):
         "step": step,
         "max_step": max_step,
         "persona_names": persona_names,
-        "black_hats": black_hats,
         "persona_init_pos": json.dumps(persona_init_pos),
         "all_movement": json.dumps(all_movement),
         "chats": json.dumps(chats),
@@ -443,59 +470,57 @@ def pen_test(request, pen_code=None, step=0, speed=2):
 
 
 @require_http_methods(["GET"])
-def pen_test_chat(request):
-    context = {}
-    template = "pages/pen_test_chat.html"
-    return render(request, template, context)
+def persona_state(request, pen_code):
+    persona_name = request.GET.get("p")
+    mode = getMode(pen_code)
+    if mode is None:
+        return HttpResponse(status=404)
 
+    with open(pen_files[mode]["meta"] % pen_code) as f:
+        meta = json.load(f)
+    step = int(meta["step"])
+    persona_names = meta["persona_names"]
 
+    states = list()
+    storage = pen_files[mode]["root"] % pen_code
+    for p_name in persona_names:
+        p_name_os = p_name.replace(" ", "_")
+        with open(storage + pen_files["memory"]["scratch"] % p_name) as json_file:
+            scratch = json.load(json_file)
+        with open(storage + pen_files["memory"]["spatial"] % p_name) as json_file:
+            spatial = json.load(json_file)
+        with open(storage + pen_files["memory"]["associative"] % p_name) as json_file:
+            associative = json.load(json_file)
 
-@require_http_methods(["GET"])
-def replay_persona_state(request, pen_code, step, persona_name):
-    pen_code = pen_code
-    step = int(step)
+        a_mem_event = []
+        a_mem_chat = []
+        a_mem_thought = []
+        for count in range(len(associative.keys()), 0, -1):
+            node_id = f"node_{count}"
+            node_details = associative[node_id]
 
-    persona_name_underscore = persona_name
-    persona_name = " ".join(persona_name.split("_"))
-    memory = f"compressed_storage/{pen_code}/personas/{persona_name}/bootstrap_memory"
-    if not exists(memory):
-        memory = f"storage/{pen_code}/personas/{persona_name}/bootstrap_memory"
+            if node_details["type"] == "event":
+                a_mem_event += [node_details]
+            elif node_details["type"] == "chat":
+                a_mem_chat += [node_details]
+            elif node_details["type"] == "thought":
+                a_mem_thought += [node_details]
+        states += [{
+            "p_name": p_name,
+            "p_name_os": p_name_os,
+            "scratch": scratch,
+            "spatial": spatial,
+            "a_mem_event": a_mem_event,
+            "a_mem_chat": a_mem_chat,
+            "a_mem_thought": a_mem_thought,
+        }]
 
-    with open(memory + "/scratch.json") as json_file:
-        scratch = json.load(json_file)
-
-    with open(memory + "/spatial_memory.json") as json_file:
-        spatial = json.load(json_file)
-
-    with open(memory + "/associative_memory/nodes.json") as json_file:
-        associative = json.load(json_file)
-
-    a_mem_event = []
-    a_mem_chat = []
-    a_mem_thought = []
-
-    for count in range(len(associative.keys()), 0, -1):
-        node_id = f"node_{str(count)}"
-        node_details = associative[node_id]
-
-        if node_details["type"] == "event":
-            a_mem_event += [node_details]
-
-        elif node_details["type"] == "chat":
-            a_mem_chat += [node_details]
-
-        elif node_details["type"] == "thought":
-            a_mem_thought += [node_details]
-
-    context = {"pen_code": pen_code,
-               "step": step,
-               "persona_name": persona_name,
-               "persona_name_underscore": persona_name_underscore,
-               "scratch": scratch,
-               "spatial": spatial,
-               "a_mem_event": a_mem_event,
-               "a_mem_chat": a_mem_chat,
-               "a_mem_thought": a_mem_thought}
+    context = {
+        "pen_code": pen_code,
+        "persona_name": persona_name,
+        "step": step,
+        "states": states,
+    }
     template = "pages/persona_state.html"
     return render(request, template, context)
 
@@ -615,8 +640,6 @@ class ReverieConsumer(AsyncWebsocketConsumer):
         response_data = dict()
         if path == "update_environment":
             response_data = self.update_environment(data)
-        if path == "get_payload_info":
-            response_data = self.get_payload_info(data)
 
         response_data["path"] = path
         await self.send_message(response_data)
@@ -639,6 +662,7 @@ class ReverieConsumer(AsyncWebsocketConsumer):
         """
         step = data["step"]
         pen_code = data["pen_code"]
+        running = data.get("running")
 
         response_data = {"step": -1}
         stepFile = pen_files["forkable"]["move"] % (pen_code, step)
@@ -646,18 +670,8 @@ class ReverieConsumer(AsyncWebsocketConsumer):
             with open(stepFile) as json_file:
                 response_data = json.load(json_file)
             response_data["step"] = step
-            response_data["chats"] = getChatting(pen_code, first_step=step, last_step=step)
-        return response_data
-
-    def get_payload_info(self, data):
-        mode = data["mode"]
-        pen_code = data["pen_code"]
-        max_step = data["max_step"]
-        meta_file = pen_files["forkable"]["meta"] % pen_code
-
-        response_data = dict()
-        with open(meta_file) as f:
-            response_data["max_step"] = json.load(f).get("step")
-        if max_step != response_data["max_step"]:
-            response_data["payloads"] = getPayloadInfo(mode, pen_code)
+            response_data["chats"] = getChatting(pen_code, first_step=step, last_step=step).get(step)
+            response_data["payload"] = getPayloadInfo("forkable", pen_code)["data"].get(step)
+        if running:
+            response_data["running"] = backendIsRunning()
         return response_data

@@ -100,8 +100,8 @@
 
             btn.setAttribute("disabled", "");
             post("./", {mode, pen_code, new_pen_code, action}, function(xhr) {
-                const tr = document.querySelector(`table tbody tr[pen_code=${pen_code}]`);
-                tr.querySelector(`[field=${mode}]`).innerHTML = "";
+                const tr = document.querySelector(`table tbody tr[pen_code="${pen_code}"]`);
+                tr.querySelector(`[field="${mode}"]`).innerHTML = "";
                 if (!tr.querySelector("button")) tr.remove();
 				modal.querySelector("[aria-label=Close]").click();
                 btn.removeAttribute("disabled");

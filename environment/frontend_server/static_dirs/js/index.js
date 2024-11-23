@@ -1,3 +1,7 @@
+const toLocaleTimeString = function(datetime) {
+	return datetime.toLocaleTimeString("en-US", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+}
+
 const post = function(url, data, callback1, callback2) {
 	let json = JSON.stringify(data);
 	let xhr = new XMLHttpRequest();
@@ -33,7 +37,7 @@ const sortBtnClick = function(btn) {
 		x.querySelector("i").classList.toggle("text-secondary", x != th);
 	}
 
-	const sorted = [...tbody.querySelectorAll(`[field=${field}]`)].sort(function(a, b) {
+	const sorted = [...tbody.querySelectorAll(`[field="${field}"]`)].sort(function(a, b) {
 		if (reverse) [a, b] = [b, a];
 		[a, b] = [a.innerText.trim().toLowerCase(), b.innerText.trim().toLowerCase()];
 		return parseFloat(a) == a ? parseFloat(a) - parseFloat(b) : a.localeCompare(b);
@@ -98,7 +102,7 @@ const insertPayloadTable = function(table, {url, data, reverse=false}) {
 		tr.innerHTML = `
 			<td field="num" class="text-end">${num}</td>
 			<td field="method" class="text-center">${data.method}</td>
-			<td field="url"><a href="${url}" target="_blank" data-bs-toggle="tooltip" data-bs-title="${origin.host}">${origin.pathname}</a></td>
+			<td field="url"><a href="${url}" target="_blank" data-bs-toggle="tooltip" data-bs-title="${origin.host}" onclick="event.stopPropagation()">${origin.pathname}</a></td>
 			<td field="payload" class="text-truncate" style="max-width: 0px;">${data.payload}</td>
 		`;
 		new bootstrap.Tooltip(tr.querySelector("td[field=url] a"));
@@ -134,13 +138,13 @@ const insertPayloadTable = function(table, {url, data, reverse=false}) {
 }
 
 const createPayloadSubTable = function(data, border=true) {
-	const disabled = ["step", "payload", "attack_name", "method", "observations", "timestamp"];
+	const disabled = ["step", "payload", "attack_name", "method", "observations", "timestamp", "url"];
 	const keys = {
-		reasoning: "reason for above",
+		reasoning: "Reason for Above",
 		html_differences: `Changed before/after Attack`,
 	}
 	const table = document.createElement("table");
-	table.className = `sub table table-sm table-hover table-border${border ? "ed" : "less"} m-0 position-relative text-wrap`;
+	table.className = `sub table table-sm table-hover table-border${border ? "ed" : "less"} m-0 h-100 position-relative text-wrap`;
 	table.innerHTML = "<tbody></tbody>";
 	for (let key in data) {
 		if (disabled.includes(key)) continue;
@@ -148,7 +152,7 @@ const createPayloadSubTable = function(data, border=true) {
 		table.querySelector("tbody").append(tr);
 		tr.setAttribute("key", key);
 		tr.innerHTML = `
-			<td class="text-end text-capitalize minimum">${(keys?.[key] || key).replace(/_/g, " ")}</td>
+			<td class="text-end text-capitalize minimum">${keys[key] || key.replace(/_/g, " ")}</td>
 			<td class="p-0 align-middle"></td>
 		`;
 		if (typeof data[key] !== "object") {
@@ -161,7 +165,7 @@ const createPayloadSubTable = function(data, border=true) {
 }
 
 const mdToHTML = function(text) {
-	return marked.parse(text);
+	return new DOMParser().parseFromString(marked.parse(text), "text/html").querySelector("body").innerHTML;
 }
 
 const jsonToUl = function(json, elem="ul") {
@@ -197,11 +201,7 @@ const jsonToUlOld = function(json, elem="ul") {
 }
 
 const displayPayloadDetails = function(e) {
-	const target = e.target;
-	if (target.tagName == "A") return;
-
-	const box = this.nextElementSibling;
-	box.classList.toggle("show");
+	this.nextElementSibling.classList.toggle("show");
 }
 
 const insertURLTable = function(table, {url, data, reverse=false}) {
@@ -250,3 +250,7 @@ if (!["light", "dark"].includes(theme)) {
 window.addEventListener("DOMContentLoaded", function() {
 	for (let table of document.querySelectorAll("table")) sortingTable(table);
 })
+
+
+
+console.log(`%cTeam Persona`, `font-size: 2em; color: ${getComputedStyle(document.documentElement).getPropertyValue("--bs-success")};`);

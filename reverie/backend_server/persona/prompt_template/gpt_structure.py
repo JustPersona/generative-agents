@@ -11,6 +11,7 @@ import ollama
 
 from utils import *
 from langchain_ollama import OllamaLLM
+from langchain_community.embeddings import GPT4AllEmbeddings
 from langchain.callbacks.manager import CallbackManager
 from langchain.callbacks.streaming_stdout_final_only import FinalStreamingStdOutCallbackHandler as CallbackHandler
 
@@ -170,7 +171,7 @@ def generate_prompt(curr_input, prompt_lib_file):
     curr_input = [curr_input]
   curr_input = [str(i) for i in curr_input]
 
-  f = open(prompt_lib_file, "r")
+  f = open(prompt_lib_file, "r", encoding="utf-8")
   prompt = f.read()
   f.close()
   for count, i in enumerate(curr_input):   
@@ -206,28 +207,59 @@ def safe_generate_response(prompt,
   return fail_safe_response
 
 
-#def get_embedding(text, model=None):
-#  # Use GPT4All local embeddings 
-#  # https://python.langchain.com/docs/integrations/text_embedding/gpt4all
-#  text = text.replace("\n", " ")
-#  if not text: 
-#    text = "this is blank"
-#  gpt4all_embd = GPT4AllEmbeddings()
-#  return gpt4all_embd.embed_query(text)
+def safe_generate_response_json(prompt, 
+                                gpt_parameter,
+                                repeat=5,
+                                fail_safe_response="error",
+                                func_validate=None,
+                                func_clean_up=None,
+                                verbose=False): 
+    if verbose: 
+        print(prompt)
+
+    try:
+        for i in range(repeat):
+            llm.format = "json"
+            curr_gpt_response = GPT_request(prompt, gpt_parameter)
+            print('생성한 응답 :',curr_gpt_response)
+            if func_validate(curr_gpt_response, prompt=prompt): 
+                return func_clean_up(curr_gpt_response, prompt=prompt)
+            if verbose: 
+                print('==== ERROR IN RESPONSE ==== \n', curr_gpt_response)
+            
+        print("==== USING FAILSAFE ====")
+        return fail_safe_response
+
+    finally:
+        llm.format = ""
+
+
+def get_embedding(text, model=None):
+ # Use GPT4All local embeddings 
+ # https://python.langchain.com/docs/integrations/text_embedding/gpt4all
+ text = text.replace("\n", " ")
+ if not text: 
+  text = "this is blank"
+ gpt4all_embd = GPT4AllEmbeddings()
+ return gpt4all_embd.embed_query(text)
+
 
 # https://ollama.com/blog/embedding-models
 # Model                   Parameter Size
 # mxbai-embed-large       334M   (1.2 GB)
 # nomic-embed-text       137M   (849 MB)
 # all-minilm           23M
-def get_embedding(text, model="mxbai-embed-large"):
-    text = text.replace("\n", " ")
-    if not text:
-        text = "this is blank"
-    if model not in [m['model'].split(':')[0] for m in ollama.list().get('models', [])]:
-        ollama.pull(model)
-    response = ollama.embeddings(model=model, prompt=text)
-    return response['embedding']
+
+# def get_embedding(text, model="mxbai-embed-large"):
+#     text = text.replace("\n", " ")
+#     if not text:
+#         text = "this is blank"
+#     if model not in [m['model'].split(':')[0] for m in ollama.list().get('models', [])]:
+#         ollama.pull(model)
+#     response = ollama.embeddings(model=model, prompt=text)
+#     return response['embedding']
+
+
 
 if __name__ == '__main__':
   gpt_parameter = {"engine": "text-davinci-003", "max_tokens": 50, 

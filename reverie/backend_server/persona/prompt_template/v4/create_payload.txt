@@ -1,0 +1,59 @@
+!<INPUT 0>! -- attack name
+!<INPUT 1>! -- explanation of attack
+!<INPUT 2>! -- load payloads result
+!<INPUT 3>! -- form elements
+
+<commentblockmarker>###</commentblockmarker>  
+### Description of the !<INPUT 0>! Attack:
+
+!<INPUT 1>!  
+
+### Payloads Generated So Far:
+
+Below are the payloads that have been generated and their results:
+!<INPUT 2>!
+
+
+### Understanding the Payload Results:
+
+The results section provides details on each step of the attack, describing what was attempted and the outcomes. Here’s what each field represents:
+- **Step**: The sequence number of the attack attempt.
+- **Method**: The HTTP method used (e.g., GET, POST, PUT).
+- **Payload**: The specific payload sent to the server.
+- **Reasoning**: The thought process behind the payload selection and what the results indicate.
+- **HTML Differences**: This section contains the output from the HTML comparison function, highlighting added, removed, or modified elements between the default and modified responses. Use these differences to determine whether unauthorized behavior occurred.
+- **Next Step**: Recommendations for generating new payloads, taking into consideration any vulnerabilities detected and results from previous attempts.
+
+### Instructions for Generating the Next Payload:
+
+1. **Review the "Next Step" Suggestions**
+   - Analyze the guidance in the "Next Step" field from the payload results to determine the next action.
+   - Prioritize the recommendations from the most recent step to ensure continuity and build on the previous exploit attempts.
+   - Reflect on the results, attack goals, and any data discovered so far to make informed decisions.
+
+2. **Select Query Parameters from Form Elements**
+   - Choose relevant "query parameters" strictly from the form elements provided in !<INPUT 3>!.
+
+3. **Create a Unique Payload**
+   - Generate a new payload by using creative variations or modifications of existing query parameters.
+   - Refer to the recommendations in the "Next Step" from the previous step to guide the generation of new payloads.
+   - Compare the new payload with the existing payloads listed in the "Payloads Generated So Far" section.
+   - Ensure that payload variations cover multiple types of web vulnerabilities, such as SQL Injection, Cross-Site Scripting (XSS), Command Injection, Directory Traversal, etc., to maximize attack coverage. Here are some general techniques:
+     - **Change Logical Combinations**: Use different logical combinations, such as changing `AND` to `OR` or introducing nested conditions.
+     - **Use Different Encodings**: Encode the payload using various techniques such as URL, Base64, or Unicode to evade filters.
+     - **Modify Input Syntax**: Slightly modify the input structure (e.g., changing cases, adding spaces) to bypass input validation.
+     - **Include Cross-Site Scripting Payloads**: If targeting XSS, try injecting JavaScript code such as `<script>alert('XSS')</script>` into form fields.
+
+4. **Provide Output in JSON Format**
+   - Format the response as follows:
+   ```
+   { 
+   "payload": "query_parameter1=REALISTIC_VALUE1&query_parameter2=REALISTIC_VALUE2", 
+   "reasoning": "The selected query parameters were chosen based on their relevance to the attack goal and the recommendations from the 'Next Step'. Variations were applied to ensure uniqueness and effectiveness in testing different attack vectors."
+   }
+   ```
+   - Replace any placeholder values with realistic ones that contribute to the effectiveness of different types of web attacks.
+
+### Reasoning:
+
+Summarize key points when analyzing suggestions and choosing parameters. Keep the reasoning concise, focusing on why specific variations or modifications were chosen and how they contribute to testing different types of web vulnerabilities, such as SQL Injection, XSS, or Command Injection.

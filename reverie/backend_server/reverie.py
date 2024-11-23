@@ -390,6 +390,24 @@ class ReverieServer:
             movements["persona"][persona_name]["description"] = description
             movements["persona"][persona_name]["chat"] = (persona
                                                           .scratch.chat)
+            
+
+
+
+
+            if persona_name == "Black Hacker" and description.split(":")[-1].strip() == "computer desk":
+              print("블랙해커 공격 중 ~~~~~~~~~!!!!!!!!!!")
+              step_data = black_hacker(persona, attack, target_url, cookies)
+              persona.payload.save_attack_data(url=target_url, data=step_data)
+
+            # if persona_name == "White Hacker" and description.split(":")[-1].strip() == "computer desk":
+            #   print("화이트해커 방어 중 ~~~~~~~~~!!!!!!!!!!")
+            #   patch_data = white_hacker()
+            #   persona.payload.save_patch_data()
+
+
+
+
 
           # Include the meta information about the current stage in the 
           # movements dictionary. 
@@ -639,7 +657,14 @@ if __name__ == '__main__':
 
   origin = input("Enter the name of the forked simulation: ").strip()
   target = input("Enter the name of the new simulation: ").strip()
-
+  cookies = login_to_dvwa("http://192.168.10.10/dvwa")
+  # target_url = input("Enter url of the server (default DVWA) : ").strip()
+  # if not target_url:
+  #   target_url = "http://192.168.10.10/dvwa/vulnerabilities/sqli/"
+  #   cookies = login_to_dvwa(target_url)
+  # attack = input("Enter a Web Attack Name (default SQL injection) : ").strip()
+  # if not attack:
+  #   attack = "SQL injection"
   rs = ReverieServer(origin, target)
   rs.open_server()
 

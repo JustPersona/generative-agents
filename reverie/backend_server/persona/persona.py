@@ -19,6 +19,7 @@ from global_methods import *
 from persona.memory_structures.spatial_memory import *
 from persona.memory_structures.associative_memory import *
 from persona.memory_structures.scratch import *
+from persona.memory_structures.payload import *
 
 from persona.cognitive_modules.perceive import *
 from persona.cognitive_modules.retrieve import *
@@ -46,6 +47,11 @@ class Persona:
     # <scratch> is the persona's scratch (short term memory) space. 
     scratch_saved = f"{folder_mem_saved}/bootstrap_memory/scratch.json"
     self.scratch = Scratch(scratch_saved)
+
+
+    payload_saved = f"{folder_mem_saved}/bootstrap_memory/payload.json"
+    self.payload = Payload(payload_saved)
+
 
 
   def save(self, save_folder): 
@@ -76,6 +82,12 @@ class Persona:
     # to Python variables. 
     f_scratch = f"{save_folder}/scratch.json"
     self.scratch.save(f_scratch)
+
+
+    f_payload = f"{save_folder}/payload.json"
+    self.payload.save(f_payload)
+
+
 
 
   def perceive(self, maze):

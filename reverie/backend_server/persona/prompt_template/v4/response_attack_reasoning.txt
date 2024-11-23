@@ -1,0 +1,45 @@
+!<INPUT 0>! -- attack name  
+!<INPUT 1>! -- explanation of attack  
+!<INPUT 2>! -- create_payload  
+!<INPUT 3>! -- Summary of Changes  
+
+<commentblockmarker>###</commentblockmarker>  
+### Description of the !<INPUT 0>! Attack:
+!<INPUT 1>!
+
+### Created Payload:
+!<INPUT 2>!  
+
+### Summary of Changes:
+!<INPUT 3>!  
+
+**Explanation of the Summary of Changes:**
+The summary of changes compares the default and modified HTML responses, listing key differences observed after injecting the payload:
+- **Added elements**: New HTML elements or tags added.
+- **Removed elements**: HTML elements or tags removed.
+- **Modified elements**: Changes in the attributes or content of existing elements.
+- **No changes**: If no differences are found, the attack is considered unsuccessful.
+
+### Analysis of Changes Between Responses:
+
+Use the summary of changes strictly to evaluate whether the attack was effective in causing unauthorized behavior or exposing vulnerabilities, relying only on the observed differences. **If no changes are detected, the attack is considered unsuccessful.**
+
+1. **Structural Changes**: Identify any newly added, removed, or modified HTML elements, attributes, or tags. If no structural changes are observed, the attack is unsuccessful.
+   
+2. **Content Differences**: Assess if sensitive data (e.g., user names, emails, credentials) was exposed. If no content changes are observed, the attack is unsuccessful.
+
+### Output:
+
+Provide the result in the following JSON format:
+
+{
+"reasoning": "<the reasoning for the conclusion based on the changes>",
+"observations": "exploit_successful" or "exploit_unsuccessful"
+}
+
+- **Reasoning**: Provide the logic behind the success or failure of the attack based on observed changes. If no changes were found, explain why this means the attack failed.
+- **Observations**: Use `"exploit_unsuccessful"` if no significant changes were found or `"exploit_successful"` if clear evidence of exploitation is observed.
+
+### Judging Success:
+
+**If no changes are found in the summary, the attack must be considered unsuccessful.**

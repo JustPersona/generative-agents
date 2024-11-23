@@ -5,7 +5,7 @@ File: run_gpt_prompt.py
 Description: Defines all run gpt prompt functions. These functions directly
 interface with the safe_generate_response function.
 """
-import re
+import re, regex
 import datetime
 import sys
 import ast
@@ -832,6 +832,13 @@ def run_gpt_prompt_pronunciatio(action_description, persona, verbose=False):
   
   def __func_clean_up(gpt_response, prompt=""):
     cr = gpt_response.strip()
+    try:
+      idx = cr.index(f"Action description: {prompt_input[0]}")
+      cr = cr[idx:]
+    except:
+      pass
+    idx = cr.find(regex.findall(r'\p{Emoji}', cr)[0])
+    cr = ''.join(regex.findall(r'\p{Emoji}', cr[idx:].split("\n")[0].strip()))
     if len(cr) > 3:
       cr = cr[:3]
     return cr

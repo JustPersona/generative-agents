@@ -15,6 +15,8 @@ import sys
 import numpy
 import math
 import shutil, errno
+import re
+import requests
 
 from os import listdir
 
@@ -223,6 +225,27 @@ def copyanything(src, dst):
     if exc.errno in (errno.ENOTDIR, errno.EINVAL):
       shutil.copy(src, dst)
     else: raise
+
+
+def login_to_dvwa(dvwa_url, username="admin", password="password", security="low"):
+    session = requests.Session()
+    login_page_url = f"{dvwa_url}/login.php"
+    response = session.get(login_page_url)
+    token_match = re.search(r'<input type=\'hidden\' name=\'user_token\' value=\'([^\']+)\'', response.text)
+    if token_match:
+        user_token = token_match.group(1)
+    params = {
+        'username': username,
+        'password': password,
+        'Login': 'Login',
+        'user_token': user_token
+    }
+    login_response = session.post(login_page_url, data=params)
+    cookies = session.cookies.get_dict()
+    cookies['security'] = security
+    # print("cookies :", cookies)
+    return cookies
+
 
 
 if __name__ == '__main__':

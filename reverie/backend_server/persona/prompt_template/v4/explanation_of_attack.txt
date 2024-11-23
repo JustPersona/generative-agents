@@ -1,0 +1,32 @@
+!<INPUT 0>! -- Attack Name
+
+<commentblockmarker>###</commentblockmarker>
+Provide a detailed explanation of the !<INPUT 0>! attack, including the following information:
+
+1. **Attack Description**: Provide a general definition and primary purpose of the !<INPUT 0>! attack.
+
+2. **Attack Steps**: Describe each step of the attack in detail. Include a thorough explanation of how the attacker proceeds through each stage, the methods or techniques used, and any specific technical details involved. Use concrete examples to illustrate how each step might be performed. Do not limit the steps to a specific number; instead, provide as many steps as necessary to fully describe the process. Additionally, describe possible scenarios where this attack might occur to illustrate the context in which the attack is likely to be effective.
+
+3. **Vulnerable HTTP Responses**: Detail which HTTP response codes or messages indicate the presence of a vulnerability that the attack could exploit, and provide examples of indicators that would confirm the attack has been successful.
+
+4. **Impact of the Attack**: Explain the potential impact if the attack is successful, including what information can be obtained and how it may affect the system or users.
+
+Include all the requested information and provide the explanation in JSON format as follows:
+{
+  "description": "<General description of the attack here>",
+  "attack_steps": [
+    "<Step 1 description with concrete example>",
+    "<Step 2 description with concrete example>",
+    "<Step 3 description with concrete example>",
+    "<Step 4 description with concrete example>",
+    "... as many steps as needed to describe the attack in detail ..."
+  ],
+  "vulnerable_http_responses": [
+    "<HTTP response code or message indicating vulnerability>",
+    "<Another response that shows vulnerability or confirms success>"
+  ],
+  "possible_impacts": [
+    "<Information that can be obtained if the attack is successful>",
+    "<Potential impact on the system>"
+  ]
+}

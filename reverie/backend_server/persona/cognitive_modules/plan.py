@@ -13,6 +13,7 @@ sys.path.append('../../')
 
 from global_methods import *
 from persona.prompt_template.run_gpt_prompt import *
+from persona.prompt_template.black_prompt import *
 from persona.cognitive_modules.retrieve import *
 from persona.cognitive_modules.converse import *
 
@@ -518,6 +519,47 @@ def _long_term_planning(persona, new_day):
 
 
 
+##############################################################################
+# CHAPTER 4 :
+##############################################################################
+
+def black_hacker(persona, attack, target_url, cookies=None):
+  """
+  
+  """
+  explanation_of_attack = run_gpt_prompt_explanation_of_attack(persona, attack)[0] # 공격설명생성
+  print("공격설명생성완료 :",explanation_of_attack)
+  create_payload = run_gpt_prompt_create_payload(persona, attack, explanation_of_attack, target_url, cookies) # 페이로드생성
+  print("페이로드생성완료 :",create_payload)
+  method = create_payload[2]
+  create_payload = create_payload[0]["payload"]
+  response_attack_reasoning = run_gpt_prompt_response_attack_reasoning(persona, attack, explanation_of_attack, target_url, create_payload, cookies)
+  print("공격성공유무,추론완료 :",response_attack_reasoning)
+  reasoning = response_attack_reasoning[0]["reasoning"] # 공격성공추론
+  observations = response_attack_reasoning[0]["observations"] # 공격성공유무
+  HTML_differences = response_attack_reasoning[2] # 변경요약
+  generate_next_step = run_gpt_prompt_generate_next_step(persona, attack, explanation_of_attack, target_url, create_payload, reasoning, observations, HTML_differences)[0]["next_step"] # 다음스텝
+  print("다음스탭생성완료 :",generate_next_step)
+  step_data = {
+    "attack_name": attack,
+    "method": method,
+    "payload": create_payload,
+    "reasoning": reasoning,
+    "observations": observations,
+    "html_differences": HTML_differences,
+    "next_step": generate_next_step,
+    "timestamp": persona.scratch.curr_time.strftime("%B %d, %Y, %H:%M:%S")
+  }
+  return step_data
+
+
+# def white_hacker(persona, attack, target_url, cookies=None):
+
+
+
+##############################################################################
+
+
 def _determine_action(persona, maze): 
   """
   Creates the next action sequence for the persona. 
@@ -651,6 +693,7 @@ def _determine_action(persona, maze):
                                  act_obj_desp, 
                                  act_obj_pron, 
                                  act_obj_event)
+
 
 
 def _choose_retrieved(persona, retrieved): 

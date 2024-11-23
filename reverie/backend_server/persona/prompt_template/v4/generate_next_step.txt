@@ -1,0 +1,78 @@
+!<INPUT 0>! -- attack name
+!<INPUT 1>! -- explanation of attack
+!<INPUT 2>! -- load payloads result
+!<INPUT 3>! -- create_payload
+!<INPUT 4>! -- HTML Differences
+!<INPUT 5>! -- Reasoning
+!<INPUT 6>! -- Observations
+
+<commentblockmarker>###</commentblockmarker>  
+### Description of the !<INPUT 0>! Attack:
+!<INPUT 1>!
+
+### Payloads Generated So Far:
+
+Below are the payloads that have been generated and their results:
+!<INPUT 2>!  
+
+### Created Payload:
+!<INPUT 3>!
+
+### HTML Differences:
+!<INPUT 4>!
+
+### Reasoning for the Attack:
+!<INPUT 5>!
+
+### Observations from the Attack:
+!<INPUT 6>!
+
+### Instructions for Generating the Next Step:
+
+Please provide a **detailed recommendation** for the next step, focusing on how to generate the next payload effectively while considering the current server behavior and previous attack outcomes. Your recommendation should be written in a **conversational style**, as if you are directly communicating with the user. Each aspect should be explained clearly with examples wherever applicable. Make sure all the information is presented in `"next_step"`.
+
+The `"next_step"` should include the following:
+
+1. **New Payload Proposal**:
+   - Propose the next payload to try, incorporating the results and observations from the previous steps. Include specific values or structures observed in HTML Differences to improve the payload.
+   - **Avoid repeating previously failed payloads** unless modifications are made to address why the previous payload failed.
+
+2. **Payload Modification Direction**:
+   - Suggest **specific modifications** to the payload format, such as:
+     - **String Encoding**: Applying URL encoding, Base64 encoding, or other obfuscation techniques to bypass potential filters.
+     - **SQL Comment Addition**: Adding SQL comments (e.g., `--` or `#`) to potentially manipulate the backend query structure more effectively.
+     - **Injection Vector Expansion**: Suggest adding new parameters or targeting different input fields to expand the scope of the attack.
+
+3. **HTTP Method Consideration**:
+   - If appropriate, consider a different HTTP method (e.g., switching from `GET` to `POST`). However, be mindful that the server may restrict certain methods. 
+   - **Conditional Suggestion**: Only suggest changing the HTTP method if it seems likely that the server will support it. For instance: "If the server allows POST requests, it may be useful to try sending the payload via POST instead of GET, as this can sometimes bypass input validation more easily."
+
+4. **Fallback and Alternative Approaches**:
+   - If the attack was **unsuccessful**, propose alternative approaches automatically to avoid repeating the same mistake:
+     - **Parameter Manipulation**: Modify the values of existing parameters or add new ones to see if different behaviors are triggered.
+     - **Timing-based Approach**: Suggest a timing attack to detect if the server is processing the payload differently, especially when no visible change is observed in the response.
+
+5. **Detailed Payload Example**:
+   - Provide a complete example of the next payload to try, including any modifications suggested above. Make sure to adapt the payload based on the information learned so far.
+   - **Example**: "The next payload could be `?id=%27or+1=1%23&Submit=Submit` with URL encoding applied to bypass input validation. If this payload is rejected, consider adding an additional parameter to observe how the server responds to more complex inputs."
+
+6. **Goal of the Next Step**:
+   - Clearly state the **goal of the next step**: whether it is to extract more data, bypass a specific filter, or escalate privileges. This will help keep the focus on progressing the attack logically and effectively.
+   - Example: "The primary goal of the next step is to manipulate the `id` parameter to access unauthorized data fields or potentially escalate privileges using the known values found in the previous HTML Differences."
+
+### Next Step Output:
+Please provide the result in the following format, where `"next_step"` contains all relevant information in a conversational and coherent style:
+
+{
+"next_step": "<Write your recommendation for the next step in a conversational style here, including: new payload proposal, payload modification direction, HTTP method consideration, fallback and alternative approaches, a detailed payload example, and the goal of the next step. Avoid repeating the same language and provide a dynamic response based on the given context.>"
+}
+
+
+### Constraints:
+- Write the `"next_step"` in a **conversational style**, as if you are directly explaining it to the user.
+- Ensure each recommendation is **highly specific** and **focused on creating an effective next payload**.
+- Include **concrete examples** wherever possible to clarify how the payload should be constructed.
+- Avoid using the same generic phrases repeatedly—use varied language and **context-specific suggestions**.
+- Ensure **all information is included in the `"next_step"`** key for clear and direct output.
+- Emphasize **conditional recommendations** for changes, such as HTTP method switching, to accommodate potential server restrictions.
+- Focus on maintaining a **reliable and automated flow** that supports iterative learning from each attack attempt.

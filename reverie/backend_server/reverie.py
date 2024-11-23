@@ -151,9 +151,10 @@ class ReverieServer:
     with open(self.curr_sim_code_file, "w+") as outfile:
       outfile.write(json.dumps(curr_sim_code, indent=2))
     
+    self.curr_step_file = f"{fs_temp_storage}/curr_step.json"
     curr_step = dict()
     curr_step["step"] = self.step
-    with open(f"{fs_temp_storage}/curr_step.json", "w+") as outfile:
+    with open(self.curr_step_file, "w+") as outfile:
       outfile.write(json.dumps(curr_step, indent=2))
 
     # 성공 데이터, 패치 데이터 초기 해시값 설정
@@ -514,13 +515,6 @@ class ReverieServer:
           self.save()
           break
 
-        elif sim_command.lower() == "start path tester mode": 
-          # Starts the path tester and removes the currently forked sim files.
-          # Note that once you start this mode, you need to exit out of the
-          # session and restart in case you want to run something else. 
-          shutil.rmtree(sim_folder) 
-          self.start_path_tester_server()
-
         elif sim_command.lower() == "exit": 
           # Finishes the simulation environment but does not save the progress
           # and erases all saved data from current simulation. 
@@ -681,6 +675,8 @@ class ReverieServer:
 
     if check_if_file_exists(self.curr_sim_code_file):
       os.remove(self.curr_sim_code_file)
+    if check_if_file_exists(self.curr_step_file):
+      os.remove(self.curr_step_file)
 
 
 

@@ -11,7 +11,6 @@ import ollama
 
 from utils import *
 from langchain_ollama import OllamaLLM
-from langchain_community.embeddings import GPT4AllEmbeddings
 from langchain.callbacks.manager import CallbackManager
 from langchain.callbacks.streaming_stdout_final_only import FinalStreamingStdOutCallbackHandler as CallbackHandler
 
@@ -275,15 +274,15 @@ def safe_generate_response_json(prompt,
         llm.format = ""
 
 
-from langchain_community.embeddings import GPT4AllEmbeddings
-def get_embedding(text, model=None):
- # Use GPT4All local embeddings 
- # https://python.langchain.com/docs/integrations/text_embedding/gpt4all
- text = text.replace("\n", " ")
- if not text: 
-  text = "this is blank"
- gpt4all_embd = GPT4AllEmbeddings()
- return gpt4all_embd.embed_query(text)
+# from langchain_community.embeddings import GPT4AllEmbeddings
+# def get_embedding(text, model=None):
+#  # Use GPT4All local embeddings 
+#  # https://python.langchain.com/docs/integrations/text_embedding/gpt4all
+#  text = text.replace("\n", " ")
+#  if not text: 
+#   text = "this is blank"
+#  gpt4all_embd = GPT4AllEmbeddings()
+#  return gpt4all_embd.embed_query(text)
 
 
 # https://ollama.com/blog/embedding-models
@@ -292,14 +291,14 @@ def get_embedding(text, model=None):
 # nomic-embed-text       137M   (849 MB)
 # all-minilm           23M
 
-# def get_embedding(text, model="mxbai-embed-large"):
-#     text = text.replace("\n", " ")
-#     if not text:
-#         text = "this is blank"
-#     if model not in [m['model'].split(':')[0] for m in ollama.list().get('models', [])]:
-#         ollama.pull(model)
-#     response = ollama.embeddings(model=model, prompt=text)
-#     return response['embedding']
+def get_embedding(text, model="mxbai-embed-large"):
+    text = text.replace("\n", " ")
+    if not text:
+        text = "this is blank"
+    if model not in [m['model'].split(':')[0] for m in ollama.list().get('models', [])]:
+        ollama.pull(model)
+    response = ollama.embeddings(model=model, prompt=text)
+    return response['embedding']
 
 
 

@@ -21,7 +21,7 @@ class Maze:
     self.maze_name = maze_name
     # Reading in the meta information about the world. If you want tp see the
     # example variables, check out the maze_meta_info.json file. 
-    meta_info = json.load(open(f"{env_matrix}/maze_meta_info.json"))
+    meta_info = json.load(open(f"{env_matrix}/maze_meta_info.json" % self.maze_name))
     # <maze_width> and <maze_height> denote the number of tiles make up the 
     # height and width of the map. 
     self.maze_width = int(meta_info["maze_width"])
@@ -45,7 +45,7 @@ class Maze:
     # Tiled export. Then we basically have the block path: 
     # World, Sector, Arena, Game Object -- again, these paths need to be 
     # unique within an instance of Reverie. 
-    blocks_folder = f"{env_matrix}/special_blocks"
+    blocks_folder = f"{env_matrix}/special_blocks" % self.maze_name
 
     _wb = blocks_folder + "/world_blocks.csv"
     wb_rows = read_file_to_list(_wb, header=False)
@@ -74,7 +74,7 @@ class Maze:
     # [SECTION 3] Reading in the matrices 
     # This is your typical two dimensional matrices. It's made up of 0s and 
     # the number that represents the color block from the blocks folder. 
-    maze_folder = f"{env_matrix}/maze"
+    maze_folder = f"{env_matrix}/maze" % self.maze_name
 
     _cm = maze_folder + "/collision_maze.csv"
     collision_maze_raw = read_file_to_list(_cm, header=False)[0]
@@ -380,37 +380,3 @@ class Maze:
     for event in curr_tile_ev_cp: 
       if event[0] == subject:  
         self.tiles[tile[1]][tile[0]]["events"].remove(event)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

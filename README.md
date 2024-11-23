@@ -1,6 +1,6 @@
 
 
-# Generative Agents: Interactive Simulacra of Human Behavior 
+# Generative Agents: Interactive Simulacra of Human Behavior
 
 <p align="center" width="100%">
 <img src="cover.png" alt="Smallville" style="width: 80%; min-width: 300px; display: block; margin: auto;">
@@ -14,19 +14,25 @@ To set up your environment, you will need to generate a `utils.py` file that con
 ### Step 1. Generate Utils File
 In the `reverie/backend_server` folder (where `reverie.py` is located), create a new file titled `utils.py` and copy and paste the content below into the file:
 ```
+# LLaMA
+llama_api = "http://localhost:11434"
+llama_model = "<Model Name>"
+
 # Copy and paste your OpenAI API Key
 openai_api_key = "<Your OpenAI API>"
 # Put your name
 key_owner = "<Name>"
 
 maze_assets_loc = "../../environment/frontend_server/static_dirs/assets"
-env_matrix = f"{maze_assets_loc}/the_ville/matrix"
-env_visuals = f"{maze_assets_loc}/the_ville/visuals"
+env_matrix = f"{maze_assets_loc}/%s/matrix"
+env_visuals = f"{maze_assets_loc}/%s/visuals"
 
 fs_storage = "../../environment/frontend_server/storage"
 fs_temp_storage = "../../environment/frontend_server/temp_storage"
 
 collision_block_id = "27613"
+
+auto_save_next_env_file = True
 
 # Verbose 
 debug = True

@@ -401,6 +401,20 @@ class ReverieServer:
           with open(curr_move_file, "w") as outfile: 
             outfile.write(json.dumps(movements, indent=2))
 
+          # Without frontend connection
+          if auto_save_next_env_file:
+            next_env_data = dict()
+            for persona_name, persona in self.personas.items():
+              persona_pos = movements["persona"][persona_name]["movement"]
+              next_env_data[persona_name] = {
+                "maze": self.maze.maze_name,
+                "x": persona_pos[0],
+                "y": persona_pos[1],
+              }
+            next_env_file = f"{sim_folder}/environment/{self.step+1}.json"
+            with open(next_env_file, "w") as outfile:
+              outfile.write(json.dumps(next_env_data, indent=2))
+
           # After this cycle, the world takes one step forward, and the 
           # current time moves by <sec_per_step> amount. 
           self.step += 1

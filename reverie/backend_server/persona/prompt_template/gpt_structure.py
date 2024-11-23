@@ -8,10 +8,11 @@ import json
 import random
 import openai
 import time 
+import requests
 
 from utils import *
 
-openai.api_key = openai_api_key
+# openai.api_key = openai_api_key
 
 def temp_sleep(seconds=0.1):
   time.sleep(seconds)
@@ -194,34 +195,100 @@ def ChatGPT_safe_generate_response_OLD(prompt,
 # ###################[SECTION 2: ORIGINAL GPT-3 STRUCTURE] ###################
 # ============================================================================
 
-def GPT_request(prompt, gpt_parameter): 
-  """
-  Given a prompt and a dictionary of GPT parameters, make a request to OpenAI
-  server and returns the response. 
-  ARGS:
-    prompt: a str prompt
-    gpt_parameter: a python dictionary with the keys indicating the names of  
-                   the parameter and the values indicating the parameter 
-                   values.   
-  RETURNS: 
-    a str of GPT-3's response. 
-  """
-  temp_sleep()
-  try: 
-    response = openai.Completion.create(
-                model=gpt_parameter["engine"],
-                prompt=prompt,
-                temperature=gpt_parameter["temperature"],
-                max_tokens=gpt_parameter["max_tokens"],
-                top_p=gpt_parameter["top_p"],
-                frequency_penalty=gpt_parameter["frequency_penalty"],
-                presence_penalty=gpt_parameter["presence_penalty"],
-                stream=gpt_parameter["stream"],
-                stop=gpt_parameter["stop"],)
-    return response.choices[0].text
-  except: 
-    print ("TOKEN LIMIT EXCEEDED")
-    return "TOKEN LIMIT EXCEEDED"
+#def GPT_request(prompt, gpt_parameter): 
+#  """
+#  Given a prompt and a dictionary of GPT parameters, make a request to OpenAI
+#  server and returns the response. 
+#  ARGS:
+#    prompt: a str prompt
+#    gpt_parameter: a python dictionary with the keys indicating the names of  
+#                   the parameter and the values indicating the parameter 
+#                   values.   
+#  RETURNS: 
+#    a str of GPT-3's response. 
+#  """
+#  temp_sleep()
+#  try: 
+#    response = openai.Completion.create(
+#                model=gpt_parameter["engine"],
+#                prompt=prompt,
+#                temperature=gpt_parameter["temperature"],
+#                max_tokens=gpt_parameter["max_tokens"],
+#                top_p=gpt_parameter["top_p"],
+#                frequency_penalty=gpt_parameter["frequency_penalty"],
+#                presence_penalty=gpt_parameter["presence_penalty"],
+#                stream=gpt_parameter["stream"],
+#                stop=gpt_parameter["stop"],)
+#    return response.choices[0].text
+#  except: 
+#    print ("TOKEN LIMIT EXCEEDED")
+#    return "TOKEN LIMIT EXCEEDED"
+
+# ============================================================================
+llama_api_url = llama_api + "/api/chat/"
+def GPT_request(prompt, llama_parameter, suffix=None,
+                  tools=None, format='json', options=None, 
+                  stream=False, keep_alive='5m'):
+    """
+    Ollama API에 요청을 보냄
+        Parameters: https://github.com/ollama/ollama/blob/main/docs/api.md
+        - model: 모델 이름
+        - messages: 채팅의 메시지, 채팅 기억
+            role: 메시지의 역할로, system, user, assistant, 또는 tool
+            content: 메시지의 내용입니다.
+            images (선택): 메시지에 포함할 이미지 목록입니다 (llava와 같은 다중 모달 모델용).
+            tool_calls (선택): 모델이 사용하고자 하는 도구의 목록입니다.
+        - tools: 모델이 사용할 수 있는 도구 (지원되는 경우, stream = false만)
+
+        - format: 응답 형식. json만 가능.
+        - options: Modelfile 문서에 나열된 추가 모델 매개변수, 예: 온도입니다.
+        - stream: false인 경우 응답이 개별 객체의 스트림이 아닌 단일 응답 객체로 반환됩니다.
+        - keep_alive: 요청 후 모델이 메모리에 얼마나 오랫동안 로드된 상태로 유지될지를 제어합니다 (기본값: 5분).
+    """
+    temp_sleep()
+
+    # 요청 데이터 설정
+    data = {
+        "model": llama_model,  # 모델 이름
+        "messages": [
+           {"role": "system", "content": "Output the response to the prompt above in json. output json: {\"result\": the answer to a question. }"},
+           {"role": "user", "content": prompt},  # 프롬프트
+           {"role": "user", "content": "Output the response to the prompt above in json. output json: {\"result\": the answer to a question. }"}
+        ],
+        "suffix": suffix,                     # 응답 후 추가 텍스트 (선택 사항)
+        "tools": tools,                       # 모델이 사용할 수 있는 도구 (선택 사항)
+        "format": format,                     # 응답 형식 (json)
+        "options": {                          # 추가 모델 파라미터
+            "num_predict": llama_parameter["max_tokens"],  # 최대 토큰 수
+            "mirostat": llama_parameter["temperature"],     # 온도
+            "top_p": llama_parameter["top_p"]               # top_p
+            # "stop": llama_parameter["stop"]               # 선택 사항
+        },
+        "stream": stream,                     # 스트리밍 여부
+        "keep_alive": keep_alive              # 유지 시간
+    }
+    # None 값 제거
+    data = {k: v for k, v in data.items() if v is not None}
+
+    try: 
+        response = requests.post(
+            llama_api_url,  # Ollama API 엔드포인트
+            json=data
+        )
+        response.raise_for_status()  # HTTP 오류가 발생하면 예외를 발생시킴
+        json_response = response.json()  # == json.loads(response.content.decode('utf-8'))
+        # print(json_response)
+        content = json_response['message']['content'].strip()
+        result_json = json.loads(content)
+        return result_json['result']  # "result" 키의 값만 반환
+    except requests.exceptions.RequestException as e:
+        print(f"API 요청 에러: {e}")
+    except json.JSONDecodeError as e:
+        print(f"JSON 파싱 에러: {e}")
+    except KeyError as e:
+        print(f"예상치 못한 응답 형식: {e}")
+    return "ERROR"
+# ============================================================================
 
 
 def generate_prompt(curr_input, prompt_lib_file): 
@@ -272,13 +339,26 @@ def safe_generate_response(prompt,
       print ("~~~~")
   return fail_safe_response
 
+#def get_embedding(text, model="text-embedding-ada-002"):
+#  text = text.replace("\n", " ")
+#  if not text: 
+#    text = "this is blank"
+#  return openai.Embedding.create(
+#          input=[text], model=model)['data'][0]['embedding']
 
-def get_embedding(text, model="text-embedding-ada-002"):
-  text = text.replace("\n", " ")
-  if not text: 
-    text = "this is blank"
-  return openai.Embedding.create(
-          input=[text], model=model)['data'][0]['embedding']
+# https://ollama.com/blog/embedding-models
+# Model                   Parameter Size
+# mxbai-embed-large       334M   (1.2 GB)
+# nomic-embed-text       137M   (849 MB)
+# all-minilm           23M
+def get_embedding(text, model="mxbai-embed-large"):
+    text = text.replace("\n", " ")
+    if not text:
+        text = "this is blank"
+    if model not in [m['model'].split(':')[0] for m in ollama.list().get('models', [])]:
+        ollama.pull(model)
+    response = ollama.embeddings(model=model, prompt=text)
+    return response['embedding']
 
 
 if __name__ == '__main__':
@@ -309,23 +389,3 @@ if __name__ == '__main__':
                                  True)
 
   print (output)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -37,7 +37,7 @@ class Payload:
     #     return successful_data
         
 
-    def save_attack_data(self, url, data, key_type="basic"):
+    def save_attack_data(self, url, data, timestamp, key_type="basic"):
         if url not in self.data:
             self.data[url] = {}
 
@@ -51,6 +51,7 @@ class Payload:
             step_number = last_step + 1
             step_data = {"step": step_number}
             step_data.update(data)
+            step_data["timestamp"] = timestamp
 
             self.data[url][key_type].append(step_data)
         else:

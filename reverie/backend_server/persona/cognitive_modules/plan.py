@@ -548,7 +548,6 @@ def black_hacker(persona, attack, target_url, cookies=None):
     "observations": observations,
     "html_differences": HTML_differences,
     "next_step": generate_next_step,
-    "timestamp": persona.scratch.curr_time.strftime("%B %d, %Y, %H:%M:%S")
   }
   return step_data
 

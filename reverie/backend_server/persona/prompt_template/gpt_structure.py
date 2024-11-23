@@ -32,7 +32,7 @@ def temp_sleep(seconds=0.1):
 def ChatGPT_single_request(prompt): 
   temp_sleep()
   try:
-    response = llm(prompt)
+    response = llm.invoke(prompt)
   except ValueError:
     print("Requested tokens exceed context window")
     ### TODO: Add map-reduce or splitter to handle this error.
@@ -54,7 +54,7 @@ def ChatGPT_request(prompt,parameters):
   """
   # temp_sleep()
   try:
-    response = llm(prompt)
+    response = llm.invoke(prompt)
   except ValueError:
     print("Requested tokens exceed context window")
     ### TODO: Add map-reduce or splitter to handle this error.
@@ -146,7 +146,7 @@ def GPT_request(prompt,parameters):
   """
   # temp_sleep()
   try:
-    response = llm(prompt)
+    response = llm.invoke(prompt)
   except ValueError:
     print("Requested tokens exceed context window")
     ### TODO: Add map-reduce or splitter to handle this error.

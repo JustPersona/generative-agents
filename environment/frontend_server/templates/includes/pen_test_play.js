@@ -4,9 +4,14 @@ const static = "{% static '' %}";
 let debug = false;
 let pause = false;
 
+const black_hats = {{ black_hats | safe }};
+const white_hats = {{ white_hats | safe }};
+const chatContainer = document.querySelector("section > #chattingbox-container");
 const fullScreen = false;
 const mode = ["forkable", "compressed"].includes("{{ mode }}") ? "{{ mode }}" : "preview";
 const canvas_ratio = 8/15;
+const map_width = "{{ map.width }}" * 1;
+const map_height = "{{ map.height }}" * 1;
 const tile_width = "{{ tile_width }}" * 1;
 const timebox = document.getElementById("game-time-content");
 let camera_zoom = 1;
@@ -67,24 +72,30 @@ const personaFocus = function(radio) {
 	document.querySelector("#on_screen_det_content-init")?.classList.toggle("d-none", !isActive);
 	for (let x of document.querySelector("#trigger-container")["on_screen_det_trigger"]) if (x != radio) x.classList.remove("active");
 	if (box) for (let x of box.parentNode.children) x.classList.toggle("d-none", x !== box || isActive);
+	document.querySelector(`[data-bs-target="#${["payload", "patch"][black_hats.includes(curr_focused_persona.replace(/_/g, " ")) ? 0 : 1]}-table-container"]`)?.click();
 }
 
 
 
-const pen_test_play = function(container) {
+const pen_test_play = async function(container) {
 	document.querySelector("#on_screen_det_trigger-Isabella_Rodriguez")?.click();
+
 	let isRunning = "{{ running }}".toLowerCase() == "true";
 	const maze_name = "{{ maze_name }}";
 
-	const map_width = "{{ map.width }}" * 1;
-	const map_height = "{{ map.height }}" * 1;
 	const sec_per_step = "{{ sec_per_step }}" * 1;
 
 	let max_step = "{{ max_step }}" * 1;
 	const player_width = 40;
 	const playerDepth = -1;
 
-	let payloads = {% if mode == "preview" or not payloads %}{}{% else %}{{ payloads.data | safe }}{% endif %};
+	let payloads = {}
+	let patches = {};
+	{% if mode != "preview" %}
+		const init_response = await asyncPost("{% url 'pen_info' %}", {pen_code: "{{ pen_code }}"});
+		payloads = init_response.payloads.data;
+		patches = init_response.patches.data;
+	{% endif %}
 	const vuln_imoji = "\u2757\u2757";
 	let imoji_bak = {};
 	let vuln_imoji_count = {};
@@ -580,7 +591,7 @@ const pen_test_play = function(container) {
 		compressed: function() {
 			// *** MOVING PERSONAS ***
 			if (execute_count <= 0) start_datetime = new Date(start_datetime.getTime() + step_size);
-			action(all_movement[step], chats[step], payloads[step], start_datetime);
+			action(all_movement[step], chats[step], payloads[step], patches[step], start_datetime);
 		},
 
 
@@ -637,7 +648,7 @@ const pen_test_play = function(container) {
 				// The execute_count_max is computed by tile_width/movement_speed, which
 				// defines a one step sequence in this world.
 				let curr_time = new Date(execute_movement["meta"]["curr_time"]);
-				action(execute_movement["persona"], execute_movement["chats"], execute_movement["payload"], curr_time);
+				action(execute_movement["persona"], execute_movement["chats"], execute_movement["payload"], execute_movement["patch"], curr_time);
 			}
 		},
 	};
@@ -661,7 +672,7 @@ const pen_test_play = function(container) {
 	}
 
 
-	const action = function(movements, curr_chat, curr_payload, curr_time) {
+	const action = function(movements, curr_chat, curr_payload, curr_patch, curr_time) {
 		if (!movements) return;
 
 		if (curr_time) {
@@ -670,8 +681,11 @@ const pen_test_play = function(container) {
 			timebox.value = time;
 		}
 		if (execute_count == 0) {
-			for (let p_name of {{ black_hats | safe }}) {
+			for (let p_name of black_hats) {
 				setPayloadByStep(p_name, curr_payload?.[p_name], movements?.[p_name]?.["pronunciatio"]);
+			}
+			for (let p_name of white_hats) {
+				setPatchByStep(curr_patch?.[p_name] );
 			}
 		}
 		for (let i=0; i<Object.keys(personas).length; i++) {
@@ -709,7 +723,7 @@ const pen_test_play = function(container) {
 					document.getElementById("current_action__" + curr_persona_name_os).innerHTML = description_content.split("@")[0];
 					document.getElementById("target_address__" + curr_persona_name_os).innerHTML = description_content.split("@")[1];
 					document.getElementById("chat__" + curr_persona_name_os).innerHTML = chat_content;
-					insertChatting(pen_code, curr_chat, curr_focused_persona, curr_time);
+					insertChatting(chatContainer, pen_code, curr_chat, {focus: curr_focused_persona, time: curr_time, suffix: "-play"});
 				}
 
 				if (execute_count > 0) {
@@ -738,8 +752,14 @@ const pen_test_play = function(container) {
 		for (let i=0; i<Object.keys(personas).length; i++) {
 			let curr_persona_name_os = Object.keys(personas)[i];
 			let curr_persona = personas[curr_persona_name_os];
+			let curr_speech_bubble = speech_bubbles[curr_persona_name_os];
+			let curr_pronunciatio = pronunciatios[curr_persona_name_os];
 			curr_persona.body.x = movement_target[curr_persona_name_os][0];
 			curr_persona.body.y = movement_target[curr_persona_name_os][1];
+			curr_speech_bubble.x = curr_persona.body.x + offsets["speech_bubble"][0];
+			curr_speech_bubble.y = curr_persona.body.y + offsets["speech_bubble"][1];
+			curr_pronunciatio.x = curr_speech_bubble.x - curr_speech_bubble.displayWidth/2 + offsets["pronunciatio"][0];
+			curr_pronunciatio.y = curr_speech_bubble.y - curr_speech_bubble.displayHeight/2 + offsets["pronunciatio"][1];
 		}
 		execute_count = execute_count_max + 1;
 		step = step + 1;
@@ -806,16 +826,24 @@ const pen_test_play = function(container) {
 
 		imoji_bak[p_name] = pronunciatio_content || imoji_bak[p_name] || "";
 		if (vuln_imoji_count[p_name] != -1) setPronunciatio_content(p_name, imoji_bak[p_name]);
-		insertPayloadTable(document.querySelector("table"), {url: data?.url, data, reverse: true});
+		insertPayloadTable(document.querySelector(`#payload-table-container table`), {url: data?.url, data, reverse: true});
+	}
+
+	const setPatchByStep = function(data) {
+		if (!data) return;
+		insertPatchTable(document.querySelector(`#patch-table-container table`), {best: data.best, data: data.suggestion, reverse: true});
 	}
 
 	for (let i=1; i<step; i++) {
 		for (let p_name in payloads[i]) {
 			const x = payloads[i][p_name];
-			insertPayloadTable(document.querySelector("table"), {url: x?.url, data: x, reverse: true});
+			insertPayloadTable(document.querySelector(`#payload-table-container table`), {url: x?.url, data: x, reverse: true});
 		}
-
-		insertChatting(pen_code, chats[i], curr_focused_persona);
+		for (let p_name in patches[i]) {
+			const x = patches[i][p_name];
+			insertPatchTable(document.querySelector(`#patch-table-container table`), {best: x.best, data: x.suggestion, reverse: true});
+		}
+		insertChatting(chatContainer, pen_code, chats[i], {focus: curr_focused_persona, suffix: "-play"});
 	}
 
 	return game;
@@ -830,9 +858,10 @@ const canvas_resizing = function(size) {
 	if (!canvas) return;
 
 	const canvas_width = typeof size === "number" ? size : gameContainer.clientWidth;
-	const canvas_height = canvas_width * canvas_ratio;
+	const canvas_height = canvas_width * (fullScreen ? map_height/map_width : canvas_ratio);
 	canvas.style.width = canvas_width + "px";
 	canvas.style.height = canvas_height + "px";
 }
 window.addEventListener("DOMContentLoaded", canvas_resizing);
+window.addEventListener("load", canvas_resizing);
 window.addEventListener("resize", canvas_resizing);

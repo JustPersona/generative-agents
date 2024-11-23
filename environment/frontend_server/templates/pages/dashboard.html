@@ -5,7 +5,7 @@
 {% block content %}
 
 <style type="text/css">
-	table#pen_code_container tbody tr.active td:first-child:before {
+	table#pen_code_container tbody tr.active th:first-child:before {
 		content: "";
 		display: block;
 		position: absolute;
@@ -19,8 +19,8 @@
 
 <section class="bg-body shadow rounded-4 my-2 p-3">
 	<div class="d-flex gap-2 align-items-center">
-		<input class="flex-grow-1 px-2" type="text" name="search" placeholder="Search..." oninput="selectPen(this.value)"/>
-		<a href="{% url 'pen_test' %}">Details &gt;</a>
+		<input class="flex-grow-1 px-2 w-100" type="text" name="search" placeholder="Search..." oninput="selectPen(this.value)"/>
+		<a href="{% url 'pen_test' %}" class="text-nowrap">All Payloads &gt;</a>
 	</div>
 	<div class="table-responsive mt-2" style="max-height: 500px;">
 		<table id="pen_code_container" class="table table-sm table-bordered table-hover m-0 position-relative text-nowrap">
@@ -28,22 +28,43 @@
 				<tr>
 					<th scope="col" rowspan="2" class="text-center minimum align-middle sorted" sort="num">#</th>
 					<th scope="col" rowspan="2" class="align-middle" sort="pen_code">Penetration Test Name</th>
-					<th scope="col" colspan="3" class="text-center minimum">Number of</th>
+					<th scope="col" rowspan="2" class="align-middle minimum">Description</th>
+					<th scope="col" colspan="6" class="text-center minimum">Number of</th>
 					<th scope="col" rowspan="2" class="text-center minimum align-middle">Control</th>
 				</tr>
 				<tr>
 					<th scope="col" class="text-center minimum" sort="step">Steps</th>
 					<th scope="col" class="text-center minimum" sort="payloads">Payloads</th>
 					<th scope="col" class="text-center minimum" sort="vulnerabilities">Vulnerabilities</th>
+					<th scope="col" class="text-center minimum" sort="vulnerable_files">Vulnerable files</th>
+					<th scope="col" class="text-center minimum" sort="patch_suggestion">Patch Suggestion</th>
+					<th scope="col" class="text-center minimum" sort="best_suggestion">Best Suggestion</th>
 				</tr>
 			</thead>
+			<tfoot class="sticky-bottom z-1">
+				<tr class="fw-bold">
+					<th scope="col" colspan="2">Total</th>
+					<td></td>
+					<td class="text-center" field="step"></td>
+					<td class="text-center" field="payloads"></td>
+					<td class="text-center" field="vulnerabilities"></td>
+					<td class="text-center" field="vulnerable_files"></td>
+					<td class="text-center" field="patch_suggestion"></td>
+					<td class="text-center" field="best_suggestion"></td>
+					<td></td>
+				</tr>
+			</tfoot>
 			<tbody class="table-group-divider">
 				{% for pen in pen_codes %}<tr class="position-relative" pen_code="{{ pen.pen_code }}" forked="{{ pen.fork_sim_code }}" mode="{{ pen.mode }}" role="button" onclick="this.querySelector('[data-bs-title=Information]').click()">
-					<td field="num" class="text-end"><span{% if backend.pen_code == pen.pen_code %} class="text-success" data-bs-toggle="tooltip" data-bs-title="Running"{% endif %}>{{ forloop.counter }}</span></td>
+					<th field="num" class="text-end" scope="row"><span{% if backend.pen_code == pen.pen_code %} class="text-success" data-bs-toggle="tooltip" data-bs-title="Running"{% endif %}>{{ forloop.counter }}</span></th>
 					<td field="pen_code">{{ pen.pen_code }}</td>
-					<td field="step" class="text-center">{% if pen.isBase %}-{% else %}{{ pen.step }}{% endif %}</td>
-					<td field="payloads" class="text-center">{% if not pen.payloads.count.payloads %}-{% else %}{{ pen.payloads.count.payloads }}{% endif %}</td>
-					<td field="vulnerabilities" class="text-center">{% if not pen.payloads.count.vulnerabilities %}-{% else %}{{ pen.payloads.count.vulnerabilities }}{% endif %}</td>
+					<td field="description">{% if not pen.description %}-{% else %}{{ pen.description }}{% endif %}</td>
+					<td class="text-center" field="step">{% if pen.isBase %}-{% else %}{{ pen.step }}{% endif %}</td>
+					<td class="text-center" field="payloads">{% if not pen.payloads.count.payloads %}-{% else %}{{ pen.payloads.count.payloads }}{% endif %}</td>
+					<td class="text-center" field="vulnerabilities">{% if not pen.payloads.count.vulnerabilities %}-{% else %}{{ pen.payloads.count.vulnerabilities }}{% endif %}</td>
+					<td class="text-center" field="vulnerable_files">{% if not pen.patches.count.vulnerable_files %}-{% else %}{{ pen.patches.count.vulnerable_files }}{% endif %}</td>
+					<td class="text-center" field="patch_suggestion">{% if not pen.patches.count.patch_suggestion %}-{% else %}{{ pen.patches.count.patch_suggestion }}{% endif %}</td>
+					<td class="text-center" field="best_suggestion">{% if not pen.patches.count.best_suggestion %}-{% else %}{{ pen.patches.count.best_suggestion }}{% endif %}</td>
 					<td field="control"><div class="d-flex gap-2">
 						<a class="link-secondary text-center" style="width: 1rem" href="{% url 'pen_test' pen.pen_code %}" data-bs-toggle="tooltip" data-bs-title="{% if pen.isBase %}Preview{% else %}Play{% endif %}" onclick="event.stopPropagation()">
 							<i class="fa-solid fa-play"></i>
@@ -53,43 +74,64 @@
 						</a>
 						<label role="button" class="link-secondary text-center" style="width: 1rem" data-bs-toggle="tooltip" data-bs-title="Information" hidden>
 							<i class="fa-solid fa-ellipsis-vertical"></i>
-							<button type="button" onclick="event.stopPropagation(); setPenInfoModal(event, this.closest('[mode]'))" data-bs-toggle="modal" data-bs-target="#penInfoModal" hidden></button>
+							<button type="button" onclick="event.stopPropagation(); setPenInfoModal(this.closest('[mode]'))" data-bs-toggle="modal" data-bs-target="#penInfoModal" hidden></button>
 						</label>
 					</div></td>
 				</tr>{% endfor %}
 			</tbody>
 		</table>
 	</div>
-	{% include 'includes/modals.html' %}
 </section>
 
 <section class="row">
-	<div class="col-md-6 my-2">
+	<div class="col-12 my-2">
 		<div class="bg-body shadow rounded-4 p-3 h-100">
+			<h3 class="text-center text-secondary fw-semibold" style="font-size: .85rem">Number of Payloads by URL</h3>
 			<div class="table-responsive">
 				<table id="url-table" class="table table-sm table-bordered table-hover m-0 position-relative text-nowrap" style="border-width: 2px;">
 					<thead class="sticky-top z-1">
 						<tr>
 							<th scope="col" rowspan="2" class="text-center minimum align-middle sorted" sort="num">#</th>
 							<th scope="col" rowspan="2" class="align-middle" sort="url">URL</th>
-							<th scope="col" colspan="2" class="text-center minimum">Number of</th>
+							<th scope="col" colspan="4" class="text-center minimum">Number of</th>
 						</tr>
 						<tr>
 							<th scope="col" class="text-center minimum" sort="payloads">Payloads</th>
 							<th scope="col" class="text-center minimum" sort="vulnerabilities">Vulnerabilities</th>
+							<th scope="col" class="text-center minimum" sort="patch_suggestion">Patch Suggestion</th>
+							<th scope="col" class="text-center minimum" sort="best_suggestion">Best Suggestion</th>
 						</tr>
 					</thead>
-					<tbody></tbody>
+					<tfoot class="sticky-bottom z-1">
+						<tr>
+							<th scope="col" colspan="2">Total</th>
+							<td field="payloads" class="text-center"></td>
+							<td field="vulnerabilities" class="text-center"></td>
+							<td field="patch_suggestion" class="text-center"></td>
+							<td field="best_suggestion" class="text-center"></td>
+						</tr>
+					</tfoot>
+					<tbody class="table-group-divider"></tbody>
 				</table>
 			</div>
 		</div>
 	</div>
+</section>
+
+<section class="row">
 	<div class="col-md-6 my-2">
 		<div class="bg-body shadow rounded-4">
-			<canvas id="type-chart" class="p-3 h-100"></canvas>
+			<canvas id="payload-type-chart" class="p-3 h-100"></canvas>
+		</div>
+	</div>
+	<div class="col-md-6 my-2">
+		<div class="bg-body shadow rounded-4">
+			<canvas id="patch-type-chart" class="p-3 h-100"></canvas>
 		</div>
 	</div>
 </section>
+
+{% include 'includes/modals.html' %}
 
 {% endblock %}
 
@@ -101,21 +143,21 @@
 		return Math.round(Math.random() * 8) + 2;
 	}
 
-	const type_chart = getCanvas({
-		canvas: document.querySelector("#type-chart"),
+	const payload_type_chart = getCanvas({
+		canvas: document.querySelector("#payload-type-chart"),
 		config: {
 			type: "bar",
 			data: {
 				labels: {{ chart.attack.labels | safe }},
 				datasets: [{
 					data: {{ chart.attack.datasets | safe }},
-					backgroundColor: "rgb(255, 99, 132)",
+					backgroundColor: "#dc3545",
 				}],
 			},
 			options: {
 				plugins: {
 					title: {
-						text: "Number of Vulnerabilities by Attack",
+						text: "Number of Vulnerabilities by Attack Type",
 						display: true,
 					},
 					legend: {
@@ -125,6 +167,53 @@
 				scales: {
 					y: {
 						beginAtZero: true,
+						ticks: {
+							callback: function(value) {
+								return Number.isInteger(value) ? value : null;
+							},
+						},
+					},
+				},
+			},
+		}
+	});
+	const patch_type_chart = getCanvas({
+		canvas: document.querySelector("#patch-type-chart"),
+		config: {
+			type: "bar",
+			data: {
+				labels: {{ chart.patch.labels | safe }},
+				datasets: [{
+					label: "Patches",
+					data: [{% for x in chart.patch.datasets %}{% if forloop.counter != 1 %}, {% endif %}{{ x.0 }}{% endfor %}],
+					backgroundColor: "rgba(25,135,84, .5)",
+				}, {
+					label: "Best Patches",
+					data: [{% for x in chart.patch.datasets %}{% if forloop.counter != 1 %}, {% endif %}{{ x.1 }}{% endfor %}],
+					backgroundColor: "rgba(25,135,84, 1)",
+				}],
+			},
+			options: {
+				plugins: {
+					title: {
+						text: "Number of Patches Suggestion by Attack",
+						display: true,
+					},
+					legend: {
+						display: true,
+						labels: {},
+					},
+				},
+				scales: {
+					x: {
+						stacked: true,
+					}, y: {
+						beginAtZero: true,
+						ticks: {
+							callback: function(value) {
+								return Number.isInteger(value) ? value : null;
+							},
+						},
 					},
 				},
 			},
@@ -137,8 +226,8 @@
 	for (let url of {{ chart.url.labels | safe }}) {
 		const idx = {{ chart.url.labels | safe }}.indexOf(url);
 		try {
-			let [payloads, vulnerabilities] = {{ chart.url.datasets | safe }}[idx];
-			insertURLTable(urlTable, {url, data: {payloads, vulnerabilities}});
+			let [payloads, vulnerabilities, patches, best] = {{ chart.url.datasets | safe }}[idx];
+			insertURLTable(urlTable, {url, data: {payloads, vulnerabilities, patches, best}});
 		} catch {}
 	}
 
@@ -146,17 +235,37 @@
 
 	const penTbody = document.querySelector("table#pen_code_container tbody");
 	const trs = penTbody.querySelectorAll("tr");
+	const numberOf = penTbody.parentNode.querySelectorAll("thead > tr:last-child th");
 
 	const selectPen = function(input) {
+		const counter = {};
 		for (let box of trs) {
-			box.classList.toggle("d-none", !box.getAttribute("pen_code").toLowerCase().trim().includes(input.toLowerCase().trim()));
+			if (!box.classList.toggle("d-none", !box.getAttribute("pen_code").toLowerCase().trim().includes(input.toLowerCase().trim()))) {
+				for (let x of numberOf) {
+					const field = x.getAttribute("sort");
+					counter[field] = (counter[field] || 0) + (parseInt(box.querySelector(`[field="${field}"]`).innerText) || 0);
+				}
+			}
+		}
+		for (let x of numberOf) {
+			const field = x.getAttribute("sort");
+			penTbody.parentNode.querySelector(`tfoot [field="${field}"]`).innerText = counter[field] || 0;
 		}
 	}
+	const urlTableTotal = function() {
+		for (let x of urlTable.querySelectorAll("thead tr:last-child th")) {
+			const field = x.getAttribute("sort");
+			urlTable.querySelector(`tfoot [field="${field}"]`).innerText = [...urlTable.querySelectorAll(`tbody [field="${field}"]`)].map(x => parseInt(x.innerText) || 0).reduce((acc, cur) => acc + cur, 0);
+		}
+		
+	}
+	selectPen("");
+	urlTableTotal();
 
 
 
-	const activeTree = function(tr, bool=true) {
-		tr?.classList.toggle("active", bool);
+	const activeTree = function(tr, isActive=true) {
+		tr?.classList.toggle("active", isActive);
 	}
 	const hideTree = function() {
 		for (let tr of penTbody.querySelectorAll("tr")) {

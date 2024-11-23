@@ -7,7 +7,6 @@ File: views.py
 import sys, json, shutil
 from os import listdir, remove
 from os.path import exists, splitext
-from urllib.parse import unquote
 from datetime import datetime, timedelta
 from tempfile import TemporaryDirectory
 
@@ -21,44 +20,10 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 
 sys.path.append("..")
 from compress_pen_storage import compress
-from utils import black_hats
+from utils import *
 
 
 
-pen_files = {
-    "memory": {
-        "root": "/personas/%s/bootstrap_memory",
-        "payload": "/personas/%s/bootstrap_memory/payload.json",
-        "scratch": "/personas/%s/bootstrap_memory/scratch.json",
-        "spatial": "/personas/%s/bootstrap_memory/spatial_memory.json",
-        "associative": "/personas/%s/bootstrap_memory/associative_memory/nodes.json",
-    },
-    "compressed": {
-        "root": "compressed_storage/%s",
-        "meta": "compressed_storage/%s/meta.json",
-        "move": "compressed_storage/%s/master_movement.json",
-    },
-    "forkable": {
-        "root": "storage/%s",
-        "meta": "storage/%s/reverie/meta.json",
-        "move": "storage/%s/movement/%s.json",
-        "env": "storage/%s/environment/%s.json",
-    },
-    "delete": {
-        "root": "../trash",
-        "name": "../trash/%s-%s",
-    },
-    "temp": {
-        "root": "temp_storage",
-        "step": "temp_storage/curr_step.json",
-        "code": "temp_storage/curr_sim_code.json",
-        "env": "temp_storage/path_tester_env.json",
-    },
-    "maze": {
-        "root": "static_dirs/assets/%s/maze",
-        "visuals": "static_dirs/assets/%s/visuals/%s.json",
-    },
-}
 
 
 
@@ -106,7 +71,7 @@ def getMapData(maze_name="hacker_ville"):
         "layers": json.dumps(layers),
     }
 
-def getPayloadInfo(mode=None, pen_code=None):
+def getPayloadInfo(mode, pen_code):
     data = {
         "count": {
             "vulnerabilities": 0,
@@ -130,6 +95,49 @@ def getPayloadInfo(mode=None, pen_code=None):
                 items["basic"][idx]["url"] = url
                 if step not in data["data"]: data["data"][step] = {}
                 data["data"][step][p_name] = items["basic"][idx]
+    return data
+
+def getPatches(mode, pen_code):
+    best = dict()
+    for owner in server_owners:
+        payload_file = (pen_files[mode]["root"] % pen_code) + (pen_files["memory"]["payload"] % owner)
+        if not exists(payload_file): continue
+        with open(payload_file) as f:
+            patch_data = json.load(f)
+        for items in patch_data.values():
+            p_name = items["best_patch"]["proposer"]
+            step = items["best_patch"]["timestamp"]
+            reason = items["reason"]
+            if step not in best: best[step] = dict()
+            if p_name not in best[step]: best[step][p_name] = list()
+            best[step][p_name] += [reason]
+
+    data = {
+        "count": {
+            "vulnerable_files": [],
+            "patch_suggestion": 0,
+            "best_suggestion": len(set([(step, p_name) for step, x in best.items() for p_name in x.keys()])),
+        },
+        "data": {},
+    }
+    for p_name in white_hats:
+        payload_file = (pen_files[mode]["root"] % pen_code) + (pen_files["memory"]["payload"] % p_name)
+        if not exists(payload_file): continue
+        with open(payload_file) as f:
+            patch_data = json.load(f)
+        data["count"]["patch_suggestion"] += len(patch_data)
+        for items in patch_data.values():
+            step = items["timestamp"]
+            data["count"]["vulnerable_files"].extend([x["file_path"] for x in items["patch_suggestion"]])
+            if step not in data["data"]: data["data"][step] = {}
+            data["data"][step][p_name] = {
+                "urls": list(items["successful_data"].keys()),
+                "attack": list(set([y["attack_name"] for x in items["successful_data"].values() for y in x])),
+                "best": best.get(step, {}).get(p_name, []),
+                "suggestion": items["patch_suggestion"],
+            }
+
+    data["count"]["vulnerable_files"] = len(set(data["count"]["vulnerable_files"]))
     return data
 
 def getMode(pen_code, *, mode=None, all=False):
@@ -164,6 +172,7 @@ def getPen(pen_code, mode=None):
     for x in modes: data[x] = True
 
     data["payloads"] = getPayloadInfo(mode, pen_code)
+    data["patches"] = getPatches(mode, pen_code)
     return data
 
 def getPens():
@@ -244,34 +253,25 @@ def parseChat(personas, curr_datetime, last_chats={}):
 def getChartData(data=None, *, min=0):
     if data is None: data = getPens()
 
-    chart_keys = ["attack", "url"]
+    chart_keys = ["url", "attack", "patch"]
     chart_data = {k: {"labels": [], "datasets": []} for k in chart_keys}
 
     for x in data:
-        if not x["payloads"]["data"]: continue
-        for step, y in x["payloads"]["data"].items():
-            for p_name, z in y.items():
+        steps = sorted(list(x["payloads"]["data"].keys()) + list(x["patches"]["data"].keys()))
+        for step in steps:
+            for p_name, z in x["payloads"]["data"].get(step, {}).items():
                 url = z.get("url")
+                chart_data["url"] = addChartData(chart_data["url"], url or z["url"], [1, z["observations"] == "exploit_successful", 0, 0])
                 chart_data["attack"] = addChartData(chart_data["attack"], z["attack_name"], z["observations"] == "exploit_successful")
-                chart_data["url"] = addChartData(chart_data["url"], url or z["url"], [1, z["observations"] == "exploit_successful"])
-
-    # basics = [basic for x in data if x["payloads"]["data"] for y in x["payloads"]["data"] for basic in y["basic"]]
-
-    # chart_data["attack"] = {"labels": sorted(set([basic["attack_name"] for basic in basics]))}
-    # chart_data["attack"]["datasets"] = [
-    #     len(list(filter(
-    #         lambda basic: basic["attack_name"] == label and basic["observations"] == "exploit_successful",
-    #         [basic for basic in basics]
-    #     ))) for label in chart_data["attack"]["labels"]
-    # ]
-
-    # chart_data["url"] = {"labels": sorted(set([basic["attack_name"] for basic in basics]))}
-
-    # chart_data = [{
-    #     "pen_code": x["pen_code"],
-    #     "vulnerabilities": x["payloads"]["count"]["vulnerabilities"],
-    #     "payloads": x["payloads"]["count"]["payloads"],
-    # } for x in data if x["step"] != 0]
+            for p_name, z in x["patches"]["data"].get(step, {}).items():
+                isBest = z["best"] != []
+                for attack in z["attack"]:
+                    chart_data["patch"] = addChartData(chart_data["patch"], attack, [1, isBest])
+                for url in z["urls"]:
+                    chart_data["url"] = addChartData(chart_data["url"], url, [0, 0, 1, isBest])
+                    # for url in z["urls"]:
+                    #     print( z["count"], flush=True )
+                    #     chart_data["patch"] = addChartData(chart_data["patch"], url, [0, 0, 1])
 
     for k in chart_keys:
         a_min = min - len(chart_data[k]["labels"])
@@ -333,25 +333,38 @@ def pen_info_update(request):
     data = json.loads(request.body)
     pen_code = data.get("pen_code", "").strip()
     new_pen_code = data.get("new_pen_code", "").strip()
+    description = data.get("description", "").strip()
 
-    if not pen_code or not new_pen_code:
+    if not pen_code and not new_pen_code and not description:
         return HttpResponse("Bad Request", status=400)
-    elif pen_code == new_pen_code:
+    
+    for mode in getMode(pen_code, all=True):
+        with open(pen_files[mode]["meta"] % pen_code, "r+") as f:
+            meta = json.load(f)
+            meta["description"] = description
+            f.seek(0)
+            json.dump(meta, f, indent=2)
+            f.truncate()
+
+    if pen_code == new_pen_code:
         return HttpResponse()
 
-    all_pen_codes = penList()
-    for mode, pen_codes in all_pen_codes.items():
-        for curr_pen_code in pen_codes:
-            with open(pen_files[mode]["meta"] % curr_pen_code) as f:
-                meta = json.load(f)
-            fork_pen_code = meta["fork_sim_code"]
-            if fork_pen_code == pen_code:
-                meta["fork_sim_code"] = new_pen_code
-                with open(pen_files[mode]["meta"] % curr_pen_code, "w") as f:
-                    json.dump(meta, f, indent=2)
-            if curr_pen_code == pen_code:
-                shutil.move(pen_files[mode]["root"] % pen_code, pen_files[mode]["root"] % new_pen_code)
-    return JsonResponse(data)
+    if pen_code != new_pen_code:
+        all_pen_codes = penList()
+        for pen_codes in all_pen_codes.values():
+            for curr_pen_code in pen_codes:
+                modes = getMode(curr_pen_code, all=True)
+                for mode in modes:
+                    with open(pen_files[mode]["meta"] % curr_pen_code) as f:
+                        meta = json.load(f)
+                    fork_pen_code = meta["fork_sim_code"]
+                    if fork_pen_code == pen_code:
+                        meta["fork_sim_code"] = new_pen_code
+                        with open(pen_files[mode]["meta"] % curr_pen_code, "w") as f:
+                            json.dump(meta, f, indent=2)
+                    if curr_pen_code == pen_code:
+                        shutil.move(pen_files[mode]["root"] % pen_code, pen_files[mode]["root"] % new_pen_code)
+    return HttpResponse()
 
 
 
@@ -376,7 +389,6 @@ def pen_test(request, pen_code=None, step=0, speed=2):
         play_speed = 32
 
 
-    payloads = getPayloadInfo(mode, pen_code)
     with open(pen_files[mode]["meta"] % pen_code) as json_file:
         meta = json.load(json_file)
     max_step = meta["step"]
@@ -447,14 +459,12 @@ def pen_test(request, pen_code=None, step=0, speed=2):
 
     context = {
         "running": getBackendInfo().get("pen_code") == pen_code,
-        "payloads": payloads,
         "pen_code": pen_code,
         "step": step,
         "max_step": max_step,
         "persona_names": persona_names,
         "persona_init_pos": json.dumps(persona_init_pos),
         "all_movement": json.dumps(all_movement),
-        "chats": json.dumps(chats),
         "tile_width": tile_width,
         "start_datetime": start_datetime,
         "sec_per_step": sec_per_step,
@@ -462,6 +472,7 @@ def pen_test(request, pen_code=None, step=0, speed=2):
         "speed": speed,
         "map": map_data,
         "maze_name": maze_name,
+        "chats": json.dumps(chats),
         "mode": mode,
     }
     template = "pages/pen_test_play.html"
@@ -672,6 +683,7 @@ class ReverieConsumer(AsyncWebsocketConsumer):
             response_data["step"] = step
             response_data["chats"] = getChatting(pen_code, first_step=step, last_step=step).get(step)
             response_data["payload"] = getPayloadInfo("forkable", pen_code)["data"].get(step)
+            response_data["patch"] = getPatches("forkable", pen_code)["data"].get(step)
         if running:
             response_data["running"] = backendIsRunning()
         return response_data

@@ -32,7 +32,7 @@
 		{% include "includes/nav.html" %}
 		{% include "includes/header.html" %}
 	{% endif %}
-	<main class="container-fluid p-4">
+	<main class="container-fluid py-2">
 		{% csrf_token %}
 		{% block content %}{% endblock %}
 	</main>

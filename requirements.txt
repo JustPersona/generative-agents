@@ -37,7 +37,7 @@ langchain-community==0.3.5
 langchain-core==0.3.15
 langchain-ollama==0.2.0
 langchain-text-splitters==0.3.0
-langsmith==0.1.136
+langsmith==0.1.143
 libsass==0.23.0
 marshmallow==3.23.1
 multidict==6.1.0

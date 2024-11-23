@@ -7,7 +7,13 @@
 
 <div id="temp_focus" hidden></div>
 <div class="my-3 fs-5 text-center">
-	<h1 class="fs-5 fw-semibold">{{ pen_code }}</h1>
+	<h1 class="fs-5 fw-semibold" pen_code="{{ pen_code }}">
+		<label role="button" class="link-success me-1" data-bs-toggle="tooltip" data-bs-title="Results">
+			<i class="fa-solid fa-square-poll-horizontal"></i>
+			<button type="button" onclick="setPenInfoModal(this.closest('[pen_code]'))" data-bs-toggle="modal" data-bs-target="#penInfoModal" hidden></button>
+		</label>
+		{{ pen_code }}
+	</h1>
 	{% if running %}<div id="backend_state" class="mt-2 fw-semibold text-success">
 		Running on the backend
 	</div>{% endif %}
@@ -18,14 +24,14 @@
 		<button class="nav-link active" data-bs-toggle="pill" data-bs-target="#pen-testing" type="button" role="tab" aria-controls="pen-testing" aria-selected="true">Pen Testing</button>
 	</li>
 	<li class="nav-item" role="presentation">
-		<button class="nav-link" data-bs-toggle="pill" data-bs-target="#pen-chattings" type="button" role="tab" aria-controls="pen-chattings" aria-selected="false">Chattings</button>
+		<button class="nav-link" data-bs-toggle="pill" data-bs-target="#table-container" type="button" role="tab" aria-controls="table-container" aria-selected="false">Payloads</button>
 	</li>
 	<li class="nav-item" role="presentation">
-		<button class="nav-link" data-bs-toggle="pill" data-bs-target="#payload-table-container" type="button" role="tab" aria-controls="payload-table-container" aria-selected="false">Payloads</button>
+		<button class="nav-link" data-bs-toggle="pill" data-bs-target="#pen-chattings" type="button" role="tab" aria-controls="pen-chattings" aria-selected="false">Chattings</button>
 	</li>
 </ul>{% endif %}
 
-<div class="tab-content{% if mode == "preview" %} container-lg{% endif %}">
+<div class="tab-content{% if mode == "preview" %} container-lg{% endif %}" pen_code="{{ pen_code }}">
 	<div class="tab-pane fade show active"{% if mode == "preview" %} style="--width: 100%"{% endif %} id="pen-testing" role="tabpanel" aria-labelledby="pen-testing-tab" tabindex="0">
 		<section class="bg-body shadow rounded-bottom-4 my-3">
 			<div id="game-container" class="text-center"></div>
@@ -124,12 +130,23 @@
 	{% if mode != "preview" %}
 		<div>
 			<section class="tab-pane fade bg-body shadow rounded-4 my-3" id="pen-chattings" role="tabpanel" aria-labelledby="pen-chattings-tab" tabindex="0" style="--min-width: 500px">
-				{% include 'includes/chattingbox.html' %}
+				{% include 'includes/chattingbox.html' with type="play" %}
 			</section>
-			<section class="tab-pane fade bg-body shadow rounded-4 my-3 p-4" id="payload-table-container" role="tabpanel" aria-labelledby="payload-table-container-tab" tabindex="0"></section>
+			<section class="tab-pane fade bg-body shadow rounded-4 my-3" id="table-container" role="tabpanel" aria-labelledby="table-container-tab" tabindex="0">
+				<div class="nav nav-tabs p-3 pb-0" role="tablist">
+					<button class="nav-link active" data-bs-toggle="tab" data-bs-target="#payload-table-container" type="button" role="tab" aria-controls="payload-table-container" aria-selected="true">Payloads</button>
+					<button class="nav-link" data-bs-toggle="tab" data-bs-target="#patch-table-container" type="button" role="tab" aria-controls="patch-table-container" aria-selected="false">Patches</button>
+				</div>
+				<div class="tab-content rounded-bottom overflow-hidden">
+					<div class="sub tab-pane fade p-3 h-100 show active" id="payload-table-container" role="tabpanel" aria-labelledby="payload-table-container" tabindex="0"></div>
+					<div class="sub tab-pane fade p-3 h-100" id="patch-table-container" role="tabpanel" aria-labelledby="patch-table-container" tabindex="0"></div>
+				</div>
+			</section>
 		</div>
 	{% endif %}
 </div>
+
+{% include 'includes/modals.html' %}
 
 {% endblock %}
 
@@ -139,7 +156,8 @@
 
 <script src='https://cdn.jsdelivr.net/npm/phaser@3.85.2/dist/phaser.js'></script>
 <script type="text/javascript">
-	document.querySelector(`#payload-table-container`)?.append(createPayloadTable("{{ pen_code }}", {style: {"min-height": "500px", "max-height": "750px"}}));
+	document.querySelector(`#payload-table-container`)?.append(createPayloadTable("{{ pen_code }}", {style: {"height": "650px"}}));
+	document.querySelector(`#patch-table-container`)?.append(createPatchTable("{{ pen_code }}", {style: {"height": "650px"}}));
 
 	{% include "includes/pen_test_play.js" %}
 </script>

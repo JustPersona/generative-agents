@@ -139,7 +139,7 @@
 	</div>
 
 	<script type="text/javascript">
-		const table = document.querySelector("table");
+		const userTable = document.querySelector("table");
 		const form = document.querySelector("#userModal form");
 		const deleteModal = document.querySelector("#deleteModal");
 		const total = document.querySelector("#total");
@@ -205,7 +205,7 @@
 
 		const pageUpdate = function(data) {
 			for (let user of data) {
-				const old_tr = table.querySelector(`tr[userid="${user.id}"]`)
+				const old_tr = userTable.querySelector(`tr[userid="${user.id}"]`)
 				const curr_user = old_tr?.hasAttribute("curr_user");
 				const tr = document.createElement("tr");
 				tr.setAttribute("userid", user.id);
@@ -230,7 +230,7 @@
 					old_tr.outerHTML = tr.outerHTML;
 				} else {
 					total.innerText = total.innerText*1 + 1;
-					table.querySelector("tbody").append(tr);
+					userTable.querySelector("tbody").append(tr);
 				}
 
 				if (curr_user) {
@@ -273,7 +273,7 @@
 			post("{% url 'user_delete' %}", {
 				userid
 			}, function(xhr) {
-				table.querySelector(`tr[userid="${JSON.parse(xhr.responseText)?.id}"]`)?.remove();
+				userTable.querySelector(`tr[userid="${JSON.parse(xhr.responseText)?.id}"]`)?.remove();
 				bootstrap.Modal.getInstance(deleteModal).hide();
 				total.innerText = total.innerText*1 - 1;
 			}, function(xhr) {

@@ -320,17 +320,15 @@ const jsonToUl = function(json, elem="ul") {
 
 const insertURLTable = function(table, {url, data, reverse=false}) {
 	if (data) {
-		const origin = new URL(url);
 		const tr = document.createElement("tr");
 		tr.innerHTML = `
 			<th field="num" class="text-end" scope="row">${table.querySelectorAll("tbody tr").length + 1}</th>
-			<td field="url"><a href="${url}" target="_blank" data-bs-toggle="tooltip" data-bs-title="${origin.host}">${origin.pathname}</a></td>
+			<td field="url"><a href="${url}" target="_blank">${url}</a></td>
 			<td field="payloads" class="text-center">${data.payloads || "-"}</td>
 			<td field="vulnerabilities" class="text-center">${data.vulnerabilities || "-"}</td>
 			<td field="patch_suggestion" class="text-center">${data.patches || "-"}</td>
 			<td field="best_suggestion" class="text-center">${data.best || "-"}</td>
 		`;
-		new bootstrap.Tooltip(tr.querySelector("td[field=url] a"));
 
 		if (reverse) {
 			table?.querySelector("tbody")?.prepend(tr);

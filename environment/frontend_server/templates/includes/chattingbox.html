@@ -2,30 +2,30 @@
 
 <div id="chattingbox-container">
 	<div class="nav nav-tabs p-3 pb-0" role="tablist">
-		<button class="nav-link active" data-bs-toggle="tab" data-bs-target="#all-chatting" type="button" role="tab" aria-controls="all-chatting" aria-selected="true">All</button>
-		<button class="nav-link" data-bs-toggle="tab" data-bs-target="#blacks-chatting" type="button" role="tab" aria-controls="blacks-chatting" aria-selected="false">Blacks</button>
-		<button class="nav-link" data-bs-toggle="tab" data-bs-target="#whites-chatting" type="button" role="tab" aria-controls="whites-chatting" aria-selected="false">Whites & Owner</button>
+		<button class="nav-link active" data-bs-toggle="tab" data-bs-target="#all-chatting-{{ type }}" type="button" role="tab" aria-controls="all-chatting-{{ type }}" aria-selected="true">All</button>
+		<button class="nav-link" data-bs-toggle="tab" data-bs-target="#blacks-chatting-{{ type }}" type="button" role="tab" aria-controls="blacks-chatting-{{ type }}" aria-selected="false">Blacks</button>
+		<button class="nav-link" data-bs-toggle="tab" data-bs-target="#whites-chatting-{{ type }}" type="button" role="tab" aria-controls="whites-chatting-{{ type }}" aria-selected="false">Whites & Owner</button>
 	</div>
-	<div class="tab-content border border-top-0 rounded-bottom overflow-hidden" style="height: 500px;">
-		<div class="sub tab-pane fade p-3 h-100 overflow-auto show active" id="all-chatting" role="tabpanel" aria-labelledby="all-chatting-tab" tabindex="0">
+	<div class="tab-content border border-top-0 rounded-bottom overflow-hidden modal-scroll-target" style="height: 550px">
+		<div class="sub tab-pane fade p-3 h-100 overflow-auto modal-scroll show active" id="all-chatting-{{ type }}" role="tabpanel" aria-labelledby="all-chatting-tab" tabindex="0">
 			<article id="all-chatting-container"><ul class="list-unstyled"></ul></article>
 		</div>
-		<div class="sub tab-pane fade p-3 h-100 overflow-auto" id="blacks-chatting" role="tabpanel" aria-labelledby="blacks-chatting-tab" tabindex="0">
+		<div class="sub tab-pane fade p-3 h-100 overflow-auto modal-scroll" id="blacks-chatting-{{ type }}" role="tabpanel" aria-labelledby="blacks-chatting-tab" tabindex="0">
 			<article id="blacks-chatting-container"><ul class="list-unstyled"></ul></article>
 		</div>
-		<div class="sub tab-pane fade p-3 h-100 overflow-auto" id="whites-chatting" role="tabpanel" aria-labelledby="whites-chatting-tab" tabindex="0">
+		<div class="sub tab-pane fade p-3 h-100 overflow-auto modal-scroll" id="whites-chatting-{{ type }}" role="tabpanel" aria-labelledby="whites-chatting-tab" tabindex="0">
 			<article id="whites-chatting-container"><ul class="list-unstyled"></ul></article>
 		</div>
 	</div>
 </div>
 
 <script type="text/javascript">
-	const setChatting_content = function(pen_code, p_name, c_content, c_datetime, mychat, chatbox="all-chatting") {
+	function setChatting_content(container, pen_code, p_name, c_content, c_datetime, {mychat=false, chatbox="all-chatting", suffix=""}={}) {
 		if (!c_content || c_content == "<em>None at the moment</em>") return;
 
-		const box = document.getElementById(chatbox);
+		const article = container.querySelector(`#${chatbox}${suffix} article`);
 		const p_name_os = p_name.replace(/ /g, "_");
-		let lastchat = box.querySelectorAll(`ul .chat-container[chat="${p_name_os}"] .chat-content .c_content`);
+		let lastchat = article.querySelectorAll(`ul .chat-container[chat="${p_name_os}"] .chat-content .c_content`);
 		lastchat = lastchat[lastchat.length-1];
 		c_content = mdToHTML(c_content);
 		if (lastchat && lastchat?.innerHTML == c_content) return;
@@ -34,8 +34,8 @@
 		const h = c_datetime.getHours();
 		const wm = h < 12 ? "AM" : "PM";
 		const time = `${h % 12}:${c_datetime.getMinutes()}:${c_datetime.getSeconds()} ${wm}`;
-		if (!box.querySelector(`li[date="${date}"]`)) {
-			box.querySelector(`ul`).innerHTML += `<li class="my-1 text-center text-secondary" date="${date}">${date}</li>`;
+		if (!article.querySelector(`li[date="${date}"]`)) {
+			article.querySelector(`ul`).innerHTML += `<li class="my-1 text-center text-secondary" date="${date}">${date}</li>`;
 		}
 		const autoScrollOffset = 10;
 		const li = document.createElement("li");
@@ -55,28 +55,28 @@
 		li.querySelector(".chat-container").classList.toggle("mychat", mychat === true);
 		new bootstrap.Tooltip(li.querySelector("a.chat-profile"));
 
-		const clientHeight = box.querySelector("article").clientHeight;
-		const autoScroll = clientHeight - autoScrollOffset < box.clientHeight + box.scrollTop;
-		box.querySelector("ul").append(li);
-		if (autoScroll) box.scrollTop = clientHeight;
+		const clientHeight = article.clientHeight;
+		const autoScroll = clientHeight - autoScrollOffset < article.parentNode.clientHeight + article.parentNode.scrollTop;
+		article.querySelector("ul").append(li);
+		if (autoScroll) article.parentNode.scrollTop = clientHeight;
 	
 		if (chatbox == "all-chatting") {
 			isBlack = {{ black_hats | safe }}.includes(p_name);
-			setChatting_content(pen_code, p_name, c_content, c_datetime, mychat, `${isBlack ? "blacks" : "whites"}-chatting`);
+			setChatting_content(container, pen_code, p_name, c_content, c_datetime, {mychat, suffix, chatbox: `${isBlack ? "blacks" : "whites"}-chatting`});
 		}
 	}
 
-	const insertChatting = function(pen_code, data, focus=false, time=undefined) {
+	function insertChatting(container, pen_code, data, {focus=false, time=undefined, suffix=""}={}) {
 		if (!data) return;
 		for (let c_content of data) {
 			const {name, chat, datetime} = c_content;
-			setChatting_content(pen_code, name, chat, time || (typeof datetime !== "string" ? datetime : new Date(Date.parse(datetime))), name == focus?.replace?.(/_/g, " "));
+			setChatting_content(container, pen_code, name, chat, time || (typeof datetime !== "string" ? datetime : new Date(Date.parse(datetime))), {mychat: name == focus?.replace?.(/_/g, " "), suffix});
 		}
 	}
 
 
 
-	const chattingScroll = function({target}) {
+	function chattingScroll({target}) {
 		target = document.querySelector(target.getAttribute("data-bs-target"));
 		target.scrollTop = target.querySelector("article").clientHeight;
 	}

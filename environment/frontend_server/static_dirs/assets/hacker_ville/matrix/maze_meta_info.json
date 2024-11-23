@@ -1,0 +1,7 @@
+{
+  "world_name": "hacker ville",
+  "maze_width": 90,
+  "maze_height": 70,
+  "sq_tile_size": 32,
+  "special_constraint": ""
+}

@@ -4,31 +4,52 @@ let debug = false;
 let pause = false;
 
 const fullScreen = false;
-const mode = "{{ mode }}" === "simulate" ? "replay" : "{{ mode }}";
+const mode = ["forkable", "compressed"].includes("{{ mode }}") ? "{{ mode }}" : "tester";
 const canvas_ratio = 8/15;
 const tile_width = "{{ tile_width }}" * 1;
+const timebox = document.getElementById("game-time-content");
+const datetime_options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+let camera_zoom = 1;
 let movement_speed;
 let execute_count_max;
 let execute_count;
 
-const apply_speed = function(speed=2, min=1, max=6) {
-	if (!speed || speed < min || max < speed) return;
-	document.querySelector("#speed")?.setAttribute("placeholder", speed);
-	if (mode != "demo") speed = 6;
+{% if mode != "tester" %}
+	const apply_speed = function(speed=2, min=1, max=6) {
+		if (!speed || speed < min) speed = min;
+		if (speed > max) speed = max;
+		if (mode != "compressed") speed = 6;
+		const elem = document.querySelector("#speed");
+		elem.setAttribute("placeholder", speed);
+		elem.value = speed;
 
-	speed = 2 ** (speed - 1);
-	execute_count_max = tile_width / speed;
-	execute_count = execute_count / (speed / movement_speed);
-	movement_speed = speed;
-}
+		speed = 2 ** (speed - 1);
+		execute_count_max = tile_width / speed;
+		execute_count = execute_count / (speed / movement_speed);
+		movement_speed = speed;
+	}
 
-const formSubmit = function(e) {
-	e.preventDefault();
-	const form = e.target;
-	const step = form.step?.value?.trim();
-	const speed = form.speed?.value?.trim() || "";
-	location.replace(`{% url 'simulator' sim_code %}${step}/${speed}`);
-}
+	const formSubmit = function(e) {
+		e.preventDefault();
+		const form = e.target;
+		const step = form.step?.value?.trim();
+		const speed = form.speed?.value?.trim() || "";
+		location.replace(`{% url 'pen_testing' pen_code %}${step}/${speed}`);
+	}
+
+	const stepChange = function(elem) {
+		elem.value = elem.value.replace(/[^0-9]/g, '');
+		if (!pause) return;
+		elem.value = Math.min(elem.value, {{ max_step }});
+
+		apply_btn.classList.toggle('d-none', elem.value == elem.placeholder);
+		const currStep = elem.placeholder;
+		const newStep = elem.value;
+
+		const curr_datetime =  new Date( Date.parse(timebox.placeholder.replace(" at", ",")) + 10000*(newStep - currStep) );
+		timebox.value = curr_datetime.toLocaleTimeString("en-US", datetime_options);
+	}
+{% endif %}
 
 const personaFocus = function(e, p_name) {
 	const btn = e.target.closest("button");
@@ -48,17 +69,24 @@ const personaFocus = function(e, p_name) {
 
 
 
-const simulator = function(container) {
+const pen_testing_play = function(container) {
 	const static = "{% static '' %}";
+	const maze_name = "{{ maze_name }}";
 
 	const map_width = "{{ map.width }}" * 1;
 	const map_height = "{{ map.height }}" * 1;
 	const sec_per_step = "{{ sec_per_step }}" * 1;
-	console.log( map_width, map_height );
 
 	const max_step = "{{ max_step }}" * 1;
 	const player_width = 40;
 	const playerDepth = mode === "tester" ? 1 : -1;
+
+	{% if mode != "tester" %}
+		const payload = {% if not payload %}{}{% else %}{{ payload.content | safe }}{% endif %};
+		const payload_step_max = 10;
+		let payload_step = payload_step_max;
+		let payload_count = 0;
+	{% endif %}
 
 
 
@@ -81,7 +109,7 @@ const simulator = function(container) {
 	// <step> -- one full loop around all three phases determined by <phase> is
 	// a step. We use this to link the steps in the backend.
 	let step = "{{ step }}" * 1;
-	const sim_code = "{{ sim_code }}";
+	const pen_code = "{{ pen_code }}";
 	const step_size = (sec_per_step || 10) * 1000; // 10 seconds = 10000
 
 
@@ -121,51 +149,53 @@ const simulator = function(container) {
 	let cursors;
 	let player;
 
-	// Persona related variables. This should have the name of the persona as its
-	// keys, and the instances of the Persona class as the values.
-	// let spawn_tile_loc = {};
-	// for (let key in persona_names) {
-	// 	spawn_tile_loc[key] = persona_names[key];
-	// }
-	const spawn_tile_loc = {{ persona_init_pos | safe }};
 
-	let personas = {};
-	let speech_bubbles = {};
-	let pronunciatios = {};
-	let anims_direction;
-	let pre_anims_direction;
-	let pre_anims_direction_dict = {};
+	{% if mode == "tester" %}
+		const spawn_tile_loc = {};
+	{% else %}
+		// Persona related variables. This should have the name of the persona as its
+		// keys, and the instances of the Persona class as the values.
+		// let spawn_tile_loc = {};
+		// for (let key in persona_names) {
+		// 	spawn_tile_loc[key] = persona_names[key];
+		// }
+		const spawn_tile_loc = {{ persona_init_pos | safe }};
 
-	const maze_name = "{{ maze_name }}";
+		let personas = {};
+		let speech_bubbles = {};
+		let pronunciatios = {};
+		let anims_direction;
+		let pre_anims_direction;
+		let pre_anims_direction_dict = {};
 
-	// <tile_width> is the width of one individual tile (tiles are square)
-	// const tile_width = "{{ tile_width }}" * 1;
-	// Important: tile_width % movement_speed has to be 0.
-	// <movement_speed> determines how fast we move at each upate cylce.
-	// const movement_speed = "{{ play_speed }}" * 1;
-	apply_speed("{{ speed }}" * 1);
+		// <tile_width> is the width of one individual tile (tiles are square)
+		// const tile_width = "{{ tile_width }}" * 1;
+		// Important: tile_width % movement_speed has to be 0.
+		// <movement_speed> determines how fast we move at each upate cylce.
+		// const movement_speed = "{{ play_speed }}" * 1;
+		apply_speed("{{ speed }}" * 1);
 
-	// <timer_max> determines how frequently our update function will query the
-	// frontend server. If it's higher, we wait longer cycles.
-	let timer_max = 0;
-	let timer = timer_max;
+		// <timer_max> determines how frequently our update function will query the
+		// frontend server. If it's higher, we wait longer cycles.
+		let timer_max = 0;
+		let timer = timer_max;
 
-	// <phase> -- there are three phases: "process," "update," and "execute."
-	let phase = "update"; // or "update" or "execute"
+		// <phase> -- there are three phases: "process," "update," and "execute."
+		let phase = "update"; // or "update" or "execute"
 
-	// Variables for storing movements that are sent from the backend server.
-	let execute_movement;
-	// let execute_count_max = tile_width / movement_speed;
-	// let execute_count = execute_count_max;
-	execute_count = execute_count_max;
-	let movement_target = {};
-	const all_movement = {{ all_movement | safe }};
+		// Variables for storing movements that are sent from the backend server.
+		let execute_movement;
+		// let execute_count_max = tile_width / movement_speed;
+		// let execute_count = execute_count_max;
+		execute_count = execute_count_max;
+		let movement_target = {};
+		const all_movement = {{ all_movement | safe }};
 
-	let start_datetime = new Date(Date.parse("{{ start_datetime }}"));
-	const datetime_options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-	if (start_datetime) {
-		document.getElementById("game-time-content").innerHTML = start_datetime.toLocaleTimeString("en-US", datetime_options);
-	}
+		let start_datetime = new Date(Date.parse("{{ start_datetime }}"));
+		if (mode != "tester" && start_datetime) {
+			timebox.value = start_datetime.toLocaleTimeString("en-US", datetime_options);
+		}
+	{% endif %}
 
 
 
@@ -317,6 +347,11 @@ const simulator = function(container) {
 		camera.startFollow(player);
 		camera.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
 		cursors = this.input.keyboard.createCursorKeys();
+
+		// camera zoom minimum
+		camera.setZoom(camera_zoom);
+		const zoomMin = Math.ceil(Math.max(canvas_width / map.widthInPixels, canvas_height / map.heightInPixels) * 10) / 10;
+		document.querySelector("#zoom")?.setAttribute("min", zoomMin);
 
 
 		// *** SET UP PERSONAS ***
@@ -470,17 +505,16 @@ const simulator = function(container) {
 		}
 
 		// Prevent camera from being out of range
-		if (player.x < this.minX) {
-			player.x = this.minX;
-		}
-		if (player.x > this.maxX) {
-			player.x = this.maxX;
-		}
-		if (player.y < this.minY) {
-			player.y = this.minY;
-		}
-		if (player.y > this.maxY) {
-			player.y = this.maxY;
+		this.cameras.main.setZoom(camera_zoom || 1);
+		if (mode != "tester") {
+			const minX = this.minX / camera_zoom;
+			const minY = this.minY / camera_zoom;
+			const maxX = this.maxX + (this.minX - minX);
+			const maxY = this.maxY + (this.minY - minY);
+			if (player.x < minX) player.x = minX;
+			if (player.y < minY) player.y = minY;
+			if (player.x > maxX) player.x = maxX;
+			if (player.y > maxY) player.y = maxY;
 		}
 
 		let curr_focused_persona = document.getElementById("temp_focus").textContent;
@@ -491,7 +525,7 @@ const simulator = function(container) {
 
 		// Run a separate function for each mode
 		if (mode in updates) {
-			if (pause === false || (mode == "replay" && phase != "update")) {
+			if (pause === false || (mode == "forkable" && phase != "update")) {
 				updates[mode]();
 			}
 		}
@@ -516,14 +550,14 @@ const simulator = function(container) {
 		},
 
 
-		demo: function() {
+		compressed: function() {
 			// *** MOVING PERSONAS ***
 			if (execute_count <= 0) start_datetime = new Date(start_datetime.getTime() + step_size);
 			action(all_movement[step], start_datetime);
 		},
 
 
-		replay: function() {
+		forkable: function() {
 			// *** MOVE PERSONAS ***
 			// Moving personas take place in three distinct phases: "process," "update,"
 			// and "execute." These phases are determined by the value of <phase>.
@@ -534,7 +568,7 @@ const simulator = function(container) {
 				// file that records all persona locations:
 				let data = {
 					"step": step,
-					"sim_code": sim_code,
+					"pen_code": pen_code,
 					"environment": {},
 				}
 				for (let i=0; i<Object.keys(personas).length; i++) {
@@ -565,7 +599,7 @@ const simulator = function(container) {
 				if (timer <= 0) {
 					const data = {
 						"step": step,
-						"sim_code": sim_code,
+						"pen_code": pen_code,
 					}
 					post("{% url 'update_environment' %}", data, function(xhr) {
 						if (JSON.parse(xhr.responseText)["<step>"] == step) {
@@ -592,7 +626,11 @@ const simulator = function(container) {
 	const action = function(movements, curr_time) {
 		if (!movements) return;
 
-		if (curr_time) document.getElementById("game-time-content").innerHTML = curr_time.toLocaleTimeString("en-US", datetime_options);
+		if (curr_time) {
+			const time = curr_time.toLocaleTimeString("en-US", datetime_options);
+			timebox.placeholder = time;
+			timebox.value = time;
+		}
 		for (let i=0; i<Object.keys(personas).length; i++) {
 			let curr_persona_name_os = Object.keys(personas)[i];
 			let curr_persona_name = curr_persona_name_os.replace(/_/g, " ");
@@ -640,10 +678,10 @@ const simulator = function(container) {
 				}
 
 				if (execute_count > 0) {
-					if (!animation.start(curr_persona, curr_speech_bubble, curr_pronunciatio, curr_persona_name_os) && mode != "demo") {
+					if (!animation.start(curr_persona, curr_speech_bubble, curr_pronunciatio, curr_persona_name_os) && mode != "compressed") {
 						animation.stop(curr_persona, curr_persona_name_os);
 					};
-				} else if (mode != "demo") {
+				} else if (mode != "compressed") {
 					move_personas();
 					phase = "process";
 				}
@@ -652,7 +690,7 @@ const simulator = function(container) {
 			}
 		}
 
-		if (mode == "demo" && execute_count <= 0) {
+		if (mode == "compressed" && execute_count <= 0) {
 			move_personas();
 		}
 
@@ -674,33 +712,10 @@ const simulator = function(container) {
 		execute_count = execute_count_max + 1;
 		step = step + 1;
 
-		// capstone
-		if (step == 7700) {
-			location.replace(`/simulator/${location.pathname.split("/")[2]}/2150/`);
-		}
-
 		if (max_step < step) return;
 		document.querySelector("#curr_step").value = step;
 		document.querySelector("#curr_step").placeholder = step;
-	}
-
-
-	const post = function(url, data, callback) {
-		let json = JSON.stringify(data);
-		// We then send this to the frontend server:
-		let xhr = new XMLHttpRequest();
-		xhr.overrideMimeType("application/json");
-		xhr.open('POST', url, true);
-		xhr.addEventListener("load", function() {
-			if (this.readyState === 4) {
-				if (xhr.status === 200) {
-					if (typeof callback === "function") {
-						callback(xhr);
-					}
-				}
-			}
-		});
-		xhr.send(json);
+		{% if mode != "tester" %}insertPayload();{% endif %}
 	}
 
 
@@ -762,13 +777,40 @@ const simulator = function(container) {
 		}
 	}
 
+	const insertPayload = function() {
+		const pos = [personas["Black_Hacker"].body.x / 32, personas["Black_Hacker"].body.y / 32];
+		if (payload_step == 0) {
+			document.querySelector("#curr_payload").value = "";
+		}
 
+		switch(`${pos}`) {
+			case "10,6":
+			case "7,13":
+			case "7,14":
+			case "10,13":
+			case "10,15":
+			// default:
+				if (payload_step <= 0) {
+					const item = payload["http://192.168.10.10/dvwa/vulnerabilities/sqli/"]?.basic;
+					const data = item[payload_count % item.length];
+					document.querySelector("#curr_payload").value = data.payload;
+
+					setPayload(document.querySelector("table"), data, true);
+
+					payload_count += 1;
+					payload_step = payload_step_max;
+				}
+		}
+		payload_step -= 1;
+	}
 
 	return game;
 }
 
+
+
 const gameContainer = document.querySelector("#game-container");
-const game = simulator(gameContainer);
+const game = pen_testing_play(gameContainer);
 const canvas_resizing = function(size) {
 	const canvas = gameContainer.querySelector("canvas");
 	if (!canvas) return;
@@ -782,5 +824,5 @@ window.addEventListener("DOMContentLoaded", canvas_resizing);
 window.addEventListener("resize", canvas_resizing);
 
 window.addEventListener("DOMContentLoaded", function() {
-	document.querySelector("#on_screen_det_trigger-Isabella_Rodriguez").click();
+	document.querySelector("#on_screen_det_trigger-Isabella_Rodriguez")?.click();
 });

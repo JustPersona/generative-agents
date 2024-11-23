@@ -1,5 +1,3 @@
-
-
 # Generative Agents: Interactive Simulacra of Human Behavior
 
 <p align="center" width="100%">
@@ -14,14 +12,9 @@ To set up your environment, you will need to generate a `utils.py` file that con
 ### Step 1. Generate Utils File
 In the `reverie/backend_server` folder (where `reverie.py` is located), create a new file titled `utils.py` and copy and paste the content below into the file:
 ```
-# LLaMA
-llama_api = "http://localhost:11434"
-llama_model = "<Model Name>"
-
-# Copy and paste your OpenAI API Key
-openai_api_key = "<Your OpenAI API>"
-# Put your name
-key_owner = "<Name>"
+# ollama
+ollama_url = "http://localhost:11434"
+ollama_model = "<Model Name>"
 
 maze_assets_loc = "../../environment/frontend_server/static_dirs/assets"
 env_matrix = f"{maze_assets_loc}/%s/matrix"
@@ -29,8 +22,6 @@ env_visuals = f"{maze_assets_loc}/%s/visuals"
 
 fs_storage = "../../environment/frontend_server/storage"
 fs_temp_storage = "../../environment/frontend_server/temp_storage"
-
-collision_block_id = "27613"
 
 auto_save_next_env_file = True
 
@@ -143,5 +134,3 @@ We encourage you to support the following three amazing artists who have designe
 * Character design: [ぴぽ (@pipohi)](https://twitter.com/pipohi)
 
 In addition, we thank Lindsay Popowski, Philip Guo, Michael Terry, and the Center for Advanced Study in the Behavioral Sciences (CASBS) community for their insights, discussions, and support. Lastly, all locations featured in Smallville are inspired by real-world locations that Joon has frequented as an undergraduate and graduate student---he thanks everyone there for feeding and supporting him all these years.
-
-

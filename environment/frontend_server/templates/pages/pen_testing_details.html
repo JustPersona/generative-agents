@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<section class="border-bottom">
+	<input type="text" class="border-0 bg-transparent w-100 lh-lg text-center" style="outline: 0" placeholder="Search..." value="{{ search }}" oninput="selectPen(this.value)">
+</section>
+
+<section class="pt-3" id="pen_code_container">{% for pen in pen_codes %}
+	<article class="bg-body shadow rounded-4 my-4 p-3" pen_code="{{ pen.pen_code }}" forked="{{ pen.fork_sim_code }}" mode="{{ pen.mode }}"{% if pen.step == 0 %} hidden{% endif %}>
+		<h3 class="h5 d-flex gap-2">
+			<a class="link-secondary" href="{% url 'pen_testing' pen.pen_code %}" data-bs-toggle="tooltip" data-bs-title="Play"><i class="fa-solid fa-play"></i></a>
+			<span style="flex: 1">{{ pen.pen_code }}</span>
+			<label role="button" class="link-secondary" data-bs-toggle="tooltip" data-bs-title="Information">
+				<i class="fa-solid fa-ellipsis-vertical"></i>
+				<button type="button" class="d-none" onclick="setPenInfoModal(event, this.closest('[mode]'))" data-bs-toggle="modal" data-bs-target="#penInfoModal"></button>
+			</label>
+		</h3>
+		<hr/>
+		{% if not pen.payload %}No Information{% else %}<div>{% for url, items in pen.payload.content.items %}
+			<span>Tool: {% for name in items.tool_name %}{{ name }}{% endfor %}</span><br/>
+			<span>URL: <a href="{{ url }}">{{ url }}</a></span><br/>
+			<div class="table-responsive mt-2" style="max-height: 500px;">
+				<table class="table table-sm table-bordered table-hover m-0 position-relative" style="border-width: 2px;">
+					<thead class="sticky-top z-1">
+						<tr>
+							<th scope="col" class="px-2" style="width: 0px;">Method</th>
+							<th scope="col" class="px-2" style="width: 0px;">Vulnerability</th>
+							<th scope="col">Payload</th>
+						</tr>
+					</thead>
+					<tbody>
+						{% for item in items.basic %}<tr>
+							<td field="method">{{ item.method }}</td>
+							<td field="vulnerability" class="text-danger text-center">{% if item.observations == 'exploit_successful' %}<i class="fa-solid fa-check"></i>{% endif %}</td>
+							<td field="payload">{{ item.payload }}</td>
+						</tr>{% endfor %}
+					</tbody>
+				</table>
+			</div>
+		{% endfor %}</div>{% endif %}
+	</article>
+{% endfor %}</section>
+{% include 'includes/modals.html' %}
+
+{% endblock %}
+
+
+
+{% block js_content %}
+<script type="text/javascript">
+	const boxs = document.querySelectorAll("article");
+	const selectPen = function(input, isContains=true) {
+		for (let box of boxs) {
+			const pen_code = box.getAttribute("pen_code");
+			box.classList.toggle("d-none", isContains ? !pen_code.toLowerCase().includes(input.toLowerCase()) : pen_code != input);
+		}
+	}
+	const search = "{{ search }}".trim();
+	if (search) {
+		selectPen(search, false);
+	}
+</script>
+{% endblock %}

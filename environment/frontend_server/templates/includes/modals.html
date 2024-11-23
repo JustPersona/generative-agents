@@ -1,0 +1,335 @@
+<div class="modal fade" id="penInfoModal" tabindex="-1" aria-labelledby="penInfoModalLabel" aria-hidden="true">
+	<div class="modal-dialog modal-lg">
+		<form class="modal-content" onsubmit="penInfoUpdate(event);">
+			<div class="modal-header pb-0">
+				<div class="nav nav-tabs w-100 border-0" id="nav-tab" role="tablist">
+					<button class="nav-link active" id="pen-info-tab" data-bs-toggle="tab" data-bs-target="#pen-info" type="button" role="tab" aria-controls="pen-info" aria-selected="true">Information</button>
+					<button class="nav-link" id="nav-2-tab" data-bs-toggle="tab" data-bs-target="#nav-2" type="button" role="tab" aria-controls="nav-2" aria-selected="false">Penetration Testing</button>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+			</div>
+			<div class="modal-body">
+				<div class="tab-content" id="nav-tabContent">
+					<div class="d-flex flex-column gap-2 mb-2">
+						<div class="d-flex gap-2 px-1">
+							<div field="forkable" class="form-check form-check-inline">
+								<input class="form-check-input" type="checkbox" id="forkable" onclick="this.blur(); return false;">
+								<label class="form-check-label" for="forkable">Forkable</label>
+							</div>
+							<div field="compressed" class="form-check form-check-inline">
+								<input class="form-check-input" type="checkbox" id="compressed" onclick="this.blur(); return false;">
+								<label class="form-check-label" for="compressed">Compressed</label>
+							</div>
+							<label field="compress" role="button" class="link-primary">
+								Compress?
+								<button type="button" class="d-none" onclick="setSubModal(event, this.closest('form'))" data-bs-toggle="modal" data-bs-target="#compressModal"></button>
+							</label>
+							<div class="text-end" style="flex: 1">
+								<button class="link-secondary bg-transparent border-0 p-0 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false"><i class="fa-solid fa-trash"></i></button>
+								<ul class="dropdown-menu dropdown-menu-end">
+									<li><button type="button" class="dropdown-item btn-forkable-delete" onclick="setSubModal(event, this.closest('form'))" data-bs-toggle="modal" data-bs-target="#deleteModal">Forkable</button></li>
+									<li><button type="button" class="dropdown-item btn-compressed-delete" onclick="setSubModal(event, this.closest('form'))" data-bs-toggle="modal" data-bs-target="#deleteModal">Compressed</button></li>
+								</ul>
+							</div>
+						</div>
+						<div class="form-floating">
+							<input type="text" class="form-control" id="modal_pen_code" name="new_pen_code" oninput="this.closest('form').querySelector('button[type=submit]').toggleAttribute('disabled', !this.value.trim() || this.value.trim() == this.placeholder);">
+							<label for="modal_pen_code">Penetration Testing Name</label>
+						</div>
+						<div class="row g-2">
+							<div class="col-6"><div class="form-floating">
+								<button type="button" class="form-control btn btn-outline-secondary text-start text-truncate" id="modal_forked" name="forked" onclick="setPenInfoModal(event, this)" title="Information"></button>
+								<label for="modal_forked">Forked from</label>
+							</div></div>
+							<div class="col-6"><select class="form-select h-100" aria-label="Large select example" onchange="setPenInfoModal(event, this.selectedOptions[0])">
+								<option selected hidden>Forked by</option>
+							</select></div>
+						</div>
+						<div class="d-flex flex-column gap-2">
+							<div class="row g-2">
+								<div class="col-6"><div class="form-floating">
+									<input type="number" class="form-control" id="modal_step" name="step" disabled>
+									<label for="modal_step">Step</label>
+								</div></div>
+								<div class="col-6"><div class="form-floating">
+									<input type="text" class="form-control" id="modal_vulnerability" name="vulnerability" disabled>
+									<label for="modal_vulnerability">Vulnerability</label>
+								</div></div>
+							</div>
+						</div>
+					</div>
+					<div class="tab-pane fade show active" id="pen-info" role="tabpanel" aria-labelledby="pen-info-tab" tabindex="0">
+						<div>
+							<canvas id="test-chart"></canvas>
+							<script type="text/javascript">
+								const testcanvas = document.querySelector("#test-chart").getContext("2d");
+								const testchart = new Chart(testcanvas, {
+									type: "bar",
+									data: {
+										labels: ["SQLi", "XSS", "CSRF", "LFI"],
+										datasets: [{
+											data: [
+												7,
+												10,
+												6,
+												4,
+											],
+											backgroundColor: "rgb(255, 99, 132)",
+										}],
+									},
+									options: {
+										plugins: {
+											title: {
+												text: "Vulnerability by Type",
+												display: true,
+											},
+											legend: {
+												display: false,
+											},
+										},
+										scales: {
+											y: {
+												beginAtZero: true,
+											},
+										},
+									},
+								});
+							</script>
+						</div>
+					</div>
+					<div class="tab-pane fade" id="nav-2" role="tabpanel" aria-labelledby="nav-2-tab" tabindex="0">
+						<div class="table-responsive mt-2" style="max-height: 500px">
+							<table class="table table-sm table-bordered table-hover m-0 position-relative" style="border-width: 2px;">
+								<thead class="sticky-top z-1">
+									<tr>
+										<th scope="col" class="px-2" style="width: 0px;">Method</th>
+										<th scope="col" class="px-2" style="width: 0px;">Vulnerability</th>
+										<th scope="col">Payload</th>
+									</tr>
+								</thead>
+								<tbody></tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+				<div class="alert alert-danger mt-3 text-center d-none"></div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+				<button type="submit" class="btn btn-primary" disabled>Save</button>
+			</div>
+		</form>
+	</div>
+</div>
+
+<div class="modal fade" id="compressModal" tabindex="-1" aria-labelledby="compressModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h1 class="modal-title fs-5" id="compressModalLabel">Compress?</h1>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+				<span class="pen_code"></span>
+				<div class="alert alert-danger mt-3 text-center d-none"></div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+				<button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#penInfoModal" aria-label="Back">Back</button>
+				<button type="button" class="btn btn-primary" onclick="compressPenTesting(event)">Yes</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+	<div class="modal-dialog">
+		<div class="modal-content">
+			<div class="modal-header">
+				<h1 class="modal-title fs-5" id="deleteModalLabel">Delete?</h1>
+				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+			</div>
+			<div class="modal-body">
+				<span class="pen_code"></span> (<span class="mode"></span>)
+				<div class="alert alert-danger mt-3 text-center d-none"></div>
+			</div>
+			<div class="modal-footer">
+				<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+				<button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#penInfoModal" aria-label="Back">Back</button>
+				<button type="button" class="btn btn-danger" onclick="deletePenTesting(event)">Yes</button>
+			</div>
+		</div>
+	</div>
+</div>
+
+
+
+<script type="text/javascript">
+	const penModal = document.querySelector("#penInfoModal");
+	penModal.addEventListener("show.bs.modal", function(e) {
+		if (!e.relatedTarget.closest(".modal")) {
+			penModal.querySelector("#pen-info-tab").click();
+		}
+	});
+	const setPenInfoModal = function(e, target) {
+		if (!target) return;
+
+		const pen_code = target.getAttribute("pen_code");
+		const form = penModal.querySelector("form");
+		const selectbox = form.querySelector(`select`);
+		const options = selectbox.querySelectorAll(`option[pen_code]`);
+		const alert = form.querySelector(".alert");
+		const container = document.querySelector(`#pen_code_container`);
+		const boxs = container.querySelectorAll(`[pen_code]`);
+		const table = penModal.querySelector("table");
+
+		const new_pen_code = form.new_pen_code;
+		post("{% url 'pen_info' %}", {pen_code: pen_code}, function(xhr) {
+			data = JSON.parse(xhr.responseText);
+			form.setAttribute("pen_code", pen_code);
+			form.querySelector(".alert").classList.add("d-none");
+			new_pen_code.value = pen_code;
+			new_pen_code.setAttribute("placeholder", pen_code);
+			form.forked.setAttribute("pen_code", data.fork_sim_code);
+			form.forked.innerText = data.fork_sim_code;
+			form.forked.toggleAttribute("disabled", new_pen_code.value == form.forked.innerText || !container.querySelector(`[pen_code=${data.fork_sim_code}]`));
+			selectbox.setAttribute("disabled", "");
+			for (let option of options) option.remove();
+			for (let box of boxs) {
+				if (box.getAttribute("forked") == pen_code && box.getAttribute("pen_code") != pen_code) {
+					const option = document.createElement("option");
+					option.setAttribute("pen_code", box.getAttribute("pen_code"));
+					option.innerText = box.getAttribute("pen_code");
+					selectbox.append(option);
+					selectbox.removeAttribute("disabled");
+				}
+			}
+			form.step.value = data.step;
+			form.vulnerability.value = `${data.payload.count || 0}/${data.payload.total || 0}`;
+			form.querySelector("[field=forkable] input").checked = data.forkable;
+			form.querySelector("[field=compressed] input").checked = data.compressed;
+			form.querySelector("[field=compressed]").classList.toggle("d-none", !data.compressed);
+			form.querySelector("[field=compress]").classList.toggle("d-none", data.step == 0 || data.compressed === true);
+			form.querySelector(".btn-forkable-delete").toggleAttribute("disabled", !data.forkable);
+			form.querySelector(".btn-compressed-delete").toggleAttribute("disabled", !data.compressed);
+
+			table.querySelector("tbody").innerHTML = "";
+			for (let x of data.payload.content["http://192.168.10.10/dvwa/vulnerabilities/sqli/"].basic) {
+				setPayload(table, x);
+			}
+		}, function(xhr) {
+			alert.innerText = xhr.responseText;
+			alert.classList.remove("d-none");
+		});
+	}
+
+	const penInfoUpdate = function(e) {
+		e.preventDefault();
+
+		const btn = e.target.closest("button");
+		const form = e.target;
+		const pen_code = form.getAttribute("pen_code");
+		const new_pen_code = form.new_pen_code.value.trim();
+		const boxs = document.querySelectorAll(`#pen_code_container [pen_code]`);
+
+		btn.setAttribute("disabled", "");
+		post("{% url 'pen_info_update' %}", {
+			pen_code: pen_code,
+			new_pen_code: new_pen_code,
+		}, function(xhr) {
+			for (let box of boxs) {
+				if (box.getAttribute("pen_code") == pen_code) {
+					box.setAttribute("pen_code", new_pen_code);
+					box.querySelector("[field=pen_code]").innerText = new_pen_code;
+				}
+				if (box.getAttribute("forked") == pen_code) {
+					box.setAttribute("forked", new_pen_code);
+				}
+				form.setAttribute("pen_code", new_pen_code)
+				form.new_pen_code.setAttribute("placeholder", new_pen_code);
+				form.querySelector("button[type=submit]").setAttribute("disabled", "");
+			}
+			btn.removeAttribute("disabled");
+		}, function(xhr) {
+			btn.removeAttribute("disabled");
+			alert.innerText = xhr.responseText;
+			alert.classList.remove("d-none");
+		})
+	}
+
+	const setSubModal = function(e, target, next="Back") {
+		const pen_code = target.getAttribute("pen_code");
+		const modal = document.querySelector(e.target.closest("button").getAttribute("data-bs-target"));
+		const btns = modal.querySelectorAll(".modal-footer .btn-secondary");
+		modal.setAttribute("pen_code", pen_code);
+		modal.querySelector(`.pen_code`).innerText = pen_code;
+		modal.querySelector(".alert").classList.add("d-none");
+		modal.setAttribute("next", next);
+		for (let btn of btns) btn.classList.toggle("d-none", btn.innerText != next);
+		if (modal.querySelector(`.mode`)) {
+			modal.setAttribute("mode", e.target.innerText.toLowerCase());
+			modal.querySelector(`.mode`).innerText = e.target.innerText;
+		}
+	}
+
+	const compressPenTesting = function(e) {
+		const btn = e.target.closest("button");
+		const modal = e.target.closest(".modal");
+		const alert = modal.querySelector(".alert");
+		const pen_code = modal.getAttribute("pen_code");
+		const box = document.querySelector(`#pen_code_container [pen_code=${pen_code}]`);
+		const form = penModal.querySelector("form");
+
+		btn.setAttribute("disabled", "");
+		const next = modal.getAttribute("next");
+		post("{% url 'compress_pen_testing' %}", {pen_code}, function(xhr) {
+			if (box.tagName == "TR") {
+				box.querySelector("[field=compressed]").innerHTML = '<i class="fa-solid fa-check"></i>';
+				box.querySelector("[field=control] [data-bs-title=Compress]").classList.add("invisible");
+			}
+			form.querySelector("[field=compress]").classList.add("d-none");
+			form.querySelector("[field=compressed]").classList.remove("d-none");
+			form.querySelector(".btn-compressed-delete").removeAttribute("disabled");
+			modal.querySelector(`[aria-label=${next}]`).click();
+			btn.removeAttribute("disabled");
+		}, function(xhr) {
+			btn.removeAttribute("disabled");
+			alert.innerText = xhr.responseText;
+			alert.classList.remove("d-none");
+		});
+	}
+
+	const deletePenTesting = function(e) {
+		const btn = e.target.closest("button");
+		const modal = e.target.closest(".modal");
+		const alert = modal.querySelector(".alert");
+		const pen_code = modal.getAttribute("pen_code");
+		const mode = modal.getAttribute("mode");
+		const box = document.querySelector(`#pen_code_container [pen_code=${pen_code}]`);
+		const form = penModal.querySelector("form");
+
+		btn.setAttribute("disabled", "");
+		const next = modal.getAttribute("next");
+		post("{% url 'delete_pen_testing' %}", {pen_code, mode}, function(xhr) {
+			if (mode === "compressed") {
+				form.querySelector(`[field=compress]`).classList.remove("d-none");
+				box.querySelector(`[data-bs-title=Compress]`)?.classList.remove("invisible");
+			}
+			form.querySelector(`[field=${mode}]`).classList.add("d-none");
+			form.querySelector(`.btn-${mode}-delete`).setAttribute("disabled", "");
+			box.querySelector(`[field=${mode}] i`)?.remove();
+
+			if (form.querySelectorAll("[class$=-delete]:not([disabled])").length) {
+				modal.querySelector(`[aria-label=${next}]`).click();
+			} else {
+				modal.querySelector("[aria-label=Close]").click();
+				box.remove();
+			}
+			btn.removeAttribute("disabled");
+		}, function(xhr) {
+			btn.removeAttribute("disabled");
+			alert.innerText = xhr.responseText;
+			alert.classList.remove("d-none");
+		});
+	}
+</script>

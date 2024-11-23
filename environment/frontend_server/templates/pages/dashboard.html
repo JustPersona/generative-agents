@@ -19,41 +19,57 @@
 
 {% if backend.step %}<section class="bg-body shadow rounded-4 my-3 p-3">
 	<div class="text-center">
-		Backend is Running, <a href="{% url 'live' %}">See</a>
+		Backend is Running, <a href="{% url 'backend' %}">See</a>
 	</div>
 </section>{% endif %}
 
 <section class="bg-body shadow rounded-4 my-3 p-3">
-	<div class="text-end">
-		<a href="{% url 'simulator' %}">Details &gt;</a>
+	<div class="d-flex gap-2 align-items-center">
+		<input class="px-2" style="flex: 1;" type="text" name="search" placeholder="Search..." oninput="selectPen(this.value)"/>
+		<a href="{% url 'pen_testing' %}">Details &gt;</a>
 	</div>
 	<div class="table-responsive mt-2" style="max-height: 500px;">
-			<table class="table table-sm table-bordered table-hover" style="border-width: 2px;">
-					<thead>
-							<tr>
-									<th scope="col" class="text-end" style="width: {{ sim_codes | length | stringformat:'d' | length | add:1 }}rem">#</th>
-									<th scope="col">Name</th>
-									<th scope="col">Step</th>
-									<th scope="col" class="text-center" style="width: 7.5rem;">Compress</th>
-									<th scope="col" class="text-center" style="width: 7.5rem;">Control</th>
-							</tr>
-					</thead>
-					<tbody class="table-group-divider">
-							{% for sim in sim_codes %}<tr class="position-relative" id="{{ sim.sim_code }}" forked="{{ sim.fork_sim_code }}" mode="{{ sim.mode }}">
-									<td field="num" class="text-end">{{ forloop.counter }}</td>
-									<td field="sim_code">{{ sim.sim_code }}</td>
-									<td field="step">{% if not sim.step %}-{% else %}{{ sim.step }}{% endif %}</td>
-									<td field="compress" class="text-center">{% if not sim.step %}-{% elif sim.mode == "demo" %}<i class="fa-solid fa-check"></i>{% endif %}</td>
-									<td field="control">
-										{% if not sim.step %}-{% else %}<div class="d-flex gap-2">
-												<a class="link-secondary" href="{% url 'simulator' sim.sim_code %}" data-bs-toggle="tooltip" data-bs-title="Play"><i class="fa-solid fa-play"></i></a>
-												<a class="link-secondary" href="{% url 'simulator' %}?search={{ sim.sim_code }}" data-bs-toggle="tooltip" data-bs-title="Information"><i class="fa-solid fa-circle-info"></i></a>
-										</div>{% endif %}
-									</td>
-							</tr>{% endfor %}
-					</tbody>
-			</table>
+		<table class="table table-sm table-bordered table-hover m-0 position-relative" style="border-width: 2px;">
+			<thead class="sticky-top z-1">
+				<tr>
+					<th scope="col" class="text-end" style="width: {{ pen_codes | length | stringformat:'d' | length | add:1 }}rem">#</th>
+					<th scope="col">Name</th>
+					<th scope="col" class="text-center px-5" style="width: 0;">Step</th>
+					<th scope="col" class="text-center px-2" style="width: 0;">Vulnerability</th>
+					<th scope="col" class="text-center px-2" style="width: 0;">Forkable</th>
+					<th scope="col" class="text-center px-2" style="width: 0;">Compressed</th>
+					<th scope="col" class="text-center px-5" style="width: 0;">Control</th>
+				</tr>
+			</thead>
+			<tbody class="table-group-divider" id="pen_code_container">
+				{% for pen in pen_codes %}<tr class="position-relative" pen_code="{{ pen.pen_code }}" forked="{{ pen.fork_sim_code }}" mode="{{ pen.mode }}">
+					<td field="num" class="text-end">{{ forloop.counter }}</td>
+					<td field="pen_code">{{ pen.pen_code }}</td>
+					<td field="step" class="text-center">{% if not pen.step %}-{% else %}{{ pen.step }}{% endif %}</td>
+					<td field="vulnerability" class="text-center">{% if not pen.payload %}-{% else %}{{ pen.payload.count }}/{{ pen.payload.total }}{% endif %}</td>
+					<td field="forkable" class="text-center">{% if pen.forkable %}<i class="fa-solid fa-check"></i>{% endif %}</td>
+					<td field="compressed" class="text-center">{% if pen.compressed %}<i class="fa-solid fa-check"></i>{% endif %}</td>
+					<td field="control"><div class="d-flex gap-2">
+						<a class="link-secondary text-center" style="width: 1rem" href="{% if not pen.step %}{% url 'path_tester' pen.maze_name %}{% else %}{% url 'pen_testing' pen.pen_code %}{% endif %}" data-bs-toggle="tooltip" data-bs-title="{% if not pen.step %}Preview{% else %}Play{% endif %}">
+							<i class="fa-solid fa-play"></i>
+						</a>
+						<label role="button" class="link-secondary{% if not pen.step or pen.mode == 'compressed' %} invisible{% endif %}" data-bs-toggle="tooltip" data-bs-title="Compress">
+							<i class="fa-solid fa-minimize"></i>
+							<button type="button" class="d-none" onclick="setSubModal(event, this.closest('[mode]'), 'Close')" data-bs-toggle="modal" data-bs-target="#compressModal"></button>
+						</label>
+						<a class="link-secondary text-center{% if not pen.step %} invisible{% endif %}" style="width: 1rem" href="{% url 'pen_testing' %}?search={{ pen.pen_code }}" data-bs-toggle="tooltip" data-bs-title="Payloads">
+							<i class="fa-solid fa-list-ul"></i>
+						</a>
+						<label role="button" class="link-secondary text-center" style="width: 1rem" data-bs-toggle="tooltip" data-bs-title="Information">
+							<i class="fa-solid fa-ellipsis-vertical"></i>
+							<button type="button" class="d-none" onclick="setPenInfoModal(event, this.closest('[mode]'))" data-bs-toggle="modal" data-bs-target="#penInfoModal"></button>
+						</label>
+					</div></td>
+				</tr>{% endfor %}
+			</tbody>
+		</table>
 	</div>
+	{% include 'includes/modals.html' %}
 </section>
 
 <section class="row">
@@ -159,7 +175,7 @@
 					options: {
 						plugins: {
 							title: {
-								text: "Number of simulations",
+								text: "Number of Pen Testing",
 								display: true,
 							},
 							legend: {
@@ -192,6 +208,15 @@
 {% block js_content %}
 <script type="text/javascript">
 	const table = document.querySelector("table tbody");
+	const trs = table.querySelectorAll("tr");
+
+	const selectPen = function(input) {
+		for (let box of trs) {
+			box.classList.toggle("d-none", !box.getAttribute("pen_code").toLowerCase().includes(input.toLowerCase()));
+		}
+	}
+
+
 
 	const activeTree = function(tr, bool=true) {
 		tr?.classList.toggle("active", bool);
@@ -210,10 +235,11 @@
 		}
 		activeTree(tr);
 
-		if (!type || type == "up") for (let x of table.querySelectorAll(`tr#${tr.getAttribute("forked")}:not(#${tr.id})`)) {
+		const pen_code = tr.getAttribute("pen_code");
+		if (!type || type == "up") for (let x of table.querySelectorAll(`tr[pen_code=${tr.getAttribute("forked")}]:not([pen_code=${pen_code}])`)) {
 			showTree(x, "up");
 		}
-		if (!type || type == "down") for (let x of table.querySelectorAll(`tr[forked="${tr.id}"]:not(#${tr.id})`)) {
+		if (!type || type == "down") for (let x of table.querySelectorAll(`tr[forked="${pen_code}"]:not([pen_code=${pen_code}])`)) {
 			showTree(x, "down");
 		}
 	}

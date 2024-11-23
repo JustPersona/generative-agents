@@ -21,10 +21,12 @@
 	<!-- Static -->
 	<link rel="shortcut icon" href="{% static 'img/atlas.png' %}">
 	<link rel="stylesheet" type="text/css" href="{% sass_src 'css/style.scss' %}?v={% now 'U' %}"/>
+	<script type="text/javascript" src="{% static 'js/index.js' %}?v={% now 'U' %}"></script>
 </head>
 <body class="bg-body-tertiary">
 	{% include "includes/nav.html" %}
 	<div id="main-container" style="padding-left: calc((var(--nav-width) + var(--nav-left)) * var(--nav-fold-moving-main)); transition: var(--nav-duration) padding-left">
+		{% csrf_token %}
 		{% include "includes/header.html" %}
 		<main class="container-md py-3">
 			{% block content %}{% endblock %}

@@ -1,13 +1,7 @@
+environment/trash/
+environment/frontend_server/db.sqlite3
 reverie/backend_server/utils.py
-config/settings/local.py
-storage/*
-static_dirs/*
 
-!storage/base_the_ville_isabella_maria_klaus/*
-!storage/base_the_ville_n25/*
-
-bin/
-include/
 pip-selfcheck.json
 .DS_Store
 
@@ -84,6 +78,7 @@ target/
 
 # pyenv
 .python-version
+pyenv-versions/
 
 # celery beat schedule file
 celerybeat-schedule

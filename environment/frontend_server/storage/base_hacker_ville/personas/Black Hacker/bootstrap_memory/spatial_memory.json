@@ -1,68 +1,28 @@
 {
   "hacker Ville": {
-    "Black Hacker's house": {
-      "main room": [
-        "bed",
+    "Black Hacker's apartment": {
+      "Black Hacker's room": [
         "closet",
-        "computer desk",
-        "blackboard"
+        "bed",
+        "desk",
+        "bookshelf"
       ],
-      "bathroom": [
+      "Black Hacker's bathroom": [
         "shower",
         "toilet",
         "bathroom sink"
       ],
-      "kitchen": [
+      "common room": [
         "refrigerator",
+        "computer desk",
+        "common room sofa"
+      ],
+      "kitchen": [
         "kitchen sink",
         "cooking area"
       ],
-      "living room": [
-        "bookshelf",
-        "guitar"
-      ]
-    },
-    "Hobbs Cafe": {
-      "cafe": [
-        "refrigerator",
-        "kitchen sink",
-        "behind the cafe counter",
-        "cooking area",
-        "cafe customer seating",
-        "piano"
-      ]
-    },
-    "The Rose and Crown Pub": {
-      "pub": [
-        "refrigerator",
-        "kitchen sink",
-        "behind the bar counter",
-        "cooking area",
-        "bar customer seating",
-        "shelf",
-        "microphone"
-      ]
-    },
-    "The Willows Market and Pharmacy": {
-      "store": [
-        "behind the grocery counter",
-        "grocery store counter",
-        "pharmacy store shelf",
-        "grocery store shelf",
-        "behind the pharmacy counter",
-        "pharmacy store counter"
-      ]
-    },
-    "Public Bathroom": {
-      "bathroom": [
-        "toilet",
-        "bathroom sink"
-      ]
-    },
-    "Johnson Park": {
-      "park": [
-        "garden chair",
-        "park garden"
+      "garden": [
+        "smoking zone"
       ]
     }
   }

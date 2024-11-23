@@ -30,7 +30,12 @@ table th, table td { padding-left: .75rem !important; padding-right: .75rem !imp
 
 table .minimum { width: 0; }
 
-p { margin: 0; }
+pre, p { margin: 0; }
+
+/* modal */
+#penInfoModal .modal-scroll { max-height: calc(100svh - var(--bs-modal-margin)*2 - var(--height) - .5rem); }
+
+#penInfoModal #chattingbox-container, #penInfoModal #chattingbox-container .tab-content { height: auto !important; }
 
 #chattingbox-container article ul:empty:before { content: "Empty"; display: block; text-align: center; font-style: italic; color: var(--bs-secondary); }
 
@@ -39,6 +44,8 @@ p { margin: 0; }
 #chattingbox-container .chat-container.mychat .chat-content { align-items: flex-end !important; }
 
 .only-vuln ~ * table:not(.sub) > tbody > tr:not(.table-danger):not(.table-danger + .details) { display: none; }
+
+.best-suggestion ~ * table:not(.sub) > tbody > tr:not(.best) { display: none; }
 
 /* details page */
 #pen_code_container article.pin { order: -1; }

@@ -70,13 +70,22 @@
 	} .minimum {
 		width: 0;
 	}
-} p {
+} pre, p {
 	margin: 0;
 }
 
 
 
-#chattingbox-container {
+/* modal */
+#penInfoModal {
+	.modal-scroll {
+		max-height: calc(100svh - var(--bs-modal-margin)*2 - var(--height) - .5rem);
+	} #chattingbox-container {
+		&, & .tab-content {
+			height: auto !important;
+		}
+	}
+} #chattingbox-container {
 	article ul:empty:before {
 		content: "Empty";
 		display: block;
@@ -91,6 +100,8 @@
 		}
 	}
 } .only-vuln ~ * table:not(.sub) > tbody > tr:not(.table-danger):not(.table-danger + .details) {
+	display: none;
+} .best-suggestion ~ * table:not(.sub) > tbody > tr:not(.best) {
 	display: none;
 }
 

@@ -16,7 +16,7 @@ class Ville:
     def _select_maze(self):
         if self.maze_name: return
         self.maze_name = input(f"maze_name (Default: {self.default_maze}): ") or self.default_maze
-        self.map_dir = os.path.join(self.frontend_dir, "static_dirs", "assets", self.maze_name)
+        self.map_dir = os.path.join(self.frontend_dir, "static", "assets", self.maze_name)
         self.matrix_dir = os.path.join(self.map_dir, "matrix")
         self.json_file = os.path.join(self.map_dir, "visuals", self.maze_name + ".json")
 
@@ -75,7 +75,7 @@ class Ville:
     def maze_save(self):
         """
         Create maze_meta_info.json, maze/*.csv files in
-        environment/frontend_server/static_dirs/assets/maze_name/matrix
+        environment/frontend_server/static/assets/maze_name/matrix
         using file maze_name/visual/maze_name.json
 
         maze_name.json file can be obtained by export from application "Tiled"
@@ -115,7 +115,7 @@ class Ville:
     def find_spawn_pos(self):
         """
         Find and display the spawn position in file
-        environment/frontend_server/static_dirs/assets/maze_name/visual/maze_name.json
+        environment/frontend_server/static/assets/maze_name/visual/maze_name.json
         The description of the tile laid at that position is get
         from the maze_name/matrix/maze/spawning_location_maze.csv file and display it.
         """
@@ -138,7 +138,7 @@ class Ville:
     def all_spatial_save(self):
         """
         Find all game objects and save them to spatial_memory.json through the file
-        environment/frontend_server/static_dirs/assets/maze_name/visual/maze_name.json
+        environment/frontend_server/static/assets/maze_name/visual/maze_name.json
         """
         self._select_maze()
 

@@ -33,7 +33,7 @@ target_path = "</target/path/>"
 target_url = target_base + target_path
 server_path = "<./path/to/source>"
 
-maze_assets_loc = "../../environment/frontend_server/static_dirs/assets"
+maze_assets_loc = "../../environment/frontend_server/static/assets"
 env_matrix = f"{maze_assets_loc}/%s/matrix"
 env_visuals = f"{maze_assets_loc}/%s/visuals"
 

@@ -1,0 +1,17 @@
+{
+  "White Hacker": {
+    "maze": "hacker_ville",
+    "x": 22,
+    "y": 54
+  },
+  "Isabella Rodriguez": {
+    "maze": "hacker_ville",
+    "x": 62,
+    "y": 13
+  },
+  "Black Hacker": {
+    "maze": "hacker_ville",
+    "x": 69,
+    "y": 54
+  }
+}

@@ -21,6 +21,7 @@ from django.views.static import serve
 urlpatterns = [
     path("", include("account.urls")),
     path("", include("translator.urls")),
+    path("api/", include("api.urls")),
 
     re_path(r'^static/(?P<path>.*)$', serve, {'document_root': settings.STATIC_ROOT}),
 ]

@@ -6,8 +6,8 @@
 	<input type="text" class="border-0 bg-transparent w-100 lh-lg text-center" style="outline: 0" placeholder="Search..." name="search" value="{{ search }}" oninput="selectPen()">
 </section>
 
-<section class="pt-3" id="pen_code_container">{% for pen in pen_codes %}
-	<article class="bg-body shadow rounded-4 my-4 p-3" pen_code="{{ pen.pen_code }}" forked="{{ pen.fork_sim_code }}" mode="{{ pen.mode }}"{% if pen.step == 0 %} hidden{% endif %}>
+<section class="pt-3 d-flex flex-column gap-4" id="pen_code_container">{% for pen in pen_codes %}
+	<article class="bg-body shadow rounded-4 p-3" pen_code="{{ pen.pen_code }}" forked="{{ pen.fork_sim_code }}" mode="{{ pen.mode }}"{% if pen.step == 0 %} hidden{% endif %}>
 		<h3 class="h5 d-flex gap-2">
 			<a class="link-secondary" href="{% url 'pen_test' pen.pen_code %}" data-bs-toggle="tooltip" data-bs-title="Play"><i class="fa-solid fa-play"></i></a>
 			<span class="flex-grow-1">{{ pen.pen_code }}</span>
@@ -22,30 +22,17 @@
 			</label>
 		</h3>
 		<hr/>
-		<div>{% if not pen.payloads.data %}
+		<div id="payload-table-{{ pen.pen_code }}-container">{% if not pen.payloads.data %}
 			No Information
 		{% else %}
-			<div class="form-check">
-				<input class="form-check-input" type="checkbox" id="only-vuln" onclick="this.parentNode.classList.toggle('only-vuln', this.checked)">
-				<label class="form-check-label" for="only-vuln">Only Show Vulnerabilities</label>
-			</div>
-			<div class="table-responsive mt-2" style="max-height: 500px;">
-				<table class="table table-sm table-bordered table-hover m-0 position-relative text-nowrap" style="border-width: 2px;">
-					<thead class="sticky-top z-1">
-						<tr>
-							<th scope="col" class="text-center minimum" sort="num">#</th>
-							<th scope="col" class="text-center minimum">Method</th>
-							<th scope="col" class="text-center minimum">URL</th>
-							<th scope="col">Payload</th>
-						</tr>
-					</thead>
-					<tbody></tbody>
-				</table>
-			</div>
 			<script type="text/javascript">
-				for (let x of {{ pen.payloads.data | safe }}) {
-					for (let y of x.basic) {
-						insertPayloadTable(document.querySelector("[pen_code={{ pen.pen_code }}] table"), {url: x.url, data: y});
+				document.querySelector(`#payload-table-{{ pen.pen_code }}-container`).append(createPayloadTable({pen_code: "{{ pen.pen_code }}"}));
+				const payloads_{{ forloop.counter }} = {{ pen.payloads.data | safe }};
+				for (let step in payloads_{{ forloop.counter }}) {
+					const x = payloads_{{ forloop.counter }}[step];
+					for (let p_name in x) {
+						const y = x[p_name];
+						insertPayloadTable(document.querySelector("#payload-table-{{ pen.pen_code }}-container table"), {url: y.url, data: y});
 					}
 				}
 			</script>

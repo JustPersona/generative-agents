@@ -5,23 +5,41 @@ import os, json, csv, pydoc
 
 # Custom Functions
 class Ville:
-    def __init__(self, maze_name=None):
+    def __init__(self, maze_name=None, pen_code=None):
+        self.default_maze = "hacker_ville"
+        self.default_pen = "base_hacker_ville"
         self.maze_name = maze_name
-        if self.maze_name is None:
-            self.maze_name = input("maze_name (Default: the_ville) : ") or "the_ville"
-        self.frontend_dir = os.path.abspath(os.path.join(__file__, "..", "frontend_server"))
+        self.pen_code = pen_code
+        self.base_dir = os.path.abspath(os.path.join(__file__, ".."))
+        self.frontend_dir = os.path.join(self.base_dir, "frontend_server")
+
+    def _select_maze(self):
+        if self.maze_name: return
+        self.maze_name = input(f"maze_name (Default: {self.default_maze}): ") or self.default_maze
         self.map_dir = os.path.join(self.frontend_dir, "static_dirs", "assets", self.maze_name)
         self.matrix_dir = os.path.join(self.map_dir, "matrix")
         self.json_file = os.path.join(self.map_dir, "visuals", self.maze_name + ".json")
 
         if not os.path.isfile(self.json_file):
-            raise FileNotFoundError(f"{maze_name}.json file not found")
+            raise FileNotFoundError(f"{self.maze_name}.json file not found")
         with open(self.json_file, "r") as f:
             self.meta = json.load(f)
         self.layers = self.meta["layers"]
         self.height = int(self.meta["height"])
         self.width = int(self.meta["width"])
         self.tile_size = int(self.meta["tilewidth"])
+
+    def _select_pen(self):
+        if self.pen_code: return
+        self.pen_code = input(f"pen_code (Default: {self.default_pen}): ") or self.default_pen
+        self.storage = os.path.join(self.frontend_dir, "storage", self.pen_code)
+        self.movement = os.path.join(self.storage, "movement", "%s.json")
+        self.environment = os.path.join(self.storage, "environment", "%s.json")
+        self.meta_file = os.path.join(self.storage, "reverie", "meta.json")
+        if not os.path.isfile(self.meta_file):
+            raise FileNotFoundError(f"{self.pen_code} not found")
+        with open(self.meta_file) as f:
+            self.pen_maze_name = json.load(f)["maze_name"]
 
     # Select and run a function
     def run(self, key="", *args, **kwargs):
@@ -62,6 +80,8 @@ class Ville:
 
         maze_name.json file can be obtained by export from application "Tiled"
         """
+        self._select_maze()
+
         save_dir = os.path.join(self.matrix_dir, "maze")
         save_files = {
             "Collisions": "collision_maze.csv",
@@ -99,6 +119,8 @@ class Ville:
         The description of the tile laid at that position is get
         from the maze_name/matrix/maze/spawning_location_maze.csv file and display it.
         """
+        self._select_maze()
+
         csv_file = os.path.join(self.matrix_dir, "special_blocks", "spawning_location_blocks.csv")
         with open(csv_file, "r") as f:
             csv_data = csv.reader(f, delimiter=",")
@@ -118,6 +140,8 @@ class Ville:
         Find all game objects and save them to spatial_memory.json through the file
         environment/frontend_server/static_dirs/assets/maze_name/visual/maze_name.json
         """
+        self._select_maze()
+
         block_dir = os.path.join(self.matrix_dir, "special_blocks")
         blocks = {
             "Object Interaction Blocks": "game_object_blocks.csv",
@@ -142,8 +166,30 @@ class Ville:
             if ls[1] not in output[ls[0]]: output[ls[0]][ls[1]] = []
             if ls[2] not in output[ls[0]][ls[1]]: output[ls[0]][ls[1]] += [ls[2]]
         output = {ville_name: output}
-        with open("./spatial_memory.json", "w") as f:
+        f_saved = os.path.join(self.base_dir, "spatial_memory.json")
+        with open(f_saved, "w") as f:
             json.dump(output, f, indent=2)
+
+
+
+    def movement_to_env(self):
+        """
+        Save all movement/step.json to environment/step+1.json
+        """
+        self._select_pen()
+
+        step = 0
+        while os.path.isfile(self.movement % step):
+            with open(self.movement % step) as f:
+                data = json.load(f)
+            data = {persona: {
+                "maze": self.pen_maze_name,
+                "x": item["movement"][0],
+                "y": item["movement"][1]
+            } for persona, item in data["persona"].items()}
+            step += 1
+            with open(self.environment % step, "w") as f:
+                json.dump(data, f, indent=2)
 
 
 

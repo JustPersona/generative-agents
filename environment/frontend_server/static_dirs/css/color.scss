@@ -9,6 +9,8 @@
 	::selection {
 		background-color: var(--bs-success);
 		color: var(--bs-body-bg);
+	} .nav-pills {
+		--bs-nav-pills-link-active-bg: var(--bs-success);
 	} .btn-close:focus {
 		--bs-btn-close-focus-shadow: 0 0 0 0.25rem rgba(var(--bs-success-rgb), 0.25);
 	} .form-check-input, .form-select, .form-control {

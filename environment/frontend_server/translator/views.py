@@ -14,15 +14,20 @@ from tempfile import TemporaryDirectory
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.views.decorators.http import require_http_methods
+from django.contrib.auth.decorators import login_required
+from django.conf import settings
+
+from channels.generic.websocket import AsyncWebsocketConsumer
 
 sys.path.append("..")
 from compress_pen_storage import compress
+from utils import black_hats
 
 
 
 pen_files = {
     "memory": {
-        "payload": "/personas/Black Hacker/bootstrap_memory/payload.json",
+        "payload": "/personas/%s/bootstrap_memory/payload.json",
     },
     "compressed": {
         "root": "compressed_storage/%s",
@@ -56,7 +61,7 @@ pen_files = {
 # Functions
 
 def backendIsRunning():
-    return exists(pen_files["temp"]["step"])
+    return exists(pen_files["temp"]["step"]) and exists(pen_files["temp"]["code"])
 
 def backendStep():
     step = None
@@ -69,7 +74,7 @@ def backendCode():
     pen_code = None
     if backendIsRunning():
         with open(pen_files["temp"]["code"]) as f:
-            pen_code = json.load(f).get("pen_code")
+            pen_code = json.load(f).get("sim_code")
     return pen_code
 
 def getBackendInfo():
@@ -80,7 +85,7 @@ def getBackendInfo():
 
 
 
-def getMapData(maze_name="the_ville"):
+def getMapData(maze_name="hacker_ville"):
     map_json = pen_files["maze"]["visuals"] % (maze_name, maze_name)
     if not exists(map_json):
         return {}
@@ -103,27 +108,24 @@ def getPayloadInfo(mode=None, pen_code=None, *, to_list=False):
             "vulnerabilities": 0,
             "payloads": 0
         },
-        "data": [],
+        "data": {},
     }
-    payload_file = (pen_files[mode]["root"] % pen_code) + pen_files["memory"]["payload"]
-    if exists(payload_file):
+
+    for p_name in black_hats:
+        payload_file = (pen_files[mode]["root"] % pen_code) + (pen_files["memory"]["payload"] % p_name)
+        if not exists(payload_file): continue
         with open(payload_file) as f:
             payload_data = json.load(f)
         for url, items in payload_data.items():
             data["count"]["payloads"] += len(items["basic"])
             for idx, payload in enumerate(items["basic"]):
+                step = payload["timestamp"]
                 if payload["observations"] == "exploit_successful":
                     data["count"]["vulnerabilities"] += 1
                 items["basic"][idx] = json.loads(json.dumps(items["basic"][idx]).replace("<", "&lt;").replace(">", "&gt;"))
-            data["data"] += [{"url": url, **items}]
-
-    if to_list is True:
-        tmp = {}
-        for x in data["data"]:
-            for y in x["basic"]:
-                y["url"] = x["url"]
-                tmp[y["timestamp"]] = y
-        data = tmp
+                items["basic"][idx]["url"] = url
+                if step not in data["data"]: data["data"][step] = {}
+                data["data"][step][p_name] = items["basic"][idx]
     return data
 
 def getPen(pen_code, mode=None):
@@ -161,6 +163,56 @@ def penList(mode=None):
         data["forkable"] = [x for x in listdir("storage") if exists(pen_files["forkable"]["meta"] % x)]
     return data
 
+def getChatting(pen_code, *, start_datetime=None, sec_per_step=10, first_step=0, last_step=None):
+    chats = dict()
+    last_chats = dict()
+
+    if exists(pen_files["compressed"]["meta"] % pen_code):
+        mode = "compressed"
+    elif exists(pen_files["forkable"]["meta"] % pen_code):
+        mode = "forkable"
+    else:
+        return {}
+
+    if last_step is None:
+        with open(pen_files[mode]["meta"] % pen_code) as f:
+            last_step = json.load(f)["step"]
+
+    if mode == "compressed":
+        with open(pen_files[mode]["move"] % pen_code) as f:
+            data = json.load(f)
+        for step in range(first_step, last_step+1):
+            try:
+                personas = data[str(step)]
+            except:
+                break
+            x = parseChat(personas, start_datetime, sec_per_step*(step-first_step), last_chats)
+            if x: chats[step] = x
+    else:
+        for step in range(first_step, last_step+1):
+            try:
+                with open(pen_files["forkable"]["move"] % (pen_code, step)) as f:
+                    personas = json.load(f)["persona"]
+            except:
+                break
+            x = parseChat(personas, start_datetime, sec_per_step*(step-first_step), last_chats)
+            if x: chats[step] = x
+    return chats
+
+def parseChat(personas, datetime, delta, last_chats={}):
+    if datetime: datetime += timedelta(seconds=delta)
+    data = dict()
+    for p_name, p_data in personas.items():
+        chat = p_data["chat"]
+        if chat is None: continue
+        for c in chat:
+            if c[0] != p_name: continue
+            if last_chats.get(p_name) == c[1]: continue
+            last_chats[p_name] = c[1]
+            data[p_name] = {"chat": c[1]}
+            if datetime: data[p_name]["datetime"] = datetime.strftime("%Y-%m-%dT%H:%M:%S")
+    return data
+
 def getChartData(data=None, *, min=0):
     if data is None: data = getPens()
 
@@ -169,9 +221,9 @@ def getChartData(data=None, *, min=0):
 
     for x in data:
         if not x["payloads"]["data"]: continue
-        for y in x["payloads"]["data"]:
-            url = y.get("url")
-            for z in y["basic"]:
+        for step, y in x["payloads"]["data"].items():
+            for p_name, z in y.items():
+                url = z.get("url")
                 chart_data["attack"] = addChartData(chart_data["attack"], z["attack_name"], z["observations"] == "exploit_successful")
                 chart_data["url"] = addChartData(chart_data["url"], url or z["url"], [1, z["observations"] == "exploit_successful"])
 
@@ -241,6 +293,7 @@ def pen_info(request):
     data = getPen(pen_code)
     if not data:
         return HttpResponse("Not found", status=404)
+    data["chart"] = getChartData([data], min=4)
     return JsonResponse(data)
 
 @require_http_methods(["POST"])
@@ -274,39 +327,6 @@ def pen_info_update(request):
 
 
 @require_http_methods(["GET"])
-def path_tester(request, maze_name="hacker_ville"):
-    maps = [x for x in listdir("static_dirs/assets") if exists(pen_files["maze"]["visuals"] % (x, x))]
-    if maze_name not in maps:
-        return HttpResponse(status=404)
-    map_data = getMapData(maze_name)
-    map_data["list"] = maps
-
-    context = {
-        "pen_code": f"Path Tester: {maze_name}",
-        "map": map_data,
-        "maze_name": maze_name,
-        "mode": "tester",
-    }
-    template = "pages/pen_test_play.html"
-    return render(request, template, context)
-
-
-
-@require_http_methods(["GET"])
-def backend(request):
-    penInfo = getBackendInfo()
-    step = penInfo["step"]
-    pen_code = penInfo["pen_code"]
-
-    if not step or not pen_code:
-        return render(request, "pages/backend-error.html")
-
-    #remove(pen_files["temp"]["step"])
-    return pen_test(request, pen_code, step)
-
-
-
-@require_http_methods(["GET"])
 def pen_test(request, pen_code=None, step=0, speed=2):
     if pen_code is None:
         context = {
@@ -328,16 +348,19 @@ def pen_test(request, pen_code=None, step=0, speed=2):
     else:
         return HttpResponse(status=404)
 
-    payloads = getPayloadInfo(mode, pen_code, to_list=True)
+    payloads = getPayloadInfo(mode, pen_code)
     with open(pen_files[mode]["meta"] % pen_code) as json_file:
         meta = json.load(json_file)
     max_step = meta["step"]
     maze_name = meta["maze_name"]
     sec_per_step = meta["sec_per_step"]
     persona_names = meta["persona_names"]
+    if max_step == 0:
+        mode = "preview"
     step = min(step, max_step)
 
     start_datetime = datetime.strptime(meta["start_date"] + " 00:00:00", '%B %d, %Y %H:%M:%S')
+    chats = getChatting(pen_code, start_datetime=start_datetime, sec_per_step=sec_per_step, last_step=[step, None][mode == "compressed"])
     start_datetime += timedelta(seconds=step * sec_per_step)
     start_datetime = start_datetime.strftime("%Y-%m-%dT%H:%M:%S")
 
@@ -345,7 +368,7 @@ def pen_test(request, pen_code=None, step=0, speed=2):
     with open(pen_files["maze"]["visuals"] % (maze_name, maze_name)) as json_file:
         tile_width = int(json.load(json_file)["tilewidth"])
 
-    if mode == "forkable":
+    if mode in ["forkable", "preview"]:
         all_movement = {}
         persona_init_pos = dict()
         curr_json = (pen_files["forkable"]["env"] % (pen_code, step))
@@ -395,13 +418,16 @@ def pen_test(request, pen_code=None, step=0, speed=2):
     } for x in persona_names]
 
     context = {
+        "running": getBackendInfo().get("pen_code") == pen_code,
         "payloads": payloads,
         "pen_code": pen_code,
         "step": step,
         "max_step": max_step,
         "persona_names": persona_names,
+        "black_hats": black_hats,
         "persona_init_pos": json.dumps(persona_init_pos),
         "all_movement": json.dumps(all_movement),
+        "chats": json.dumps(chats),
         "tile_width": tile_width,
         "start_datetime": start_datetime,
         "sec_per_step": sec_per_step,
@@ -412,6 +438,14 @@ def pen_test(request, pen_code=None, step=0, speed=2):
         "mode": mode,
     }
     template = "pages/pen_test_play.html"
+    return render(request, template, context)
+
+
+
+@require_http_methods(["GET"])
+def pen_test_chat(request):
+    context = {}
+    template = "pages/pen_test_chat.html"
     return render(request, template, context)
 
 
@@ -513,6 +547,7 @@ def delete_pen_test(request):
         return HttpResponse("Unknown Error", status=500)
     return HttpResponse()
 
+@login_required(login_url=settings.LOGIN_URL)
 @require_http_methods(["GET", "POST"])
 def trash(request):
     if not request.user.is_staff:
@@ -564,75 +599,65 @@ def trash(request):
 
 
 
-@require_http_methods(["POST"])
-def process_environment(request):
-    """
-    <FRONTEND to BACKEND>
-    This sends the frontend visual world information to the backend server.
-    It does this by writing the current environment representation to
-    "storage/environment.json" file.
+# Web Socket
 
-    ARGS:
-        request: Django request
-    RETURNS:
-        HttpResponse: string confirmation message.
-    """
-    # f_curr_pen_code = pen_files["temp"]["code"]
-    # with open(f_curr_sim_code) as json_file:
-    #   pen_code = json.load(json_file)["pen_code"]
+class ReverieConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        await self.accept()
 
-    data = json.loads(request.body)
-    step = data["step"]
-    pen_code = data["pen_code"]
-    environment = data["environment"]
+    async def disconnect(self, code):
+        return super().disconnect(code)
 
-    with open(pen_files["forkable"]["env"] % (pen_code, step), "w") as outfile:
-        outfile.write(json.dumps(environment, indent=2))
+    async def receive(self, text_data):
+        data = json.loads(text_data)
+        path = data["path"]
 
-    return HttpResponse("received")
+        response_data = dict()
+        if path == "update_environment":
+            response_data = self.update_environment(data)
+        if path == "get_payload_info":
+            response_data = self.get_payload_info(data)
 
-@require_http_methods(["POST"])
-def update_environment(request):
-    """
-    <BACKEND to FRONTEND>
-    This sends the backend computation of the persona behavior to the frontend
-    visual server.
-    It does this by reading the new movement information from
-    "storage/movement.json" file.
+        response_data["path"] = path
+        await self.send_message(response_data)
 
-    ARGS:
-        request: Django request
-    RETURNS:
-        HttpResponse
-    """
+    async def send_message(self, message):
+        await self.send(text_data=json.dumps(message))
 
-    data = json.loads(request.body)
-    step = data["step"]
-    pen_code = data["pen_code"]
+    def update_environment(self, data):
+        """
+        <BACKEND to FRONTEND>
+        This sends the backend computation of the persona behavior to the frontend
+        visual server.
+        It does this by reading the new movement information from
+        "storage/movement.json" file.
 
-    response_data = {"<step>": -1}
-    stepFile = pen_files["forkable"]["move"] % (pen_code, step)
-    if exists(stepFile):
-        with open(stepFile) as json_file:
-            response_data = json.load(json_file)
-            response_data["<step>"] = step
-    return JsonResponse(response_data)
+        ARGS:
+            Dict parsed from WebSocket
+        RETURNS:
+            movement.json to Dict
+        """
+        step = data["step"]
+        pen_code = data["pen_code"]
 
-@require_http_methods(["POST"])
-def path_tester_update(request):
-    """
-    Processing the path and saving it to path_tester_env.json temp storage for
-    conducting the path tester.
+        response_data = {"step": -1}
+        stepFile = pen_files["forkable"]["move"] % (pen_code, step)
+        if exists(stepFile):
+            with open(stepFile) as json_file:
+                response_data = json.load(json_file)
+            response_data["step"] = step
+            response_data["chats"] = getChatting(pen_code, first_step=step, last_step=step)
+        return response_data
 
-    ARGS:
-        request: Django request
-    RETURNS:
-        HttpResponse: string confirmation message.
-    """
-    data = json.loads(request.body)
-    camera = data["camera"]
+    def get_payload_info(self, data):
+        mode = data["mode"]
+        pen_code = data["pen_code"]
+        max_step = data["max_step"]
+        meta_file = pen_files["forkable"]["meta"] % pen_code
 
-    with open(pen_files["temp"]["env"], "w") as outfile:
-        outfile.write(json.dumps(camera, indent=2))
-
-    return HttpResponse("received")
+        response_data = dict()
+        with open(meta_file) as f:
+            response_data["max_step"] = json.load(f).get("step")
+        if max_step != response_data["max_step"]:
+            response_data["payloads"] = getPayloadInfo(mode, pen_code)
+        return response_data

@@ -40,7 +40,19 @@
 		border-left: 2px solid var(--bs-link-color);
 	}
 } table {
-	thead [sort] {
+	table.sub {
+		tr {
+			& > *:not(:first-child) {
+				border-left-width: 1px;
+			} & > *:not(:last-child) {
+				border-right-width: 1px;
+			} &:not(:first-child) > * {
+				border-top-width: 1px;
+			} &:not(:last-child) > * {
+				border-bottom-width: 1px;
+			}
+		} 
+	} thead [sort] {
 		i {
 			transform: rotateX(var(--deg, 0deg)) translateY(-.2rem);
 		} &.sorted.reverse {
@@ -48,12 +60,65 @@
 		} &:not(.sorted) label:hover i {
 			--bs-secondary-rgb: var(--bs-body-color);
 		}
+	} tr.details {
+		&:not(.show) {
+			display: none;
+		} p {
+			margin: 0;
+		}
 	} th, td {
 		padding-left: .75rem !important;
 		padding-right: .75rem !important;
 	} .minimum {
 		width: 0;
 	}
-} .only-vuln + * table tbody tr:not(.table-danger) {
+} .only-vuln ~ * table:not(.sub) > tbody > tr:not(.table-danger):not(.table-danger + .details) {
 	display: none;
+}
+
+
+
+/* details page */
+#pen_code_container {
+	article.pin {
+		order: -1;
+	}
+}
+
+
+
+/* play page */
+#temp_focus ~ * {
+	.tab-pane:not(.active) {
+		display: none;
+	} [id$=chatting] p {
+		margin: 0;
+	} .chat-container.mychat {
+		flex-direction: row-reverse;
+
+		.chat-content {
+			align-items: flex-end !important;
+		}
+	}
+
+	@media (min-width: 1200px) {
+		&.nav-pills {
+			display: none;
+		} &.tab-content {
+			--gap: 1rem;
+			display: flex;
+			flex-wrap: wrap;
+			gap: var(--gap);
+
+			& > * {
+				--width: calc((100% - var(--gap)) / 2);
+				width: var(--width);
+				min-width: var(--width);
+				max-width: var(--width);
+			} .tab-pane:not(.sub) {
+				display: block;
+				opacity: 1;
+			}
+		}
+	}
 }

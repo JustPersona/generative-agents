@@ -1,0 +1,34 @@
+:root { --bs-link-color: var(--bs-success); --bs-link-color-rgb: var(--bs-success-rgb); --bs-link-hover-color: #146c43; --bs-link-hover-color-rgb: 20, 108, 67; }
+
+:root ::selection { background-color: var(--bs-success); color: var(--bs-body-bg); }
+
+:root .nav-pills { --bs-nav-pills-link-active-bg: var(--bs-success); }
+
+:root .btn-close:focus { --bs-btn-close-focus-shadow: 0 0 0 0.25rem rgba(var(--bs-success-rgb), 0.25); }
+
+:root .form-check-input, :root .form-select, :root .form-control { --color: var(--bs-success); --color-rgb: var(--bs-success-rgb); --bd-color: var(--bs-form-valid-border-color); }
+
+:root .form-check-input.form-danger, :root .form-select.form-danger, :root .form-control.form-danger { --color: var(--bs-danger); --color-rgb: var(--bs-danger-rgb); --bd-color: var(--bs-form-invalid-border-color); }
+
+:root .form-check-input:checked, :root .form-select:checked, :root .form-control:checked { background-color: var(--color); border-color: var(--color); }
+
+:root .form-check-input:focus, :root .form-check-input.focus, :root .form-select:focus, :root .form-select.focus, :root .form-control:focus, :root .form-control.focus { border-color: var(--bd-color); box-shadow: 0 0 0 0.25rem rgba(var(--color-rgb), 0.25); }
+
+:root .dropdown-item:active { background-color: var(--bs-link-color); }
+
+:root .form-range::-webkit-slider-thumb { background-color: var(--bs-success); }
+
+:root .form-range::-moz-range-thumb { background-color: var(--bs-success); }
+
+:root .form-range:focus::-webkit-slider-thumb { box-shadow: 0 0 0 1px #fff, 0 0 0 0.25rem rgba(var(--bs-success-rgb), 0.25); }
+
+:root .form-range:focus::-moz-range-thumb { box-shadow: 0 0 0 1px #fff, 0 0 0 0.25rem rgba(var(--bs-success-rgb), 0.25); }
+
+:root .form-range:active::-webkit-slider-thumb { background-color: rgba(var(--bs-success-rgb), 0.25); }
+
+:root .form-range:active::-moz-range-thumb { background-color: rgba(var(--bs-success-rgb), 0.25); }
+
+:root .table-hover > tfoot > tr:hover > * { --bs-table-color-state: var(--bs-table-hover-color); --bs-table-bg-state: var(--bs-table-hover-bg)
+	; }
+
+/*# sourceMappingURL=color.css.map */

@@ -6,6 +6,7 @@ from django.shortcuts import render, redirect
 from django.views.decorators.http import require_http_methods
 
 from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
 from django.core.validators  import validate_email
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
@@ -39,7 +40,7 @@ def signout(request):
 @require_http_methods(["GET", "POST"])
 def signin(request):
     if request.user.is_authenticated:
-        return redirect(settings.LOGIN_REDIRECT_URL)
+        return redirect(request.GET.get("next", settings.LOGIN_REDIRECT_URL))
     
     if request.method == "GET":
         return render(request, "pages/signin.html", {"num_of_users": User.objects.count() != 0})
@@ -61,6 +62,8 @@ def signin(request):
     login(request, user)
     return HttpResponse()
 
+
+@login_required(login_url=settings.LOGIN_URL)
 @require_http_methods(["GET"])
 def manage(request):
     if not request.user.is_superuser:

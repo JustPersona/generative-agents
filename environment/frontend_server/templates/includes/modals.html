@@ -1,5 +1,5 @@
 <div class="modal fade" id="penInfoModal" tabindex="-1" aria-labelledby="penInfoModalLabel" aria-hidden="true">
-	<div class="modal-dialog modal-lg modal-dialog-scrollable">
+	<div class="modal-dialog modal-xl modal-dialog-scrollable">
 		<form class="modal-content" onsubmit="penInfoUpdate(event);">
 			<div class="modal-header pb-0">
 				<div class="nav nav-tabs w-100 border-0" id="nav-tab" role="tablist">
@@ -64,61 +64,10 @@
 					</div>
 					<div class="tab-pane fade show active" id="pen-summary" role="tabpanel" aria-labelledby="pen-summary-tab" tabindex="0">
 						<div>
-							<canvas id="test-chart"></canvas>
-							<script type="text/javascript">
-								const testcanvas = document.querySelector("#test-chart").getContext("2d");
-								const testchart = new Chart(testcanvas, {
-									type: "bar",
-									data: {
-										labels: ["SQLi", "XSS", "CSRF", "LFI"],
-										datasets: [{
-											data: [
-												7,
-												10,
-												6,
-												4,
-											],
-											backgroundColor: "rgb(255, 99, 132)",
-										}],
-									},
-									options: {
-										plugins: {
-											title: {
-												text: "Vulnerability by Type",
-												display: true,
-											},
-											legend: {
-												display: false,
-											},
-										},
-										scales: {
-											y: {
-												beginAtZero: true,
-											},
-										},
-									},
-								});
-							</script>
+							<canvas id="sub-type-chart"></canvas>
 						</div>
 					</div>
 					<div class="tab-pane fade" id="pen-details" role="tabpanel" aria-labelledby="pen-details-tab" tabindex="0">
-						<div class="form-check">
-							<input class="form-check-input" type="checkbox" id="only-vuln" onclick="this.parentNode.classList.toggle('only-vuln', this.checked)">
-							<label class="form-check-label" for="only-vuln">Only Show Vulnerabilities</label>
-						</div>
-						<div class="table-responsive mt-2" style="max-height: 500px">
-							<table class="table table-sm table-bordered table-hover m-0 position-relative text-nowrap" style="border-width: 2px;">
-								<thead class="sticky-top z-1">
-									<tr>
-										<th scope="col" class="text-center minimum" sort="num">#</th>
-										<th scope="col" class="text-center minimum">Method</th>
-										<th scope="col" class="text-center minimum">URL</th>
-										<th scope="col">Payload</th>
-									</tr>
-								</thead>
-								<tbody></tbody>
-							</table>
-						</div>
 					</div>
 				</div>
 				<div class="alert alert-danger mt-3 text-center d-none"></div>
@@ -172,9 +121,45 @@
 
 
 <script type="text/javascript">
+	document.querySelector(`#pen-details`).append(createPayloadTable("model"));
+	const table = document.querySelector(`#pen-details table`);
+
 	const container = document.querySelector("#pen_code_container");
 	const penModal = document.querySelector("#penInfoModal");
 	const pen_codes = container.querySelectorAll(`[pen_code]`);
+
+	const sub_type_chart = getCanvas({
+		canvas: document.querySelector("#sub-type-chart"),
+		config: {
+			type: "bar",
+			data: {
+				labels: [],
+				datasets: [{
+					data: [],
+					backgroundColor: "rgb(255, 99, 132)",
+				}],
+			},
+			options: {
+				animation: {
+					duration: 0,
+				},
+				plugins: {
+					title: {
+						text: "Number of Vulnerabilities by Attack",
+						display: true,
+					},
+					legend: {
+						display: false,
+					},
+				},
+				scales: {
+					y: {
+						beginAtZero: true,
+					},
+				},
+			},
+		}
+	});
 
 	penModal.addEventListener("show.bs.modal", function(e) {
 		if (!e.relatedTarget.closest(".modal")) {
@@ -189,11 +174,11 @@
 		const selectbox = form.querySelector(`select`);
 		const options = selectbox.querySelectorAll(`option[pen_code]`);
 		const alertbox = form.querySelector(".alert");
-		const table = penModal.querySelector("table");
 
 		const new_pen_code = form.new_pen_code;
 		post("{% url 'pen_info' %}", {pen_code: pen_code}, function(xhr) {
 			data = JSON.parse(xhr.responseText);
+
 			form.setAttribute("pen_code", pen_code);
 			alertbox.classList.add("d-none");
 			new_pen_code.value = pen_code;
@@ -222,12 +207,19 @@
 			form.querySelector(".btn-forkable-delete")?.toggleAttribute("disabled", !data.forkable);
 			form.querySelector(".btn-compressed-delete")?.toggleAttribute("disabled", !data.compressed);
 
+			sub_type_chart.data.labels = data.chart?.attack.labels || [];
+			sub_type_chart.data.datasets[0].data = data.chart?.attack?.datasets || [];
+			sub_type_chart.update();
+
+			const onlyVuln = document.querySelector("#only-vuln-model")
+			if (onlyVuln.checked) onlyVuln.click();
 			table.querySelector("tbody").innerHTML = "";
 			try {
-				for (let payload_data of data.payloads.data) {
-					const url = payload_data.url;
-					for (let x of payload_data.basic) {
-						insertPayloadTable(table, {url, data: x});
+				for (let step in data.payloads?.data) {
+					const payload_data = data.payloads.data[step];
+					for (let p_name in payload_data) {
+						const x = payload_data[p_name];
+						insertPayloadTable(table, {url: x.url, data: x});
 					}
 				}
 			} catch {}

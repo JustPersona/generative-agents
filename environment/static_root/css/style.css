@@ -6,10 +6,46 @@
 
 header { height: var(--header-height); }
 
-nav ul .nav-link:hover { color: green !important; }
+nav ul .nav-link:hover { color: var(--bs-link-color) !important; }
 
-nav ul .nav-link.active:after { content: ""; display: block; position: absolute; top: 0; right: 0; height: 100%; width: 0; border-left: 2px solid green; }
+nav ul .nav-link.active:after { content: ""; display: block; position: absolute; top: 0; right: 0; height: 100%; width: 0; border-left: 2px solid var(--bs-link-color); }
 
-a { text-decoration: none; }
+table table.sub tr > *:not(:first-child) { border-left-width: 1px; }
+
+table table.sub tr > *:not(:last-child) { border-right-width: 1px; }
+
+table table.sub tr:not(:first-child) > * { border-top-width: 1px; }
+
+table table.sub tr:not(:last-child) > * { border-bottom-width: 1px; }
+
+table thead [sort] i { transform: rotateX(var(--deg, 0deg)) translateY(-0.2rem); }
+
+table thead [sort].sorted.reverse { --deg: 180deg; }
+
+table thead [sort]:not(.sorted) label:hover i { --bs-secondary-rgb: var(--bs-body-color); }
+
+table tr.details:not(.show) { display: none; }
+
+table tr.details p { margin: 0; }
+
+table th, table td { padding-left: .75rem !important; padding-right: .75rem !important; }
+
+table .minimum { width: 0; }
+
+.only-vuln ~ * table:not(.sub) > tbody > tr:not(.table-danger):not(.table-danger + .details) { display: none; }
+
+/* details page */
+#pen_code_container article.pin { order: -1; }
+
+/* play page */
+#temp_focus ~ * .tab-pane:not(.active) { display: none; }
+
+#temp_focus ~ * [id$=chatting] p { margin: 0; }
+
+#temp_focus ~ * .chat-container.mychat { flex-direction: row-reverse; }
+
+#temp_focus ~ * .chat-container.mychat .chat-content { align-items: flex-end !important; }
+
+@media (min-width: 1200px) { #temp_focus ~ *.nav-pills { display: none; } #temp_focus ~ *.tab-content { --gap: 1rem; display: flex; flex-wrap: wrap; gap: var(--gap); } #temp_focus ~ *.tab-content > * { --width: calc((100% - var(--gap)) / 2); width: var(--width); min-width: var(--width); max-width: var(--width); } #temp_focus ~ *.tab-content .tab-pane:not(.sub) { display: block; opacity: 1; } }
 
 /*# sourceMappingURL=style.css.map */

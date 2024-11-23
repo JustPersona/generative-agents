@@ -1,10 +1,11 @@
 {% load static %}
 
+const static = "{% static '' %}";
 let debug = false;
 let pause = false;
 
 const fullScreen = false;
-const mode = ["forkable", "compressed"].includes("{{ mode }}") ? "{{ mode }}" : "tester";
+const mode = ["forkable", "compressed"].includes("{{ mode }}") ? "{{ mode }}" : "preview";
 const canvas_ratio = 8/15;
 const tile_width = "{{ tile_width }}" * 1;
 const timebox = document.getElementById("game-time-content");
@@ -14,21 +15,26 @@ let movement_speed;
 let execute_count_max;
 let execute_count;
 
-{% if mode != "tester" %}
-	const apply_speed = function(speed=2, min=1, max=6) {
-		if (!speed || speed < min) speed = min;
-		if (speed > max) speed = max;
-		if (mode != "compressed") speed = 6;
-		const elem = document.querySelector("#speed");
-		elem.setAttribute("placeholder", speed);
-		elem.value = speed;
+const toLocaleTimeString = function(datetime) {
+	return datetime.toLocaleTimeString("en-US", datetime_options)
+}
 
-		speed = 2 ** (speed - 1);
-		execute_count_max = tile_width / speed;
-		execute_count = execute_count / (speed / movement_speed);
-		movement_speed = speed;
-	}
+const apply_speed = function(speed=2, min=1, max=6) {
+	if (!speed || speed < min) speed = min;
+	if (speed > max) speed = max;
+	if (mode != "compressed") speed = 6;
+	const elem = document.querySelector("#speed");
+	elem.setAttribute("placeholder", speed);
+	elem.value = speed;
 
+	speed = 2 ** (speed - 1);
+	execute_count_max = tile_width / speed;
+	execute_count = execute_count / (speed / movement_speed);
+	movement_speed = speed;
+}
+
+
+{% if mode != "preview" %}
 	const formSubmit = function(e) {
 		e.preventDefault();
 		const form = e.target;
@@ -49,7 +55,7 @@ let execute_count;
 		const newStep = value;
 
 		const curr_datetime =  new Date( Date.parse(timebox.placeholder.replace(" at", ",")) + 10000*(newStep - currStep) );
-		timebox.value = curr_datetime.toLocaleTimeString("en-US", datetime_options);
+		timebox.value = toLocaleTimeString(curr_datetime);
 	}
 {% endif %}
 
@@ -69,7 +75,6 @@ const personaFocus = function(radio) {
 
 
 const pen_test_play = function(container) {
-	const static = "{% static '' %}";
 	const maze_name = "{{ maze_name }}";
 
 	const map_width = "{{ map.width }}" * 1;
@@ -78,12 +83,12 @@ const pen_test_play = function(container) {
 
 	let max_step = "{{ max_step }}" * 1;
 	const player_width = 40;
-	const playerDepth = mode === "tester" ? 1 : -1;
+	const playerDepth = -1;
 
-	const payloads = {% if mode == "tester" or not payloads %}{}{% else %}{{ payloads | safe }}{% endif %};
+	let payloads = {% if mode == "preview" or not payloads %}{}{% else %}{{ payloads.data | safe }}{% endif %};
 	const vuln_imoji = "\u2757\u2757";
-	let imoji_bak = "";
-	let vuln_imoji_count = 0;
+	let imoji_bak = {};
+	let vuln_imoji_count = {};
 	const vuln_imoji_count_max = 10;
 
 
@@ -136,6 +141,7 @@ const pen_test_play = function(container) {
 			update: update,
 		},
 		scale: {
+			zoom: container.clientWidth / canvas_width,
 			// mode: Phaser.Scale.FIT,
 		},
 	};
@@ -148,51 +154,50 @@ const pen_test_play = function(container) {
 	let player;
 
 
-	{% if mode == "tester" %}
-		const spawn_tile_loc = {};
-	{% else %}
-		// Persona related variables. This should have the name of the persona as its
-		// keys, and the instances of the Persona class as the values.
-		// let spawn_tile_loc = {};
-		// for (let key in persona_names) {
-		// 	spawn_tile_loc[key] = persona_names[key];
-		// }
-		const spawn_tile_loc = {{ persona_init_pos | safe }};
 
-		let personas = {};
-		let speech_bubbles = {};
-		let pronunciatios = {};
-		let anims_direction;
-		let pre_anims_direction_dict = {};
+	// Persona related variables. This should have the name of the persona as its
+	// keys, and the instances of the Persona class as the values.
+	// let spawn_tile_loc = {};
+	// for (let key in persona_names) {
+	// 	spawn_tile_loc[key] = persona_names[key];
+	// }
+	const spawn_tile_loc = {{ persona_init_pos | safe }};
+	let curr_focused_persona;
 
-		// <tile_width> is the width of one individual tile (tiles are square)
-		// const tile_width = "{{ tile_width }}" * 1;
-		// Important: tile_width % movement_speed has to be 0.
-		// <movement_speed> determines how fast we move at each upate cylce.
-		// const movement_speed = "{{ play_speed }}" * 1;
-		apply_speed("{{ speed }}" * 1);
+	let personas = {};
+	let speech_bubbles = {};
+	let pronunciatios = {};
+	let anims_direction;
+	let pre_anims_direction_dict = {};
 
-		// <timer_max> determines how frequently our update function will query the
-		// frontend server. If it's higher, we wait longer cycles.
-		let timer_max = 0;
-		let timer = timer_max;
+	// <tile_width> is the width of one individual tile (tiles are square)
+	// const tile_width = "{{ tile_width }}" * 1;
+	// Important: tile_width % movement_speed has to be 0.
+	// <movement_speed> determines how fast we move at each upate cylce.
+	// const movement_speed = "{{ play_speed }}" * 1;
+	if (mode != "preview") apply_speed("{{ speed }}" * 1);
 
-		// <phase> -- there are three phases: "process," "update," and "execute."
-		let phase = "update"; // or "update" or "execute"
+	// <timer_max> determines how frequently our update function will query the
+	// frontend server. If it's higher, we wait longer cycles.
+	let timer_max = 0;
+	let timer = timer_max;
 
-		// Variables for storing movements that are sent from the backend server.
-		let execute_movement;
-		// let execute_count_max = tile_width / movement_speed;
-		// let execute_count = execute_count_max;
-		execute_count = execute_count_max;
-		let movement_target = {};
-		const all_movement = {{ all_movement | safe }};
+	// <phase> -- there are three phases: "update", "await" and "execute".
+	let phase = "update"; // or "await" or "execute"
 
-		let start_datetime = new Date(Date.parse("{{ start_datetime }}"));
-		if (mode != "tester" && start_datetime) {
-			timebox.value = start_datetime.toLocaleTimeString("en-US", datetime_options);
-		}
-	{% endif %}
+	// Variables for storing movements that are sent from the backend server.
+	let execute_movement;
+	// let execute_count_max = tile_width / movement_speed;
+	// let execute_count = execute_count_max;
+	execute_count = execute_count_max;
+	let movement_target = {};
+	const all_movement = {{ all_movement | safe }};
+	const chats = {{ chats | safe }};
+
+	let start_datetime = new Date(Date.parse("{{ start_datetime }}"));
+	if (mode != "preview" && start_datetime) {
+		timebox.value = toLocaleTimeString(start_datetime);
+	}
 
 
 
@@ -459,7 +464,7 @@ const pen_test_play = function(container) {
 				y: (pointerPos.y || downY) - y,
 			};
 
-			if (document.getElementById("temp_focus").innerHTML == "") {
+			if (!curr_focused_persona) {
 				player.body.setVelocity(move.x * 125, move.y * 125);
 			}
 
@@ -492,7 +497,7 @@ const pen_test_play = function(container) {
 		const camera_speed = 400;
 		// Stop any previous movement from the last frame
 		player.body.setVelocity(0);
-		if (document.getElementById("temp_focus").innerHTML == "") {
+		if (!curr_focused_persona) {
 			if (cursors.left.isDown) {
 				player.body.setVelocityX(-camera_speed);
 			}
@@ -509,21 +514,21 @@ const pen_test_play = function(container) {
 
 		// Prevent camera from being out of range
 		this.cameras.main.setZoom(camera_zoom || 1);
-		if (mode != "tester") {
-			const minX = this.minX / camera_zoom;
-			const minY = this.minY / camera_zoom;
-			const maxX = this.maxX + (this.minX - minX);
-			const maxY = this.maxY + (this.minY - minY);
-			if (player.x < minX) player.x = minX;
-			if (player.y < minY) player.y = minY;
-			if (player.x > maxX) player.x = maxX;
-			if (player.y > maxY) player.y = maxY;
-		}
+		const minX = this.minX / camera_zoom;
+		const minY = this.minY / camera_zoom;
+		const maxX = this.maxX + (this.minX - minX);
+		const maxY = this.maxY + (this.minY - minY);
+		if (player.x < minX) player.x = minX;
+		if (player.y < minY) player.y = minY;
+		if (player.x > maxX) player.x = maxX;
+		if (player.y > maxY) player.y = maxY;
 
-		let curr_focused_persona = document.getElementById("temp_focus").textContent;
-		if (curr_focused_persona != "") {
+		curr_focused_persona = document.getElementById("temp_focus").innerText.trim();
+		for (let x of document.querySelectorAll(`#pen-chattings .chat-container`)) {
+			x.classList.toggle("mychat", x.getAttribute("chat") == curr_focused_persona);
+		}
+		if (curr_focused_persona) {
 			player.setPosition(personas[curr_focused_persona].body.x, personas[curr_focused_persona].body.y)
-			// document.getElementById("temp_focus").innerHTML = "";
 		}
 
 		// Run a separate function for each mode
@@ -536,60 +541,67 @@ const pen_test_play = function(container) {
 
 
 
-	updates = {
-		tester: function() {
-			// *** MOVE PERSONAS ***
-			// Moving personas take place in three distinct phases: "process," "update,"
-			// and "execute." These phases are determined by the value of <phase>.
-			// Only one of the three phases is incurred in each update cycle.
-			let data = {
-				"camera": {
-					"maze": maze_name,
-					"x": player.body.position.x,
-					"y": player.body.position.y,
-				},
-			}
-			post("{% url 'path_tester_update' %}", data);
-		},
+	// *** POST REQUEST TO WEBSOCKET ***
+	let ws;
+	let ws_step;
+	let ws_responses = {};
+	let ws_connected = false;
+	const ws_connection = function() {
+		const ws = new WebSocket(`${location.protocol.replace("http", "ws")}//${location.host}/ws/reverie/`);
+		ws.addEventListener("open", ws_onopen);
+		ws.addEventListener("message", ws_onmessage);
+		ws.addEventListener("close", ws_onclose);
+		ws.addEventListener("error", ws_onerror);
+		return ws;
+	}
+	const ws_onopen = function() {
+		ws_connected = true;
+	}
+	const ws_onmessage = function({data}) {
+		ws_step = step;
+		data = JSON.parse(data);
+		ws_responses[data.path] = data;
+	}
+	const ws_onclose = function() {
+		ws_connected = false;
+		step = ws_step;
+		phase = "update";
+		setTimeout(function() {
+			ws = ws_connection();
+		}, 1000)
+	}
+	const ws_onerror = function() {
+		ws.close();
+	}
+	const ws_send = function(path, data) {
+		data["path"] = path;
+		ws.send(JSON.stringify(data));
+	}
+	ws = mode == "forkable" ? ws_connection() : undefined;
 
-
+	const updates = {
 		compressed: function() {
 			// *** MOVING PERSONAS ***
 			if (execute_count <= 0) start_datetime = new Date(start_datetime.getTime() + step_size);
-			action(all_movement[step], start_datetime);
+			action(all_movement[step], chats[step], start_datetime);
 		},
 
 
 		forkable: function() {
 			// *** MOVE PERSONAS ***
-			// Moving personas take place in three distinct phases: "process," "update,"
-			// and "execute." These phases are determined by the value of <phase>.
+			// Moving personas take place in three distinct phases: "update" "await"
+			// and "execute". These phases are determined by the value of <phase>.
 			// Only one of the three phases is incurred in each update cycle.
-			if (phase == "process") {
-				// "process" takes all current locations of the personas and send them to
-				// the frontend server in a json form. Here, we first create the json
-				// file that records all persona locations:
-				let data = {
-					"step": step,
-					"pen_code": pen_code,
-					"environment": {},
-				}
-				for (let i=0; i<Object.keys(personas).length; i++) {
-					let persona_name_os = Object.keys(personas)[i];
-					let persona_name = persona_name_os.replace(/_/g, " ");
-					data["environment"][persona_name] = {
-						"maze": maze_name,
-						"x": Math.ceil((personas[persona_name_os].body.position.x) / tile_width),
-						"y": Math.ceil((personas[persona_name_os].body.position.y) / tile_width),
-					}
-				}
-				post("{% url 'process_environment' %}", data);
-
-				// Finally, we update the phase variable to start the "udpate" process.
-				// Now that we sent all persona locations to the backend server, we need
-				// to wait until the backend determines what the personas will do next.
+			if (phase == "payload") {
+				// Wait for a response from the WebSocket.
+				const data = ws_responses["get_payload_info"];
+				delete ws_responses["get_payload_info"];
+				if (!data) return;
+				max_step = data.max_step;
+				payloads = data.payloads || payloads;
 				phase = "update";
 			} else if (phase == "update") {
+				if (ws_connected !== true) return;
 				// Update is where we * wait * for the backend server to finish
 				// computing about what the personas will do next given their current
 				// situation.
@@ -604,15 +616,18 @@ const pen_test_play = function(container) {
 						"step": step,
 						"pen_code": pen_code,
 					}
-					post("{% url 'update_environment' %}", data, function(xhr) {
-						if (JSON.parse(xhr.responseText)["<step>"] == step) {
-							execute_movement = JSON.parse(xhr.responseText)
-							phase = "execute";
-						}
-						timer = timer_max;
-					});
+					ws_send("update_environment", data);
+					phase = "await";
 				}
 				timer -= 1;
+			} else if (phase === "await") {
+				// Wait for a response from the WebSocket.
+				const data = ws_responses["update_environment"];
+				if (data?.step == step) {
+					execute_movement = data;
+					phase = "execute";
+				}
+				timer = timer_max;
 			} else { // phase == execute
 				// This is where we actually move the personas in the visual world. Each
 				// backend computation in execute_movement moves each persona by one tile
@@ -620,14 +635,15 @@ const pen_test_play = function(container) {
 				// The execute_count_max is computed by tile_width/movement_speed, which
 				// defines a one step sequence in this world.
 				let curr_time = new Date(execute_movement["meta"]["curr_time"]);
-				action(execute_movement["persona"], curr_time);
+				action(execute_movement["persona"], execute_movement["chats"][step], curr_time);
 			}
 		},
 	};
 
 
 
-	const setPronunciatio_content = function(curr_persona_name_os, pronunciatio_content) {
+	const setPronunciatio_content = function(curr_persona_name, pronunciatio_content) {
+		const curr_persona_name_os = curr_persona_name.replace(/ /g, "_");
 		// This is what gives the pronunciatio balloon the name initials. We
 		// use regex to extract the initials of the personas.
 		// E.g., "Dolores Murphy" -> "DM"
@@ -642,11 +658,11 @@ const pen_test_play = function(container) {
 	}
 
 
-	const action = function(movements, curr_time) {
+	const action = function(movements, curr_chat, curr_time) {
 		if (!movements) return;
 
 		if (curr_time) {
-			const time = curr_time.toLocaleTimeString("en-US", datetime_options);
+			const time = toLocaleTimeString(curr_time);
 			timebox.placeholder = time;
 			timebox.value = time;
 		}
@@ -670,7 +686,7 @@ const pen_test_play = function(container) {
 					let description_content = p_movement["description"];
 					let chat_content_raw = p_movement["chat"];
 
-					setPronunciatio_content(curr_persona_name_os, pronunciatio_content);
+					setPronunciatio_content(curr_persona_name, pronunciatio_content);
 
 					let chat_content = "";
 					if (chat_content_raw != null) {
@@ -685,6 +701,7 @@ const pen_test_play = function(container) {
 					document.getElementById("current_action__" + curr_persona_name_os).innerHTML = description_content.split("@")[0];
 					document.getElementById("target_address__" + curr_persona_name_os).innerHTML = description_content.split("@")[1];
 					document.getElementById("chat__" + curr_persona_name_os).innerHTML = chat_content;
+					setChatting_content(curr_persona_name, curr_chat?.[curr_persona_name]?.chat, curr_time);
 				}
 
 				if (execute_count > 0) {
@@ -693,7 +710,7 @@ const pen_test_play = function(container) {
 					};
 				} else if (mode != "compressed") {
 					move_personas();
-					phase = "process";
+					if (phase != "payload") phase = "update";
 				}
 			} else {
 				animation.stop(curr_persona, curr_persona_name_os);
@@ -701,7 +718,9 @@ const pen_test_play = function(container) {
 		}
 
 		if (execute_count <= 0) {
-			setPayloadByStep(movements["Black Hacker"]?.["pronunciatio"]);
+			for (let p_name of {{ black_hats | safe }}) {
+				setPayloadByStep(p_name, payloads?.[step]?.[p_name], movements?.[p_name]?.["pronunciatio"]);
+			}
 		}
 
 		if (mode == "compressed" && execute_count <= 0) {
@@ -713,9 +732,6 @@ const pen_test_play = function(container) {
 
 
 	const move_personas = function() {
-		// Once we are done moving the personas, we move on to the "process"
-		// stage where we will send the current locations of all personas at the
-		// end of the movemments to the frontend server, and then the backend.
 		if (debug) console.log(step, personas)
 		for (let i=0; i<Object.keys(personas).length; i++) {
 			let curr_persona_name_os = Object.keys(personas)[i];
@@ -726,8 +742,13 @@ const pen_test_play = function(container) {
 		execute_count = execute_count_max + 1;
 		step = step + 1;
 
-		if (mode == "compressed" && max_step < step) return;
-		max_step = Math.max(max_step, step);
+		if (max_step < step) {
+			if (mode == "compressed") return;
+			if (mode == "forkable") {
+				phase = "payload";
+				ws_send("get_payload_info", {mode, pen_code, max_step});
+			}
+		}
 		for (let x of document.querySelectorAll("#curr_step, #step_range")) {
 			x.value = step;
 			x.placeholder = step;
@@ -771,24 +792,27 @@ const pen_test_play = function(container) {
 		}
 	}
 
-	const setPayloadByStep = function(pronunciatio_content) {
-		const data = payloads[step];
+	const setPayloadByStep = function(p_name, data, pronunciatio_content) {
 		const input = document.querySelector("#curr_payload");
 		const isVuln = data?.observations == "exploit_successful";
-		vuln_imoji_count = isVuln ? vuln_imoji_count_max : Math.max(vuln_imoji_count-1, -1);
+		vuln_imoji_count[p_name] = isVuln ? vuln_imoji_count_max : Math.max((vuln_imoji_count[p_name] || 0)-1, -1);
 
 		input.value = data?.payload || "-";
 		input.classList.toggle("text-danger", isVuln);
 		input.classList.toggle("focus", isVuln);
 
-		imoji_bak = pronunciatio_content || imoji_bak;
-		if (vuln_imoji_count != -1) setPronunciatio_content("Black_Hacker", vuln_imoji_count != 0 ? vuln_imoji : imoji_bak);
+		imoji_bak[p_name] = pronunciatio_content || imoji_bak[p_name] || "";
+		if (vuln_imoji_count[p_name] != -1) setPronunciatio_content(p_name, vuln_imoji_count[p_name] != 0 ? vuln_imoji : imoji_bak[p_name]);
 		insertPayloadTable(document.querySelector("table"), {url: data?.url, data, reverse: true});
 	}
 
 	for (let i=1; i<step; i++) {
-		const data = payloads[i];
-		insertPayloadTable(document.querySelector("table"), {url: data?.url, data, reverse: true});
+		insertPayloadTable(document.querySelector("table"), {url: payloads[i]?.url, data: payloads[i], reverse: true});
+		for (let p in chats[i]) {
+			c_content = chats[i][p];
+			if (!c_content) continue;
+			setChatting_content(p, c_content.chat, new Date(Date.parse(c_content.datetime)));
+		}
 	}
 
 	return game;
@@ -809,7 +833,6 @@ const canvas_resizing = function(size) {
 }
 window.addEventListener("DOMContentLoaded", canvas_resizing);
 window.addEventListener("resize", canvas_resizing);
-
 window.addEventListener("DOMContentLoaded", function() {
 	document.querySelector("#on_screen_det_trigger-Isabella_Rodriguez")?.click();
 });

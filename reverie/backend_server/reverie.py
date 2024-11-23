@@ -657,7 +657,7 @@ if __name__ == '__main__':
 
   origin = input("Enter the name of the forked simulation: ").strip()
   target = input("Enter the name of the new simulation: ").strip()
-  cookies = login_to_dvwa(target_host)
+  cookies = login_to_dvwa(target_base)
   # target_url = input("Enter url of the server (default DVWA) : ").strip()
   # if not target_url:
   #   target_url = "http://192.168.10.10/dvwa/vulnerabilities/sqli/"

@@ -10,13 +10,15 @@ Variables:
 !<INPUT 8>! -- curr action description
 !<INPUT 9>! -- Persona name
 <commentblockmarker>###</commentblockmarker>
-Task -- choose an appropriate area  from the area options for a task at hand. 
-
+Task -- choose an appropriate area from the area options for a task at hand. Provide only the location in brackets {}.
+For example:
+---
 Sam Kim lives in {Sam Kim's house} that has Sam Kim's room, bathroom, kitchen.
 Sam Kim is currently in {Sam Kim's house} that has Sam Kim's room, bathroom, kitchen. 
 Area options: {Sam Kim's house, The Rose and Crown Pub, Hobbs Cafe, Oak Hill College, Johnson Park, Harvey Oak Supply Store, The Willows Market and Pharmacy}.
 * Stay in the current area if the activity can be done there. Only go out if the activity needs to take place in another place.
 * Must be one of the "Area options," verbatim.
+* Must provide the area in {} brackets
 For taking a walk, Sam Kim should go to the following area: {Johnson Park}
 ---
 Jane Anderson lives in {Oak Hill College Student Dormatory} that has Jane Anderson's room.
@@ -24,6 +26,7 @@ Jane Anderson is currently in {Oak Hill College} that has a classroom, library
 Area options: {Oak Hill College Student Dormatory, The Rose and Crown Pub, Hobbs Cafe, Oak Hill College, Johnson Park, Harvey Oak Supply Store, The Willows Market and Pharmacy}. 
 * Stay in the current area if the activity can be done there. Only go out if the activity needs to take place in another place.
 * Must be one of the "Area options," verbatim.
+* Must provide the area in {} brackets
 For eating dinner, Jane Anderson should go to the following area: {Hobbs Cafe}
 ---
 !<INPUT 0>! lives in {!<INPUT 1>!} that has !<INPUT 2>!.
@@ -31,4 +34,5 @@ For eating dinner, Jane Anderson should go to the following area: {Hobbs Cafe}
 Area options: {!<INPUT 7>!}. 
 * Stay in the current area if the activity can be done there. Only go out if the activity needs to take place in another place.
 * Must be one of the "Area options," verbatim.
-!<INPUT 8>! is !<INPUT 9>!. For !<INPUT 10>!, !<INPUT 11>! should go to the following area: {
+* Must provide the area in {} brackets
+!<INPUT 8>! is !<INPUT 9>!. For !<INPUT 10>!, !<INPUT 11>! should go to the following area:

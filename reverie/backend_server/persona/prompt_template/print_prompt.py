@@ -28,7 +28,7 @@ def print_run_prompts(prompt_template=None,
                       output=None): 
   print (f"=== {prompt_template}")
   print ("~~~ persona    ---------------------------------------------------")
-  print (persona.name, "\n")
+  print (persona.name if persona is not None else None, "\n")
   print ("~~~ gpt_param ----------------------------------------------------")
   print (gpt_param, "\n")
   print ("~~~ prompt_input    ----------------------------------------------")

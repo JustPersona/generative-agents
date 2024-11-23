@@ -8,118 +8,100 @@ import json
 import random
 import openai
 import time 
-import requests
 
 from utils import *
+from langchain.llms import Ollama
+from langchain.llms import OpenAI
+from langchain.llms import LlamaCpp
+from langchain.llms import GPT4All
+from langchain.chat_models import ChatAnthropic
+from langchain.embeddings import GPT4AllEmbeddings
+from langchain.callbacks.manager import CallbackManager
+# from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler as CallbackHandler
+from langchain.callbacks.streaming_stdout_final_only import FinalStreamingStdOutCallbackHandler as CallbackHandler
 
-# openai.api_key = openai_api_key
+from huggingface_hub import hf_hub_download
+
+# ============================================================================
+# ################### [Set LLM] ###################
+# ============================================================================
+
+### **** OpenAI **** 
+'''
+llm = OpenAI(temperature=0,model_name="gpt-3.5-turbo-16k")
+'''
+
+### **** Anthropic **** 
+'''
+llm = ChatAnthropic(model_name="claude-2", temperature=0)
+'''
+
+### *** Llama.cpp ***
+'''
+model_path = hf_hub_download(repo_id=model_repo, filename=model_filename)
+
+n_gpu_layers = -1
+n_batch = 2048
+callback_manager = CallbackManager([CallbackHandler()])
+
+llm = LlamaCpp(
+    model_path=model_path,
+    n_gpu_layers=n_gpu_layers,
+    n_batch=n_batch,
+    n_ctx=4096,
+    # f16_kv=True,
+    callback_manager=callback_manager,
+    verbose=True,
+)
+'''
+
+### *** GPT4Alll (nous-hermes-13b) *** 
+''' 
+model_path = "/Users/rlm/Desktop/Code/gpt4all/models/nous-hermes-13b.ggmlv3.q4_0.bin"
+llm = GPT4All(
+    model=model_path
+)
+'''
+
+### *** Ollama ***
+llm = Ollama(base_url="http://localhost:11434",
+             model=ollama_model,
+             callback_manager=CallbackManager([CallbackHandler()]))
 
 def temp_sleep(seconds=0.1):
   time.sleep(seconds)
 
 def ChatGPT_single_request(prompt): 
   temp_sleep()
-
-  completion = openai.ChatCompletion.create(
-    model="gpt-3.5-turbo", 
-    messages=[{"role": "user", "content": prompt}]
-  )
-  return completion["choices"][0]["message"]["content"]
-
+  try:
+    response = llm(prompt)
+  except ValueError:
+    print("Requested tokens exceed context window")
+    ### TODO: Add map-reduce or splitter to handle this error.
+    return "LLM ERROR"
+  return response
 
 # ============================================================================
 # #####################[SECTION 1: CHATGPT-3 STRUCTURE] ######################
 # ============================================================================
 
-def GPT4_request(prompt): 
+def ChatGPT_request(prompt,parameters): 
   """
-  Given a prompt and a dictionary of GPT parameters, make a request to OpenAI
-  server and returns the response. 
+  Given a prompt, make a request to LLM server and returns the response. 
   ARGS:
-    prompt: a str prompt
-    gpt_parameter: a python dictionary with the keys indicating the names of  
-                   the parameter and the values indicating the parameter 
-                   values.   
+    prompt: a str prompt 
+    parameters: optional
   RETURNS: 
-    a str of GPT-3's response. 
-  """
-  temp_sleep()
-
-  try: 
-    completion = openai.ChatCompletion.create(
-    model="gpt-4", 
-    messages=[{"role": "user", "content": prompt}]
-    )
-    return completion["choices"][0]["message"]["content"]
-  
-  except: 
-    print ("ChatGPT ERROR")
-    return "ChatGPT ERROR"
-
-
-def ChatGPT_request(prompt): 
-  """
-  Given a prompt and a dictionary of GPT parameters, make a request to OpenAI
-  server and returns the response. 
-  ARGS:
-    prompt: a str prompt
-    gpt_parameter: a python dictionary with the keys indicating the names of  
-                   the parameter and the values indicating the parameter 
-                   values.   
-  RETURNS: 
-    a str of GPT-3's response. 
+    a str of LLM's response. 
   """
   # temp_sleep()
-  try: 
-    completion = openai.ChatCompletion.create(
-    model="gpt-3.5-turbo", 
-    messages=[{"role": "user", "content": prompt}]
-    )
-    return completion["choices"][0]["message"]["content"]
-  
-  except: 
-    print ("ChatGPT ERROR")
-    return "ChatGPT ERROR"
-
-
-def GPT4_safe_generate_response(prompt, 
-                                   example_output,
-                                   special_instruction,
-                                   repeat=3,
-                                   fail_safe_response="error",
-                                   func_validate=None,
-                                   func_clean_up=None,
-                                   verbose=False): 
-  prompt = 'GPT-3 Prompt:\n"""\n' + prompt + '\n"""\n'
-  prompt += f"Output the response to the prompt above in json. {special_instruction}\n"
-  prompt += "Example output json:\n"
-  prompt += '{"output": "' + str(example_output) + '"}'
-
-  if verbose: 
-    print ("CHAT GPT PROMPT")
-    print (prompt)
-
-  for i in range(repeat): 
-
-    try: 
-      curr_gpt_response = GPT4_request(prompt).strip()
-      end_index = curr_gpt_response.rfind('}') + 1
-      curr_gpt_response = curr_gpt_response[:end_index]
-      curr_gpt_response = json.loads(curr_gpt_response)["output"]
-      
-      if func_validate(curr_gpt_response, prompt=prompt): 
-        return func_clean_up(curr_gpt_response, prompt=prompt)
-      
-      if verbose: 
-        print ("---- repeat count: \n", i, curr_gpt_response)
-        print (curr_gpt_response)
-        print ("~~~~")
-
-    except: 
-      pass
-
-  return False
-
+  try:
+    response = llm(prompt)
+  except ValueError:
+    print("Requested tokens exceed context window")
+    ### TODO: Add map-reduce or splitter to handle this error.
+    return "LLM ERROR"
+  return response
 
 def ChatGPT_safe_generate_response(prompt, 
                                    example_output,
@@ -136,7 +118,7 @@ def ChatGPT_safe_generate_response(prompt,
   prompt += '{"output": "' + str(example_output) + '"}'
 
   if verbose: 
-    print ("CHAT GPT PROMPT")
+    print ("LLM PROMPT")
     print (prompt)
 
   for i in range(repeat): 
@@ -195,101 +177,23 @@ def ChatGPT_safe_generate_response_OLD(prompt,
 # ###################[SECTION 2: ORIGINAL GPT-3 STRUCTURE] ###################
 # ============================================================================
 
-#def GPT_request(prompt, gpt_parameter): 
-#  """
-#  Given a prompt and a dictionary of GPT parameters, make a request to OpenAI
-#  server and returns the response. 
-#  ARGS:
-#    prompt: a str prompt
-#    gpt_parameter: a python dictionary with the keys indicating the names of  
-#                   the parameter and the values indicating the parameter 
-#                   values.   
-#  RETURNS: 
-#    a str of GPT-3's response. 
-#  """
-#  temp_sleep()
-#  try: 
-#    response = openai.Completion.create(
-#                model=gpt_parameter["engine"],
-#                prompt=prompt,
-#                temperature=gpt_parameter["temperature"],
-#                max_tokens=gpt_parameter["max_tokens"],
-#                top_p=gpt_parameter["top_p"],
-#                frequency_penalty=gpt_parameter["frequency_penalty"],
-#                presence_penalty=gpt_parameter["presence_penalty"],
-#                stream=gpt_parameter["stream"],
-#                stop=gpt_parameter["stop"],)
-#    return response.choices[0].text
-#  except: 
-#    print ("TOKEN LIMIT EXCEEDED")
-#    return "TOKEN LIMIT EXCEEDED"
-
-# ============================================================================
-llama_api_url = llama_api + "/api/chat/"
-def GPT_request(prompt, llama_parameter, suffix=None,
-                  tools=None, format='json', options=None, 
-                  stream=False, keep_alive='5m'):
-    """
-    Ollama API에 요청을 보냄
-        Parameters: https://github.com/ollama/ollama/blob/main/docs/api.md
-        - model: 모델 이름
-        - messages: 채팅의 메시지, 채팅 기억
-            role: 메시지의 역할로, system, user, assistant, 또는 tool
-            content: 메시지의 내용입니다.
-            images (선택): 메시지에 포함할 이미지 목록입니다 (llava와 같은 다중 모달 모델용).
-            tool_calls (선택): 모델이 사용하고자 하는 도구의 목록입니다.
-        - tools: 모델이 사용할 수 있는 도구 (지원되는 경우, stream = false만)
-
-        - format: 응답 형식. json만 가능.
-        - options: Modelfile 문서에 나열된 추가 모델 매개변수, 예: 온도입니다.
-        - stream: false인 경우 응답이 개별 객체의 스트림이 아닌 단일 응답 객체로 반환됩니다.
-        - keep_alive: 요청 후 모델이 메모리에 얼마나 오랫동안 로드된 상태로 유지될지를 제어합니다 (기본값: 5분).
-    """
-    temp_sleep()
-
-    # 요청 데이터 설정
-    data = {
-        "model": llama_model,  # 모델 이름
-        "messages": [
-           {"role": "system", "content": "Output the response to the prompt above in json. output json: {\"result\": the answer to a question. }"},
-           {"role": "user", "content": prompt},  # 프롬프트
-           {"role": "user", "content": "Output the response to the prompt above in json. output json: {\"result\": the answer to a question. }"}
-        ],
-        "suffix": suffix,                     # 응답 후 추가 텍스트 (선택 사항)
-        "tools": tools,                       # 모델이 사용할 수 있는 도구 (선택 사항)
-        "format": format,                     # 응답 형식 (json)
-        "options": {                          # 추가 모델 파라미터
-            "num_predict": llama_parameter["max_tokens"],  # 최대 토큰 수
-            "mirostat": llama_parameter["temperature"],     # 온도
-            "top_p": llama_parameter["top_p"]               # top_p
-            # "stop": llama_parameter["stop"]               # 선택 사항
-        },
-        "stream": stream,                     # 스트리밍 여부
-        "keep_alive": keep_alive              # 유지 시간
-    }
-    # None 값 제거
-    data = {k: v for k, v in data.items() if v is not None}
-
-    try: 
-        response = requests.post(
-            llama_api_url,  # Ollama API 엔드포인트
-            json=data
-        )
-        response.raise_for_status()  # HTTP 오류가 발생하면 예외를 발생시킴
-        json_response = response.json()  # == json.loads(response.content.decode('utf-8'))
-        # print(json_response)
-        content = json_response['message']['content'].strip()
-        result_json = json.loads(content)
-        return result_json['result']  # "result" 키의 값만 반환
-    except requests.exceptions.RequestException as e:
-        print(f"API 요청 에러: {e}")
-    except json.JSONDecodeError as e:
-        print(f"JSON 파싱 에러: {e}")
-    except KeyError as e:
-        print(f"예상치 못한 응답 형식: {e}")
-    return "ERROR"
-# ============================================================================
-
+def GPT_request(prompt,parameters): 
+  """
+  Given a prompt, make a request to LLM server and returns the response. 
+  ARGS:
+    prompt: a str prompt 
+    parameters: optional 
+  RETURNS: 
+    a str of LLM's response. 
+  """
+  # temp_sleep()
+  try:
+    response = llm(prompt)
+  except ValueError:
+    print("Requested tokens exceed context window")
+    ### TODO: Add map-reduce or splitter to handle this error.
+    return "LLM ERROR"
+  return response
 
 def generate_prompt(curr_input, prompt_lib_file): 
   """
@@ -333,33 +237,26 @@ def safe_generate_response(prompt,
     curr_gpt_response = GPT_request(prompt, gpt_parameter)
     if func_validate(curr_gpt_response, prompt=prompt): 
       return func_clean_up(curr_gpt_response, prompt=prompt)
+    else:
+      print('==== ERROR IN RESPONSE ====')
+      print(curr_gpt_response)
+      print('~~~~')
     if verbose: 
       print ("---- repeat count: ", i, curr_gpt_response)
       print (curr_gpt_response)
       print ("~~~~")
+  print("==== USING FAILSAFE ====")
   return fail_safe_response
 
-#def get_embedding(text, model="text-embedding-ada-002"):
-#  text = text.replace("\n", " ")
-#  if not text: 
-#    text = "this is blank"
-#  return openai.Embedding.create(
-#          input=[text], model=model)['data'][0]['embedding']
 
-# https://ollama.com/blog/embedding-models
-# Model                   Parameter Size
-# mxbai-embed-large       334M   (1.2 GB)
-# nomic-embed-text       137M   (849 MB)
-# all-minilm           23M
-def get_embedding(text, model="mxbai-embed-large"):
-    text = text.replace("\n", " ")
-    if not text:
-        text = "this is blank"
-    if model not in [m['model'].split(':')[0] for m in ollama.list().get('models', [])]:
-        ollama.pull(model)
-    response = ollama.embeddings(model=model, prompt=text)
-    return response['embedding']
-
+def get_embedding(text, model=None):
+  # Use GPT4All local embeddings 
+  # https://python.langchain.com/docs/integrations/text_embedding/gpt4all
+  text = text.replace("\n", " ")
+  if not text: 
+    text = "this is blank"
+  gpt4all_embd = GPT4AllEmbeddings()
+  return gpt4all_embd.embed_query(text)
 
 if __name__ == '__main__':
   gpt_parameter = {"engine": "text-davinci-003", "max_tokens": 50, 
@@ -389,3 +286,23 @@ if __name__ == '__main__':
                                  True)
 
   print (output)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

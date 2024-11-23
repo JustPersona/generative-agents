@@ -115,59 +115,43 @@ def generate_one_utterance(maze, init_persona, target_persona, retrieved, curr_c
               f"{target_persona.scratch.name}.")
 
   print ("July 23 5")
-  x = run_gpt_generate_iterative_chat_utt(maze, init_persona, target_persona, retrieved, curr_context, curr_chat)[0]
+  utterance = run_gpt_generate_iterative_chat_utt(maze, init_persona, target_persona, retrieved, curr_context, curr_chat)[0]
+
+  end = run_gpt_end_convo(maze, init_persona, target_persona, retrieved, curr_context, curr_chat + [[init_persona.scratch.name, utterance]])[0]
 
   print ("July 23 6")
 
-  print ("adshfoa;khdf;fajslkfjald;sdfa HERE", x)
+  print ("adshfoa;khdf;fajslkfjald;sdfa HERE", init_persona, '->', target_persona, utterance, end)
 
-  return x["utterance"], x["end"]
+  return utterance, end
 
 def agent_chat_v2(maze, init_persona, target_persona): 
   curr_chat = []
   print ("July 23")
 
-  for i in range(8): 
-    focal_points = [f"{target_persona.scratch.name}"]
-    retrieved = new_retrieve(init_persona, focal_points, 50)
-    relationship = generate_summarize_agent_relationship(init_persona, target_persona, retrieved)
+  speaker, receiver = init_persona, target_persona
+
+  for i in range(16):  # TODO: don't limit conversation lengths?
+    focal_points = [f"{receiver.scratch.name}"]
+    retrieved = new_retrieve(speaker, focal_points, 50)
+    relationship = generate_summarize_agent_relationship(speaker, receiver, retrieved)
     print ("-------- relationshopadsjfhkalsdjf", relationship)
     last_chat = ""
-    for i in curr_chat[-4:]:
-      last_chat += ": ".join(i) + "\n"
+    for i in curr_chat[-4:]:  # ??? consider only last 4 utterances to identify focal points
+      last_chat += f'{i[0]}: {i[1]}\n'
     if last_chat: 
       focal_points = [f"{relationship}", 
-                      f"{target_persona.scratch.name} is {target_persona.scratch.act_description}", 
+                      f"{receiver.scratch.name} is {receiver.scratch.act_description}",
                       last_chat]
     else: 
       focal_points = [f"{relationship}", 
-                      f"{target_persona.scratch.name} is {target_persona.scratch.act_description}"]
-    retrieved = new_retrieve(init_persona, focal_points, 15)
-    utt, end = generate_one_utterance(maze, init_persona, target_persona, retrieved, curr_chat)
+                      f"{receiver.scratch.name} is {receiver.scratch.act_description}"]
+    retrieved = new_retrieve(speaker, focal_points, 15)
+    utt, end = generate_one_utterance(maze, speaker, receiver, retrieved, curr_chat)
 
-    curr_chat += [[init_persona.scratch.name, utt]]
-    if end:
-      break
+    curr_chat += [(speaker.scratch.name, utt)]
 
-
-    focal_points = [f"{init_persona.scratch.name}"]
-    retrieved = new_retrieve(target_persona, focal_points, 50)
-    relationship = generate_summarize_agent_relationship(target_persona, init_persona, retrieved)
-    print ("-------- relationshopadsjfhkalsdjf", relationship)
-    last_chat = ""
-    for i in curr_chat[-4:]:
-      last_chat += ": ".join(i) + "\n"
-    if last_chat: 
-      focal_points = [f"{relationship}", 
-                      f"{init_persona.scratch.name} is {init_persona.scratch.act_description}", 
-                      last_chat]
-    else: 
-      focal_points = [f"{relationship}", 
-                      f"{init_persona.scratch.name} is {init_persona.scratch.act_description}"]
-    retrieved = new_retrieve(target_persona, focal_points, 15)
-    utt, end = generate_one_utterance(maze, target_persona, init_persona, retrieved, curr_chat)
-
-    curr_chat += [[target_persona.scratch.name, utt]]
+    speaker, receiver = receiver, speaker
     if end:
       break
 

@@ -116,7 +116,8 @@ def run_reflect(persona):
   # agent's memory. 
   for focal_pt, nodes in retrieved.items(): 
     xx = [i.embedding_key for i in nodes]
-    for xxx in xx: print (xxx)
+    for xxx in xx:
+      print(xxx)
 
     thoughts = generate_insights_and_evidence(persona, nodes, 5)
     for thought, evidence in thoughts.items(): 

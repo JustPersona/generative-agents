@@ -145,28 +145,34 @@ class ReverieServer:
     # simulation. 
     curr_sim_code = dict()
     curr_sim_code["sim_code"] = self.sim_code
-    with open(f"{fs_temp_storage}/curr_sim_code.json", "w") as outfile: 
+
+    os.makedirs(fs_temp_storage, exist_ok=True)  # create directory if missing
+    with open(f"{fs_temp_storage}/curr_sim_code.json", "w+") as outfile:
       outfile.write(json.dumps(curr_sim_code, indent=2))
     
     curr_step = dict()
     curr_step["step"] = self.step
-    with open(f"{fs_temp_storage}/curr_step.json", "w") as outfile: 
+    with open(f"{fs_temp_storage}/curr_step.json", "w+") as outfile:
       outfile.write(json.dumps(curr_step, indent=2))
 
 
-  def save(self): 
+  def save(self, include_datetime=False):
     """
     Save all Reverie progress -- this includes Reverie's global state as well
     as all the personas.  
 
     INPUT
-      None
+      include_datetime: whether to include the datetime in the sim folder name and create a new copy
+      time: time value to insert into sim folder name
     OUTPUT 
       None
       * Saves all relevant data to the designated memory directory
     """
     # <sim_folder> points to the current simulation folder.
     sim_folder = f"{fs_storage}/{self.sim_code}"
+
+    if include_datetime:
+      shutil.copytree(sim_folder, sim_folder := f'{sim_folder}_{self.curr_time.isoformat()}')
 
     # Save Reverie meta information.
     reverie_meta = dict() 
@@ -178,7 +184,8 @@ class ReverieServer:
     reverie_meta["persona_names"] = list(self.personas.keys())
     reverie_meta["step"] = self.step
     reverie_meta_f = f"{sim_folder}/reverie/meta.json"
-    with open(reverie_meta_f, "w") as outfile: 
+
+    with open(reverie_meta_f, "w") as outfile:
       outfile.write(json.dumps(reverie_meta, indent=2))
 
     # Save the personas.
@@ -397,23 +404,12 @@ class ReverieServer:
           # {"persona": {"Maria Lopez": {"movement": [58, 9]}},
           #  "persona": {"Klaus Mueller": {"movement": [38, 12]}}, 
           #  "meta": {curr_time: <datetime>}}
+          movementFolder = f"{sim_folder}/movement"
+          if not os.path.exists(movementFolder):
+            os.mkdir(movementFolder)
           curr_move_file = f"{sim_folder}/movement/{self.step}.json"
           with open(curr_move_file, "w") as outfile: 
             outfile.write(json.dumps(movements, indent=2))
-
-          # Without frontend connection
-          if auto_save_next_env_file:
-            next_env_data = dict()
-            for persona_name, persona in self.personas.items():
-              persona_pos = movements["persona"][persona_name]["movement"]
-              next_env_data[persona_name] = {
-                "maze": self.maze.maze_name,
-                "x": persona_pos[0],
-                "y": persona_pos[1],
-              }
-            next_env_file = f"{sim_folder}/environment/{self.step+1}.json"
-            with open(next_env_file, "w") as outfile:
-              outfile.write(json.dumps(next_env_data, indent=2))
 
           # After this cycle, the world takes one step forward, and the 
           # current time moves by <sec_per_step> amount. 
@@ -480,6 +476,16 @@ class ReverieServer:
           # Example: run 1000
           int_count = int(sim_command.split()[-1])
           rs.start_server(int_count)
+
+        elif sim_command[:7].lower() == "autorun":
+          # Automatically runs the provided number of steps, saving a new copy occasionally
+          # Example: autorun 1440 60
+          #   with 1-minute steps runs a full day, daving every hour
+          max_steps, save_frequency = tuple(int(n) for n in sim_command.split()[1:])
+          for _ in range(max_steps//save_frequency):
+              rs.start_server(save_frequency)
+              self.save(include_datetime=True)
+
 
         elif ("print persona schedule" 
               in sim_command[:22].lower()): 
@@ -607,7 +613,7 @@ class ReverieServer:
         print (ret_str)
 
       except:
-        traceback.print_exc()
+        print(traceback.format_exc())
         print ("Error.")
         pass
 

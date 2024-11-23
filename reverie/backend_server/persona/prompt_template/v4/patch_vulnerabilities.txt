@@ -1,0 +1,38 @@
+!<INPUT 0>! -- Exploited payload data
+!<INPUT 1>! -- Vulnerable files and their code
+
+<commentblockmarker>###</commentblockmarker>
+
+Below are details of the attack, including exploited payload data and vulnerable file code.
+
+### INPUT DETAILS
+
+#### Exploited Payload Data:
+{!<INPUT 0>!}
+
+#### Vulnerable Files and Their Code:
+{!<INPUT 1>!}
+
+### TASK
+1. Review the **exploited payload data** and **vulnerable files**.
+2. Identify vulnerabilities based on the **attack type** in the payload data (e.g., SQL injection) and the vulnerable code.
+3. Provide **detailed and specific patch instructions** by:
+   - Mentioning affected lines, functions, or variables directly related to the vulnerability.
+   - Providing clear modification guidance without full code samples (e.g., “Apply parameterized queries to prevent SQL injection”).
+   - Concluding with an explanation of the security impact, outlining the threat, solution, and its mitigation effect.
+
+### OUTPUT FORMAT
+Output a JSON object structured as follows:
+{
+  "patch_instructions": "A complete explanation that includes the vulnerability description, code modifications, and security effect, based on the payload data."
+}
+
+In the `"patch_instructions"` field, include a **detailed report-style explanation** in natural language, covering:
+   - **Vulnerability Description**: Include the specific file, line number, and function or variable affected. Clearly explain why this vulnerability occurred, what input or action caused it, and any additional context relevant to the attack.
+   - **Modification Instructions**: Provide clear, step-by-step guidance for code modifications, including sample pseudocode if needed, and list any specific functions or libraries required.
+   - **Security Impact**: Describe in detail the protection this change provides. Outline the types of attacks prevented, and clarify how this patch enhances security and mitigates specific risks related to the payload data.
+   
+The description should be thorough enough to guide a developer with intermediate security knowledge, with no ambiguities or assumptions.
+
+
+

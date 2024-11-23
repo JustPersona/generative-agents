@@ -13,9 +13,12 @@ sys.path.append('../../')
 
 from global_methods import *
 from persona.prompt_template.run_gpt_prompt import *
-from persona.prompt_template.black_prompt import *
 from persona.cognitive_modules.retrieve import *
 from persona.cognitive_modules.converse import *
+
+from persona.prompt_template.black_prompt import *
+from persona.prompt_template.white_prompt import *
+from persona.prompt_template.owner_prompt import *
 
 ##############################################################################
 # CHAPTER 2: Generate
@@ -523,23 +526,23 @@ def _long_term_planning(persona, new_day):
 # CHAPTER 4 :
 ##############################################################################
 
-def black_hacker(persona, attack, target_url, cookies=None):
+def black_hacker(persona, attack, target_url, cookies=None, step=None):
   """
   
   """
-  explanation_of_attack = run_gpt_prompt_explanation_of_attack(persona, attack)[0] # 공격설명생성
-  print("공격설명생성완료 :",explanation_of_attack)
-  create_payload = run_gpt_prompt_create_payload(persona, attack, explanation_of_attack, target_url, cookies) # 페이로드생성
-  print("페이로드생성완료 :",create_payload)
+  explanation_of_attack = run_gpt_prompt_explanation_of_attack(persona, attack)[0]
+  print("##### 공격설명 :",explanation_of_attack)
+  create_payload = run_gpt_prompt_create_payload(persona, attack, explanation_of_attack, target_url, cookies)
+  print("##### 생성한 페이로드 :",create_payload)
   method = create_payload[2]
   create_payload = create_payload[0]["payload"]
-  response_attack_reasoning = run_gpt_prompt_response_attack_reasoning(persona, attack, explanation_of_attack, target_url, create_payload, cookies)
-  print("공격성공유무,추론완료 :",response_attack_reasoning)
-  reasoning = response_attack_reasoning[0]["reasoning"] # 공격성공추론
-  observations = response_attack_reasoning[0]["observations"] # 공격성공유무
-  HTML_differences = response_attack_reasoning[2] # 변경요약
+  response_attack_reasoning = run_gpt_prompt_response_attack_reasoning(persona, attack, explanation_of_attack, target_url, method, create_payload, cookies)
+  print("##### 공격성공유무, 추론 :",response_attack_reasoning)
+  reasoning = response_attack_reasoning[0]["reasoning"]
+  observations = response_attack_reasoning[0]["observations"]
+  HTML_differences = response_attack_reasoning[2]
   generate_next_step = run_gpt_prompt_generate_next_step(persona, attack, explanation_of_attack, target_url, create_payload, reasoning, observations, HTML_differences)[0]["next_step"] # 다음스텝
-  print("다음스탭생성완료 :",generate_next_step)
+  print("##### 다음스탭 :",generate_next_step)
   step_data = {
     "attack_name": attack,
     "method": method,
@@ -548,12 +551,59 @@ def black_hacker(persona, attack, target_url, cookies=None):
     "observations": observations,
     "html_differences": HTML_differences,
     "next_step": generate_next_step,
+    "timestamp": step
   }
   return step_data
 
 
-# def white_hacker(persona, attack, target_url, cookies=None):
+def white_hacker(persona, successful_data, step=None):
+  """
+  
+  """
+  patch_suggestion = []
+  identify_vulnerable_files = run_gpt_prompt_identify_vulnerable_files(persona, successful_data)[0]
+  print("##### 취약하다 생각한 파일들 :", identify_vulnerable_files)
+  for vulnerable_file in identify_vulnerable_files.get("vulnerable_files", []):
+      patch_instructions = run_gpt_patch_instructions(persona, successful_data, vulnerable_file)
+      output_patch = patch_instructions[0]
+      vulnerable_file_code = patch_instructions[2]
+      patch_suggestion.append({
+            'file_path': vulnerable_file['file_path'], 
+            'vulnerable_file_code': f'```\n{vulnerable_file_code['code']}\n```',
+            'patch_instructions': output_patch['patch_instructions']
+        })
+  print("##### 파일 패치 내용 :", patch_suggestion)
+  patch_data = {
+    "proposer": persona.name,
+    "successful_data" : successful_data,
+    "patch_suggestion" : patch_suggestion,
+    "timestamp": step
+  }
+  return patch_data
 
+
+def server_owner(persona, patch_datas, step=None):
+  """
+  
+  """
+  print("##### 패치 데이터들 :",patch_datas)
+  select_best_patch = run_gpt_prompt_select_best_patch(persona, patch_datas)[0]
+  print("##### 선택한 패치 데이터 id :",select_best_patch)
+  best_patch_id = select_best_patch['patch_id']
+  reason = select_best_patch['reason']
+  if best_patch_id == 0:
+    best_patch = "No patch selected."
+  else:
+    best_patch = next(
+      {key: value for key, value in patch_data.items() if key != "patch_id"} 
+      for patch_data in patch_datas if patch_data.get("patch_id") == best_patch_id
+    )
+  best_patch_data = {
+    "best_patch": best_patch,
+    "reason": reason,
+    "timestamp": step
+  }
+  return best_patch_data
 
 
 ##############################################################################

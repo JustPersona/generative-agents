@@ -125,42 +125,112 @@ def generate_one_utterance(maze, init_persona, target_persona, retrieved, curr_c
 
   return utterance, end
 
+
+
+
+
+
+
+# def agent_chat_v2(maze, init_persona, target_persona): 
+#   curr_chat = []
+#   print ("July 23")
+
+#   speaker, receiver = init_persona, target_persona
+
+#   for i in range(16):  # TODO: don't limit conversation lengths?
+#     focal_points = [f"{receiver.scratch.name}"]
+#     retrieved = new_retrieve(speaker, focal_points, 50)
+#     relationship = generate_summarize_agent_relationship(speaker, receiver, retrieved)
+#     print ("-------- relationshopadsjfhkalsdjf", relationship)
+#     last_chat = ""
+#     for i in curr_chat[-4:]:  # ??? consider only last 4 utterances to identify focal points
+#       last_chat += f'{i[0]}: {i[1]}\n'
+#     if last_chat: 
+#       focal_points = [f"{relationship}", 
+#                       f"{receiver.scratch.name} is {receiver.scratch.act_description}",
+#                       last_chat]
+#     else: 
+#       focal_points = [f"{relationship}", 
+#                       f"{receiver.scratch.name} is {receiver.scratch.act_description}"]
+#     retrieved = new_retrieve(speaker, focal_points, 15)
+#     utt, end = generate_one_utterance(maze, speaker, receiver, retrieved, curr_chat)
+
+#     curr_chat += [(speaker.scratch.name, utt)]
+
+#     speaker, receiver = receiver, speaker
+#     if end:
+#       break
+
+#   print ("July 23 PU")
+#   for row in curr_chat: 
+#     print (row)
+#   print ("July 23 FIN")
+
+#   return curr_chat
+
+
+
 def agent_chat_v2(maze, init_persona, target_persona): 
-  curr_chat = []
-  print ("July 23")
+    curr_chat = []
+    print("July 23")
 
-  speaker, receiver = init_persona, target_persona
+    speaker, receiver = init_persona, target_persona
 
-  for i in range(16):  # TODO: don't limit conversation lengths?
-    focal_points = [f"{receiver.scratch.name}"]
-    retrieved = new_retrieve(speaker, focal_points, 50)
-    relationship = generate_summarize_agent_relationship(speaker, receiver, retrieved)
-    print ("-------- relationshopadsjfhkalsdjf", relationship)
-    last_chat = ""
-    for i in curr_chat[-4:]:  # ??? consider only last 4 utterances to identify focal points
-      last_chat += f'{i[0]}: {i[1]}\n'
-    if last_chat: 
-      focal_points = [f"{relationship}", 
-                      f"{receiver.scratch.name} is {receiver.scratch.act_description}",
-                      last_chat]
-    else: 
-      focal_points = [f"{relationship}", 
-                      f"{receiver.scratch.name} is {receiver.scratch.act_description}"]
-    retrieved = new_retrieve(speaker, focal_points, 15)
-    utt, end = generate_one_utterance(maze, speaker, receiver, retrieved, curr_chat)
+    for i in range(16):  # TODO: don't limit conversation lengths?
+        # speaker와 receiver의 payload 데이터 로드
+        speaker_payload = speaker.payload.load()
+        receiver_payload = receiver.payload.load()
 
-    curr_chat += [(speaker.scratch.name, utt)]
+        # receiver에 대한 focal_points 생성
+        focal_points = [f"{receiver.scratch.name}"]
+        retrieved = new_retrieve(speaker, focal_points, 50)
+        relationship = generate_summarize_agent_relationship(speaker, receiver, retrieved)
+        print("-------- relationship:", relationship)
+        
+        # 최근 대화 기록을 last_chat에 포함
+        last_chat = ""
+        for i in curr_chat[-4:]:  # 최근 4개의 발화만 포함
+            last_chat += f'{i[0]}: {i[1]}\n'
+        
+        # 대화에 payload 데이터를 활용해 focal_points 확장
+        if last_chat: 
+            focal_points = [
+                f"{relationship}", 
+                f"{receiver.scratch.name} is {receiver.scratch.act_description}",
+                last_chat,
+                f"Speaker Payload: {speaker_payload}",  # speaker의 payload 데이터
+                f"Receiver Payload: {receiver_payload}"  # receiver의 payload 데이터
+            ]
+        else: 
+            focal_points = [
+                f"{relationship}", 
+                f"{receiver.scratch.name} is {receiver.scratch.act_description}",
+                f"Speaker Payload: {speaker_payload}",
+                f"Receiver Payload: {receiver_payload}"
+            ]
+        
+        # focal_points를 바탕으로 retrieved 업데이트
+        retrieved = new_retrieve(speaker, focal_points, 15)
+        
+        # 발화 생성
+        utt, end = generate_one_utterance(maze, speaker, receiver, retrieved, curr_chat)
+        curr_chat += [(speaker.scratch.name, utt)]
 
-    speaker, receiver = receiver, speaker
-    if end:
-      break
+        # 발화 주체 변경
+        speaker, receiver = receiver, speaker
+        if end:
+            break
 
-  print ("July 23 PU")
-  for row in curr_chat: 
-    print (row)
-  print ("July 23 FIN")
+    print("July 23 PU")
+    for row in curr_chat: 
+        print(row)
+    print("July 23 FIN")
 
-  return curr_chat
+    return curr_chat
+
+
+
+
 
 
 

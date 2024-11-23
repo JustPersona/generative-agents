@@ -17,6 +17,8 @@ import math
 import shutil, errno
 import re
 import requests
+import hashlib
+import json
 
 from os import listdir
 
@@ -245,6 +247,48 @@ def login_to_dvwa(dvwa_url, username="admin", password="password", security="low
     cookies['security'] = security
     # print("cookies :", cookies)
     return cookies
+
+
+def get_payloads(personas, target_personas, payload_loader):
+    """
+    특정 페르소나 그룹의 데이터를 로드하고 해시화
+
+    input :
+    personas (dict) : 모든 페르소나 정보
+    target_personas (list) : 데이터를 로드할 대상 그룹
+    payload_loader (str) : 데이터를 로드할 메서드 이름 ("load_successful_data", "load_patch_data").
+
+    output :
+    로드한 데이터, 해당 데이터의 해시값
+    """
+    def hash_data(data):
+        return hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()
+
+    payload_datas = [] if payload_loader == "load_patch_data" else {}
+    patch_id = 1
+
+    for persona_name in target_personas:
+        persona_payload = personas.get(persona_name).payload
+        if not persona_payload:
+            continue
+
+        load_method = getattr(persona_payload, payload_loader, None)
+        if not callable(load_method):
+            continue
+
+        loaded_data = load_method()
+
+        if payload_loader == "load_patch_data" and isinstance(loaded_data, list):
+            for patch in loaded_data:
+                patch["patch_id"] = patch_id
+                payload_datas.append(patch)
+                patch_id += 1
+        elif payload_loader == "load_successful_data" and isinstance(loaded_data, dict):
+            for key, value in loaded_data.items():
+                payload_datas.setdefault(key, []).extend(value)
+
+    return payload_datas, hash_data(payload_datas) if payload_datas else ([], None if payload_loader == "load_patch_data" else {}, None)
+
 
 
 

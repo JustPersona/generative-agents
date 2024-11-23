@@ -58,8 +58,10 @@ class ReverieServer:
     with open(f"{sim_folder}/reverie/meta.json") as json_file:  
       reverie_meta = json.load(json_file)
 
+    self.created_at = datetime.datetime.now()
     with open(f"{sim_folder}/reverie/meta.json", "w") as outfile: 
       reverie_meta["fork_sim_code"] = fork_sim_code
+      reverie_meta["created_at"] = self.created_at.strftime("%B %d, %Y, %H:%M:%S")
       outfile.write(json.dumps(reverie_meta, indent=2))
 
     # LOADING REVERIE'S GLOBAL VARIABLES
@@ -141,17 +143,23 @@ class ReverieServer:
     # used to communicate the code and step information to the frontend. 
     # Note that step file is removed as soon as the frontend opens up the 
     # simulation. 
+    self.curr_sim_code_file = f"{fs_temp_storage}/curr_sim_code.json"
     curr_sim_code = dict()
     curr_sim_code["sim_code"] = self.sim_code
 
     os.makedirs(fs_temp_storage, exist_ok=True)  # create directory if missing
-    with open(f"{fs_temp_storage}/curr_sim_code.json", "w+") as outfile:
+    with open(self.curr_sim_code_file, "w+") as outfile:
       outfile.write(json.dumps(curr_sim_code, indent=2))
     
     curr_step = dict()
     curr_step["step"] = self.step
     with open(f"{fs_temp_storage}/curr_step.json", "w+") as outfile:
       outfile.write(json.dumps(curr_step, indent=2))
+
+    # 성공 데이터, 패치 데이터 초기 해시값 설정
+    _, self.previous_successful_data_hash = get_payloads(self.personas, black_hats, "load_successful_data")
+    _, self.previous_patch_data_hash = get_payloads(self.personas, white_hats, "load_patch_data")
+
 
 
   def save(self, include_datetime=False):
@@ -181,6 +189,7 @@ class ReverieServer:
     reverie_meta["maze_name"] = self.maze.maze_name
     reverie_meta["persona_names"] = list(self.personas.keys())
     reverie_meta["step"] = self.step
+    reverie_meta["created_at"] = self.created_at.strftime("%B %d, %Y, %H:%M:%S")
     reverie_meta_f = f"{sim_folder}/reverie/meta.json"
 
     with open(reverie_meta_f, "w") as outfile:
@@ -190,6 +199,9 @@ class ReverieServer:
     for persona_name, persona in self.personas.items(): 
       save_folder = f"{sim_folder}/personas/{persona_name}/bootstrap_memory"
       persona.save(save_folder)
+
+
+    
 
 
   def start_path_tester_server(self): 
@@ -393,17 +405,35 @@ class ReverieServer:
             
 
 
+            if description.split(":")[-1].strip() in work_areas:
+
+              if persona_name in black_hats:
+                print("#### 블랙해커 공격 중 ~~~~~~~~~!!!!!!!!!!")
+                step_data = black_hacker(persona, attack, target_url, cookies, self.step)
+                persona.payload.save_attack_data(url=target_url, data=step_data)
 
 
-            if persona_name == "Black Hacker" and description.split(":")[-1].strip() == "computer desk":
-              print("블랙해커 공격 중 ~~~~~~~~~!!!!!!!!!!")
-              step_data = black_hacker(persona, attack, target_url, cookies)
-              persona.payload.save_attack_data(url=target_url, data=step_data, timestamp=self.step)
+              successful_datas, successful_data_hash = get_payloads(self.personas, black_hats, "load_successful_data")
 
-            # if persona_name == "White Hacker" and description.split(":")[-1].strip() == "computer desk":
-            #   print("화이트해커 방어 중 ~~~~~~~~~!!!!!!!!!!")
-            #   patch_data = white_hacker()
-            #   persona.payload.save_patch_data()
+
+              if persona_name in white_hats and successful_data_hash != self.previous_successful_data_hash:
+                  print("#### 화이트해커 방어 중 ~~~~~~~~~!!!!!!!!!!")
+                  patch_data = white_hacker(persona, successful_datas, self.step)
+                  persona.payload.save_patch_data(patch_data)
+                  self.previous_successful_data_hash = successful_data_hash
+
+
+              patch_datas, patch_data_hash = get_payloads(self.personas, white_hats, "load_patch_data")
+
+
+              if persona_name in server_owners and patch_data_hash != self.previous_patch_data_hash:
+                  print("#### 서버 주인 검증 중 ~~~~~~~~~!!!!!!!!!!")
+                  best_patch_data = server_owner(persona, patch_datas, self.step)
+                  persona.payload.save_bast_patch(best_patch_data)
+                  self.previous_patch_data_hash = patch_data_hash
+
+
+
 
 
 
@@ -647,6 +677,11 @@ class ReverieServer:
         print ("Error.")
         pass
 
+    if check_if_file_exists(self.curr_sim_code_file):
+      os.remove(self.curr_sim_code_file)
+
+
+
 
 if __name__ == '__main__':
   # rs = ReverieServer("base_the_ville_isabella_maria_klaus", 
@@ -658,6 +693,7 @@ if __name__ == '__main__':
   origin = input("Enter the name of the forked simulation: ").strip()
   target = input("Enter the name of the new simulation: ").strip()
   cookies = login_to_dvwa(target_base)
+  print("cookies :",cookies)
   # target_url = input("Enter url of the server (default DVWA) : ").strip()
   # if not target_url:
   #   target_url = "http://192.168.10.10/dvwa/vulnerabilities/sqli/"
@@ -667,55 +703,3 @@ if __name__ == '__main__':
   #   attack = "SQL injection"
   rs = ReverieServer(origin, target)
   rs.open_server()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

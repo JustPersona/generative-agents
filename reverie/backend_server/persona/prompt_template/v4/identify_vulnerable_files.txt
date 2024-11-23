@@ -1,0 +1,40 @@
+!<INPUT 0>! -- list of all server files
+!<INPUT 1>! -- hacked payload data
+
+<commentblockmarker>###</commentblockmarker>  
+
+You will receive details of an exploited payload, including a target URL and a list of all server files, each represented by its relative path. Focus on identifying the **most relevant file** to the URL and vulnerability described.
+
+### INPUT DETAILS
+
+#### List of Server Files:
+{!<INPUT 0>!}
+
+#### Exploited Payload Data:
+{!<INPUT 1>!}
+
+### TASK
+Examine the list of server files and locate the **single most relevant file** directly involved in the vulnerability described in the payload data. Only select one file that:
+- Is located in a directory related to the URL path provided in the payload (e.g., if the URL includes "/vulnerabilities/sqli/", focus on files within the "sqli" directory).
+- Is **present in the provided server file list**.
+- Handles user inputs or processes parameters found in the payload data.
+
+The file path must match one of the items in the provided server file list. Do not create or suggest paths that are not part of the list.
+
+### OUTPUT FORMAT
+{
+  "vulnerable_files": [
+    {
+      "file_path": "relative/path/to/most_relevant_file (from the provided list)",
+      "reason": "This file handles user input related to the payload or performs actions relevant to the exploit."
+    }
+  ]
+}
+
+### Additional Guidance
+Focus on identifying files that:
+- Directly relate to the URL-specified directory in the payload.
+- Handle user inputs or process parameters found in the payload data.
+- Contain interactions, sensitive data handling, or similar actions relevant to the exploit type described in the payload.
+
+Only include the single most relevant file directly related to the exploit to ensure precise and relevant outputs.

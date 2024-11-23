@@ -13,7 +13,7 @@ from persona.prompt_template.gpt_structure import *
 from persona.prompt_template.print_prompt import *
 
 
-def run_gpt_prompt_explanation_of_attack(persona, attack, test_input=None, verbose=False):
+def run_gpt_prompt_explanation_of_attack(persona, attack, test_input=None):
     def create_prompt_input(attack, test_input=None): 
         if test_input: return test_input
         prompt_input = [attack]
@@ -60,7 +60,7 @@ def run_gpt_prompt_explanation_of_attack(persona, attack, test_input=None, verbo
 
 
 
-def run_gpt_prompt_create_payload(persona, attack, explanation_of_attack, target_url, cookies=None, test_input=None, verbose=False):
+def run_gpt_prompt_create_payload(persona, attack, explanation_of_attack, target_url, cookies=None, test_input=None):
     def create_prompt_input(attack, test_input=None): 
         if test_input: return test_input, []
         prompt_input = [attack]
@@ -91,6 +91,8 @@ def run_gpt_prompt_create_payload(persona, attack, explanation_of_attack, target
             response_json = json.loads(gpt_response)
             payload = response_json.get("payload")
             if not payload or any(kw in payload for kw in ["query_parameter", "VALUE"]):
+                return False
+            if not isinstance(payload, str):
                 return False
             if payload.startswith('?'):
                 payload = payload[1:]
@@ -144,10 +146,10 @@ def run_gpt_prompt_create_payload(persona, attack, explanation_of_attack, target
         func_validate=__func_validate,
         func_clean_up=__func_clean_up
     )
-
-    if isinstance(output, dict) and "payload" in output:
-        if not _is_url_encoded(output["payload"]):
-            output["payload"] = _url_encode(output["payload"])
+    if output["payload"].startswith('?'):
+        output["payload"] = output["payload"][1:]
+    if not _is_url_encoded(output["payload"]):
+        output["payload"] = _url_encode(output["payload"])
         
     return output, [output, prompt, gpt_param, prompt_input, fail_safe], method
 
@@ -156,7 +158,7 @@ def run_gpt_prompt_create_payload(persona, attack, explanation_of_attack, target
 
 
 
-def run_gpt_prompt_response_attack_reasoning(persona, attack, explanation_of_attack, target_url, create_payload, cookies=None, test_input=None, verbose=False):   
+def run_gpt_prompt_response_attack_reasoning(persona, attack, explanation_of_attack, target_url, method, create_payload, cookies=None, test_input=None):   
     def create_prompt_input(attack, test_input=None): 
         if test_input: return test_input
         prompt_input = [attack]
@@ -250,18 +252,44 @@ def run_gpt_prompt_response_attack_reasoning(persona, attack, explanation_of_att
     'Referer': target_url,
     'Content-Type': 'application/json'
     }
-    response_default = requests.get(
-        url=target_url,
-        headers=headers,
-        cookies=cookies,
-        # allow_redirects=True,
-    )
-    response_add_payload = requests.get(
-        url=target_url + '?' + create_payload,
-        headers=headers,
-        cookies=cookies,
-        # allow_redirects=True,
-    )
+    
+    if method.lower() == 'get':
+        response_default = requests.get(
+            url=target_url,
+            headers=headers,
+            cookies=cookies,
+            # allow_redirects=True,
+        )
+        response_add_payload = requests.get(
+            url=f"{target_url}?{create_payload}",
+            headers=headers,
+            cookies=cookies,
+            # allow_redirects=True,
+        )
+    elif method.lower() == 'post':
+        response_default = requests.post(
+            url=target_url,
+            headers=headers,
+            cookies=cookies,
+        )
+        response_add_payload = requests.post(
+            url=target_url,
+            headers=headers,
+            cookies=cookies,
+            data=create_payload
+        )
+    else:  # PUT method
+        response_default = requests.put(
+            url=target_url,
+            headers=headers,
+            cookies=cookies,
+        )
+        response_add_payload = requests.put(
+            url=target_url,
+            headers=headers,
+            cookies=cookies,
+            data=create_payload
+        )
     HTML_differences = compare_html_responses(response_default, response_add_payload)
 
     gpt_param = ''
@@ -286,11 +314,11 @@ def run_gpt_prompt_response_attack_reasoning(persona, attack, explanation_of_att
 
 
 
-def run_gpt_prompt_generate_next_step(persona, attack, explanation_of_attack, target_url, create_payload, HTML_differences, reasoning, observations, test_input=None, verbose=False):   
+def run_gpt_prompt_generate_next_step(persona, attack, explanation_of_attack, target_url, create_payload, HTML_differences, reasoning, observations, test_input=None):   
     def create_prompt_input(attack, test_input=None): 
         if test_input: return test_input
         prompt_input = [attack]
-        prompt_input += [explanation_of_attack]  # 공격설명
+        prompt_input += [explanation_of_attack]
         load_payloads_result = persona.payload.load_url_data(target_url)
         prompt_input += [load_payloads_result]
         prompt_input += [create_payload]
@@ -335,3 +363,5 @@ def run_gpt_prompt_generate_next_step(persona, attack, explanation_of_attack, ta
     )
         
     return output, [output, prompt, gpt_param, prompt_input, fail_safe]
+
+

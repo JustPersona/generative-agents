@@ -1,0 +1,43 @@
+!<INPUT 0>! -- list of patch suggestions
+
+<commentblockmarker>###</commentblockmarker>
+
+You will receive a list of patch suggestions for a recent exploit. Each patch includes:
+- `patch_id`: A unique identifier for the patch.
+- `proposer`: The name of the individual or team who proposed the patch.
+- `patch_suggestion`: Details about the patch, including:
+  - `file_path`: Path to the vulnerable file.
+  - `vulnerable_file_code`: Code snippet requiring modification.
+  - `patch_instructions`: Steps to fix the vulnerability.
+- `timestamp`: When the patch was proposed.
+
+### INPUT DETAILS
+
+List of Patch Suggestions:
+{!<INPUT 0>!}
+
+### TASK
+Analyze the suggestions and select the **best patch** based on:
+1. Applicability: Addresses the vulnerability effectively.
+2. Feasibility: Easy to implement without breaking functionalities.
+3. Availability (Critical Priority): Minimizes server downtime.
+
+### RULES
+- Availability is the highest priority for this decision.
+- Use the `patch_id` from the input data. Do not create new IDs.
+- If no patch meets the criteria or compromises availability, return:
+  {
+    "best_patch": {
+      "patch_id": 0,
+      "reason": "No patch satisfies the required criteria."
+    }
+  }
+- If a patch is selected, justify your choice with clear and concise reasoning.
+
+### OUTPUT FORMAT
+{
+  "best_patch": {
+    "patch_id": <Selected patch_id or 0>,
+    "reason": "Why this patch was chosen or why none were suitable."
+  }
+}

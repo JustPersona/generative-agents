@@ -52,18 +52,18 @@ def execute(persona, maze, personas, plan):
       potential_path = path_finder(maze.collision_maze, 
                                    persona.scratch.curr_tile, 
                                    target_p_tile, 
-                                   collision_block_id)
+                                   maze.collision_block_id)
       if len(potential_path) <= 2: 
         target_tiles = [potential_path[0]]
       else: 
         potential_1 = path_finder(maze.collision_maze, 
                                 persona.scratch.curr_tile, 
                                 potential_path[int(len(potential_path)/2)], 
-                                collision_block_id)
+                                maze.collision_block_id)
         potential_2 = path_finder(maze.collision_maze, 
                                 persona.scratch.curr_tile, 
                                 potential_path[int(len(potential_path)/2)+1], 
-                                collision_block_id)
+                                maze.collision_block_id)
         if len(potential_1) <= len(potential_2): 
           target_tiles = [potential_path[int(len(potential_path)/2)]]
         else: 
@@ -132,7 +132,7 @@ def execute(persona, maze, personas, plan):
       curr_path = path_finder(maze.collision_maze, 
                               curr_tile, 
                               i, 
-                              collision_block_id)
+                              maze.collision_block_id)
       if not closest_target_tile: 
         closest_target_tile = i
         path = curr_path
@@ -157,18 +157,3 @@ def execute(persona, maze, personas, plan):
 
   execution = ret, persona.scratch.act_pronunciatio, description
   return execution
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

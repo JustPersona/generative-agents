@@ -6,67 +6,24 @@ Description: Wrapper functions for calling OpenAI APIs.
 """
 import json
 import random
-import openai
 import time 
+import ollama
 
 from utils import *
-from langchain.llms import Ollama
-from langchain.llms import OpenAI
-from langchain.llms import LlamaCpp
-from langchain.llms import GPT4All
-from langchain.chat_models import ChatAnthropic
-from langchain.embeddings import GPT4AllEmbeddings
+from langchain_ollama import OllamaLLM
 from langchain.callbacks.manager import CallbackManager
-# from langchain.callbacks.streaming_stdout import StreamingStdOutCallbackHandler as CallbackHandler
 from langchain.callbacks.streaming_stdout_final_only import FinalStreamingStdOutCallbackHandler as CallbackHandler
-
-from huggingface_hub import hf_hub_download
 
 # ============================================================================
 # ################### [Set LLM] ###################
 # ============================================================================
 
-### **** OpenAI **** 
-'''
-llm = OpenAI(temperature=0,model_name="gpt-3.5-turbo-16k")
-'''
-
-### **** Anthropic **** 
-'''
-llm = ChatAnthropic(model_name="claude-2", temperature=0)
-'''
-
-### *** Llama.cpp ***
-'''
-model_path = hf_hub_download(repo_id=model_repo, filename=model_filename)
-
-n_gpu_layers = -1
-n_batch = 2048
-callback_manager = CallbackManager([CallbackHandler()])
-
-llm = LlamaCpp(
-    model_path=model_path,
-    n_gpu_layers=n_gpu_layers,
-    n_batch=n_batch,
-    n_ctx=4096,
-    # f16_kv=True,
-    callback_manager=callback_manager,
-    verbose=True,
-)
-'''
-
-### *** GPT4Alll (nous-hermes-13b) *** 
-''' 
-model_path = "/Users/rlm/Desktop/Code/gpt4all/models/nous-hermes-13b.ggmlv3.q4_0.bin"
-llm = GPT4All(
-    model=model_path
-)
-'''
-
 ### *** Ollama ***
-llm = Ollama(base_url="http://localhost:11434",
-             model=ollama_model,
-             callback_manager=CallbackManager([CallbackHandler()]))
+llm = OllamaLLM(
+    base_url=ollama_url,
+    model=ollama_model,
+    callback_manager=CallbackManager([CallbackHandler()])
+)
 
 def temp_sleep(seconds=0.1):
   time.sleep(seconds)
@@ -249,14 +206,28 @@ def safe_generate_response(prompt,
   return fail_safe_response
 
 
-def get_embedding(text, model=None):
-  # Use GPT4All local embeddings 
-  # https://python.langchain.com/docs/integrations/text_embedding/gpt4all
-  text = text.replace("\n", " ")
-  if not text: 
-    text = "this is blank"
-  gpt4all_embd = GPT4AllEmbeddings()
-  return gpt4all_embd.embed_query(text)
+#def get_embedding(text, model=None):
+#  # Use GPT4All local embeddings 
+#  # https://python.langchain.com/docs/integrations/text_embedding/gpt4all
+#  text = text.replace("\n", " ")
+#  if not text: 
+#    text = "this is blank"
+#  gpt4all_embd = GPT4AllEmbeddings()
+#  return gpt4all_embd.embed_query(text)
+
+# https://ollama.com/blog/embedding-models
+# Model                   Parameter Size
+# mxbai-embed-large       334M   (1.2 GB)
+# nomic-embed-text       137M   (849 MB)
+# all-minilm           23M
+def get_embedding(text, model="mxbai-embed-large"):
+    text = text.replace("\n", " ")
+    if not text:
+        text = "this is blank"
+    if model not in [m['model'].split(':')[0] for m in ollama.list().get('models', [])]:
+        ollama.pull(model)
+    response = ollama.embeddings(model=model, prompt=text)
+    return response['embedding']
 
 if __name__ == '__main__':
   gpt_parameter = {"engine": "text-davinci-003", "max_tokens": 50, 

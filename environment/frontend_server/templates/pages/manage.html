@@ -1,0 +1,287 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<section>
+	<div class="d-flex justify-content-between align-items-end py-2">
+		<span class="fw-semibold">Total: <span id="total">0</span></span>
+		<button type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#userModal" onclick="setUserModal(event, false)">New User</button>
+	</div>
+	<table class="table table-sm table-bordered table-hover text-nowrap mb-0">
+		<thead>
+			<tr>
+				<th scope="col" class="text-end minimum">#</th>
+				<th scope="col" class="text-start">Name</th>
+				<th scope="col" class="text-start">E-mail</th>
+				<th scope="col" class="text-start minimum">Last Login</th>
+				<th scope="col" class="text-start minimum">Date Joined</th>
+				<th scope="col" class="text-center minimum">Active</th>
+				<th scope="col" class="text-center minimum">Staff</th>
+				<th scope="col" class="text-center minimum">Super</th>
+				<th scope="col" class="text-center minimum">Edit</th>
+			</tr>
+		</thead>
+		<tfoot>
+			<tr>
+				<td colspan="100" class="p-0">
+					<label role="button" class="w-100 text-center p-1">
+						<i class="fa-solid fa-plus"></i>
+						<button type="button" data-bs-toggle="modal" data-bs-target="#userModal" onclick="setUserModal(event, false)" hidden></button>
+					</label>
+				</td>
+			</tr>
+		</tfoot>
+		<tbody class="table-group-divider"></tbody>
+	</table>
+
+	<div class="modal fade" id="userModal" tabindex="-1" aria-labelledby="userModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+			<form class="modal-content" method="post" onsubmit="userUpdate(event)">
+				<div class="modal-header pb-0">
+					<div class="nav nav-tabs w-100 border-0" id="nav-tab" role="tablist">
+						<button class="nav-link active" id="user-info-tab" data-bs-toggle="tab" data-bs-target="#user-info" type="button" role="tab" aria-controls="user-info" aria-selected="true"></button>
+						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+					</div>
+				</div>
+				<div class="modal-body">
+					<div class="tab-content" id="nav-tabContent">
+						<div class="tab-pane fade show active" id="user-info" role="tabpanel" aria-labelledby="user-info-tab" tabindex="0">
+							<div class="d-flex align-items-start px-1">
+								<div class="d-sm-flex flex-wrap flex-grow-1 column-gap-3">
+									<div class="form-check mb-3">
+										<input class="form-check-input" type="checkbox" id="is_superuser" name="is_superuser" disabled>
+										<label class="form-check-label" for="is_superuser">Superuser</label>
+									</div>
+									<div class="form-check mb-3">
+										<input class="form-check-input" type="checkbox" id="is_staff" name="is_staff">
+										<label class="form-check-label" for="is_staff">Staff</label>
+									</div>
+									<div class="form-check mb-3">
+										<input class="form-check-input" type="checkbox" id="is_active" name="is_active">
+										<label class="form-check-label" for="is_active">Active</label>
+									</div>
+								</div>
+								<label role="button" class="link-danger" id="delete-label">
+									<i class="fa-solid fa-trash"></i>
+									<button type="button" onclick="setDeleteModal(event)" data-bs-toggle="modal" data-bs-target="#deleteModal" hidden></button>
+								</label>
+							</div>
+							<div class="form-floating mb-3">
+								<input type="text" class="form-control" id="username" name="username" placeholder="ID">
+								<label for="username">Name</label>
+								<div class="invalid-feedback px-1"></div>
+							</div>
+							<div class="form-floating mb-3">
+								<input type="email" class="form-control" id="email" name="email" placeholder="E-mail">
+								<label for="email">E-mail</label>
+								<div class="invalid-feedback px-1"></div>
+							</div>
+							<div class="row">
+								<div class="col-md-6 mb-3"><div class="form-floating">
+									<input type="text" class="form-control" id="first_name" name="first_name" placeholder="First Name">
+									<label for="first_name">First Name</label>
+									<div class="invalid-feedback px-1"></div>
+								</div></div>
+								<div class="col-md-6 mb-3"><div class="form-floating">
+									<input type="text" class="form-control" id="last_name" name="last_name" placeholder="Last Name">
+									<label for="last_name">Last Name</label>
+									<div class="invalid-feedback px-1"></div>
+								</div></div>
+							</div>
+							<div class="form-floating mb-3">
+								<input type="password" class="form-control" id="password" name="password" placeholder="Password">
+								<label for="password">Password</label>
+								<div class="invalid-feedback px-1"></div>
+							</div>
+							<div class="row">
+								<div class="col-md-6 mb-3"><div class="form-floating">
+									<input type="text" class="form-control" id="last_login" placeholder="Last Login" disabled>
+									<label for="last_login">Last Login</label>
+								</div></div>
+								<div class="col-md-6 mb-3"><div class="form-floating">
+									<input type="text" class="form-control" id="date_joined" placeholder="Date Joined" disabled>
+									<label for="date_joined">Date Joined</label>
+								</div></div>
+							</div>
+							<div class="valid-feedback px-1 fs-6 fw-semibold text-center"></div>
+						</div>
+					</div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+					<button type="submit" class="btn btn-success">Update</button>
+				</div>
+			</form>
+		</div>
+	</div>
+
+	<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-dialog-centered">
+			<div class="modal-content">
+				<div class="modal-header">
+					<h1 class="modal-title fs-5" id="deleteModalLabel"><span class="username"></span></h1>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body">
+					<div>
+						You can use <span class="fw-semibold">Active</span> instead.<br/>
+						Do you still want to delete it?
+					</div>
+					<div class="alert alert-danger my-3 text-center d-none" role="alert"></div>
+				</div>
+				<div class="modal-footer">
+					<button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#userModal" aria-label="Back">Back</button>
+					<button type="button" class="btn btn-danger" onclick="userDelete(event)">Yes</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script type="text/javascript">
+		const table = document.querySelector("table");
+		const form = document.querySelector("#userModal form");
+		const deleteModal = document.querySelector("#deleteModal");
+		const total = document.querySelector("#total");
+
+		const hideFeedbacks = function() {
+			deleteModal.querySelector(".alert").classList.add("d-none");
+			for (let x of form.querySelectorAll(`[class~=valid-feedback], [class~=invalid-feedback]`)) {
+				x.classList.remove("d-block");
+			}
+		}
+
+		const setUserModal = function(e, request=true) {
+			const userid = e.target.closest("tr")?.getAttribute("userid");
+
+			hideFeedbacks();
+			if (!request) {
+				formUpdate();
+			} else {
+				post("{% url 'user' %}", {userid}, function(xhr) {
+					formUpdate(JSON.parse(xhr.responseText));
+				});
+			}
+		}
+
+		const userUpdate = function(e) {
+			e.preventDefault();
+
+			const userid = form.getAttribute("userid");
+			const btn = form.querySelector("[type=submit]");
+			hideFeedbacks();
+
+			btn.setAttribute("disabled", "");
+			post("{% url 'user_update' %}", {
+				userid,
+				username: form.username.value.trim(),
+				password: form.password.value.trim(),
+				email: form.email.value.trim(),
+				first_name: form.first_name.value.trim(),
+				last_name: form.last_name.value.trim(),
+				is_superuser: form.is_superuser.checked,
+				is_staff: form.is_staff.checked,
+				is_active: form.is_active.checked,
+				update: userid != "create",
+			}, function(xhr) {
+				const data = JSON.parse(xhr.responseText);
+				const feedback = form.querySelector(".valid-feedback");
+				feedback.classList.add("d-block");
+				feedback.innerText = "Successfully";
+				pageUpdate([data]);
+				formUpdate(data);
+				btn.removeAttribute("disabled");
+			}, function(xhr) {
+				btn.removeAttribute("disabled");
+				const data = JSON.parse(xhr.responseText);
+				for (let key in data) {
+					const feedback = form[key]?.parentNode?.querySelector(".invalid-feedback");
+					if (!feedback) continue;
+					feedback.classList.add("d-block");
+					feedback.innerText = data[key];
+				}
+			});
+		}
+
+		const pageUpdate = function(data) {
+			for (let user of data) {
+				const old_tr = table.querySelector(`tr[userid="${user.id}"]`)
+				const curr_user = old_tr?.hasAttribute("curr_user");
+				const tr = document.createElement("tr");
+				tr.setAttribute("userid", user.id);
+				tr.toggleAttribute("curr_user", user.curr_user);
+				tr.innerHTML = `
+					<th field="id" scope="row" class="text-end">${user.id}</th>
+					<td field="username">${user.username}</td>
+					<td field="email">${user.email || ""}</td>
+					<td field="last_login">${user.last_login || "-"}</td>
+					<td field="date_joined">${user.date_joined || "-"}</td>
+					<td field="is_active" class="text-center"><input class="form-check-input" type="checkbox" onclick="this.blur(); return false;"${user.is_active ? " checked" : ""}></td>
+					<td field="is_staff" class="text-center"><input class="form-check-input" type="checkbox" onclick="this.blur(); return false;"${user.is_staff ? " checked" : ""}></td>
+					<td field="is_superuser" class="text-center"><input class="form-check-input" type="checkbox" onclick="this.blur(); return false;"${user.is_superuser ? " checked" : ""}></td>
+					<td field="control" class="text-center">
+						<label role="button" class="link-secondary text-center">
+							<i class="fa-solid fa-pen-to-square"></i>
+							<button type="button" data-bs-toggle="modal" data-bs-target="#userModal" onclick="setUserModal(event);" hidden></button>
+						</label>
+					</td>
+				`;
+				if (old_tr) {
+					old_tr.outerHTML = tr.outerHTML;
+				} else {
+					total.innerText = total.innerText*1 + 1;
+					table.querySelector("tbody").append(tr);
+				}
+
+				if (curr_user) {
+					document.querySelector(`[user="username"]`).innerText = user.username;
+				}
+			}
+		}
+
+		const formUpdate = function(user=undefined) {
+			form.reset();
+			form.is_staff.disabled = false;
+			form.querySelector(".modal-footer button[type=submit]").innerText = user ? "Update" : "Create";
+			form.querySelector("#user-info-tab").innerText = user?.username || "New User";
+			form.setAttribute("userid", user?.id || "create");
+			form.querySelector("#delete-label").classList.toggle("d-none", user ? false : true);
+			if (!user) return;
+
+			for (let key in user) {
+				const elem = form[key];
+				const value = user[key];
+				if (!elem) continue;
+				if (key.startsWith("is_")) {
+					elem.checked = value === true;
+				} else {
+					elem.value = value;
+					elem.placeholder = value;
+				}
+			}
+			form.is_staff.disabled = user.is_superuser;
+		}
+
+		const setDeleteModal = function(e) {
+			deleteModal.querySelector(".username").innerText = form.querySelector("#user-info-tab").innerText;
+		}
+
+		const userDelete = function() {
+			const userid = form.getAttribute("userid");
+			post("{% url 'user_delete' %}", {
+				userid
+			}, function(xhr) {
+				table.querySelector(`tr[userid="${JSON.parse(xhr.responseText)?.id}"]`)?.remove();
+				bootstrap.Modal.getInstance(deleteModal).hide();
+				total.innerText = total.innerText*1 - 1;
+			}, function(xhr) {
+				const box = deleteModal.querySelector(".alert");
+				box.classList.remove("d-none");
+				box.innerText = xhr.responseText;
+			});
+		}
+
+		pageUpdate({{ users | safe }});
+	</script>
+</section>
+
+{% endblock %}

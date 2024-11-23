@@ -51,20 +51,18 @@ let execute_count;
 	}
 {% endif %}
 
-const personaFocus = function(e, p_name) {
-	const btn = e.target.closest("button");
-	const box = document.querySelector(`#on_screen_det_content-${p_name}`);
-	const show = !Boolean(btn.getAttribute("style"));
-	btn.blur();
+const personaFocus = function(radio) {
+	let p_name = radio.id.split("-");
+	p_name = p_name[p_name.length-1];
+	radio.blur();
 
-	document.querySelector("#on_screen_det_content-init").classList.toggle("d-none", show);
-	for (let x of btn.parentNode.children) x.removeAttribute("style");
+	const box = document.querySelector(`#on_screen_det_content-${p_name}`);
+	const isActive = !box.classList.contains("d-none");
+	document.getElementById("temp_focus").innerHTML = isActive ? "" : p_name;
+	document.querySelector("#on_screen_det_content-init").classList.toggle("d-none", !isActive);
 	for (let x of box.parentNode.children) x.classList.add("d-none");
-	if (show) {
-		btn.setAttribute("style", "font-weight: bolder; background-color: #ABFF84 !important;");
-		box.classList.remove("d-none");
-	}
-	document.getElementById("temp_focus").innerHTML = show ? p_name : "";
+	box.classList.toggle("d-none", isActive);
+	radio.checked = !isActive;
 }
 
 

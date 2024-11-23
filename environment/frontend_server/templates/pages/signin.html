@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+	:root, body, main, section {
+		height: 100%
+		{% if not site.hide %}
+			} main {
+				height: calc(100% - var(--header-height) * 2);
+		{% endif %}
+	}
+</style>
+<section class="d-flex justify-content-center align-items-center px-5">{% if not num_of_users %}
+	<div class="text-center fs-5 fw-semibold">
+		To create a superuser, enter the command like:<br/>
+		<code>python3 manage.py createsuperuser</code>
+	</div>
+
+	{% else %}
+
+	<div class="bg-body shadow rounded-4 mx-auto p-5 my-5 w-100" style="max-width: 750px;">
+		<h1 class="text-center">Sign In</h1>
+		<hr/>
+		<form class="mt-4" onsubmit="signin(event)">
+			<div class="alert alert-danger mb-3 text-center d-none" role="alert"></div>
+			<div class="form-floating mb-3">
+				<input type="text" class="form-control" id="username" name="username" placeholder="ID">
+				<label for="username">ID</label>
+				<div class="invalid-feedback"></div>
+			</div>
+			<div class="form-floating mb-3">
+				<input type="password" class="form-control" id="password" name="password" placeholder="Password">
+				<label for="password">Password</label>
+				<div class="invalid-feedback"></div>
+			</div>
+			<div class="text-end">
+				<button type="submit" class="btn btn-success">Submit</button>
+			</div>
+		</form>
+	</div>
+	<script type="text/javascript">
+		const signin = function(e) {
+			e.preventDefault();
+			const form = e.target;
+			const box = form.querySelector(".alert");
+	
+			post("{% url 'signin' %}", {
+				"username": form.username.value,
+				"password": form.password.value,
+			}, function(xhr) {
+				location.reload();
+			}, function(xhr) {
+				box.classList.remove("d-none");
+				box.innerText = xhr.responseText;
+			});
+		}
+	</script>
+{% endif %}</section>
+{% endblock %}

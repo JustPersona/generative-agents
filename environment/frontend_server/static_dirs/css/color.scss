@@ -1,0 +1,56 @@
+:root {
+	--bs-link-color: var(--bs-success);
+	--bs-link-color-rgb: var(--bs-success-rgb);
+	--bs-link-hover-color: #146c43;
+	--bs-link-hover-color-rgb: 20, 108, 67;
+
+
+
+	::selection {
+		background-color: var(--bs-success);
+		color: var(--bs-body-bg);
+	} .btn-close:focus {
+		--bs-btn-close-focus-shadow: 0 0 0 0.25rem rgba(var(--bs-success-rgb), 0.25);
+	} .form-check-input, .form-select, .form-control {
+		--color: var(--bs-success);
+		--color-rgb: var(--bs-success-rgb);
+		--bd-color: var(--bs-form-valid-border-color);
+
+		&.form-danger {
+			--color: var(--bs-danger);
+			--color-rgb: var(--bs-danger-rgb);
+			--bd-color: var(--bs-form-invalid-border-color);
+		} &:checked {
+			background-color: var(--color);
+			border-color: var(--color);
+		} &:focus {
+			border-color: var(--bd-color);
+			box-shadow: 0 0 0 .25rem rgba(var(--color-rgb), .25);
+		}
+	} .dropdown-item {
+		&:active {
+			background-color: var(--bs-link-color);
+		}
+	} .form-range {
+		&::-webkit-slider-thumb {
+			background-color: var(--bs-success);
+		} &::-moz-range-thumb {
+			background-color: var(--bs-success);
+		} &:focus {
+			&::-webkit-slider-thumb {
+				box-shadow: 0 0 0 1px #fff, 0 0 0 .25rem rgba(var(--bs-success-rgb), .25);
+			} &::-moz-range-thumb {
+				box-shadow: 0 0 0 1px #fff, 0 0 0 .25rem rgba(var(--bs-success-rgb), .25);
+			}
+		} &:active {
+			&::-webkit-slider-thumb {
+				background-color: rgba(var(--bs-success-rgb), .25);
+			} &::-moz-range-thumb {
+				background-color: rgba(var(--bs-success-rgb), .25);
+			}
+		}
+	} .table-hover>tfoot>tr:hover > * {
+		--bs-table-color-state: var(--bs-table-hover-color);
+		--bs-table-bg-state: var(--bs-table-hover-bg)
+	}
+}

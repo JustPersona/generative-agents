@@ -5,7 +5,7 @@
 
 {% block content %}
 
-<div class="d-none" id="temp_focus"></div>
+<div id="temp_focus" hidden></div>
 <div class="my-3 fs-5 fw-semibold text-center">{{ pen_code }}</div>
 
 <section class="bg-body shadow rounded-bottom-4 my-4">
@@ -30,18 +30,18 @@
 			</div></div>
 			<div class="col-12"><div class="row g-2">
 				<div class="col-md">
-					<div class="form-floating" style="flex: 1">
+					<div class="form-floating flex-grow-1">
 						<input id="curr_payload" class="form-control" type="text" readonly/>
 						<label for="curr_payload">New Payload</label>
 					</div>
 				</div>
 				<div class="col-md-auto text-end">
-					<button type="submit" class="btn btn-outline-primary h-100 fw-semibold d-none" id="apply_btn"><i class="fa-solid fa-paper-plane"></i> Apply</button>
-					<button id="play_button" type="button" class="btn btn-outline-primary h-100 fw-semibold" onclick="pause = !pause; for (let x of this.children) x.classList.toggle('d-none'); if (!pause) apply_btn.classList.add('d-none')">
+					<button type="submit" class="btn btn-outline-success h-100 fw-semibold d-none" id="apply_btn"><i class="fa-solid fa-paper-plane"></i> Apply</button>
+					<button id="play_button" type="button" class="btn btn-outline-success h-100 fw-semibold" onclick="pause = !pause; for (let x of this.children) x.classList.toggle('d-none'); if (!pause) apply_btn.classList.add('d-none')">
 						<span class="play d-none"><i class="fa-solid fa-play"></i> Play</span>
 						<span class="pause"><i class="fa-solid fa-pause"></i> Pause</span>
 					</button>
-					<button type="button" class="btn btn-outline-primary h-100 fw-semibold" onclick="location.reload()"><i class="fa-solid fa-rotate-right"></i> Restart</button>
+					<button type="button" class="btn btn-outline-success h-100 fw-semibold" onclick="location.reload()"><i class="fa-solid fa-rotate-right"></i> Restart</button>
 				</div>
 			</div></div>
 		{% endif %}</form>
@@ -60,7 +60,8 @@
 {% else %}
 	<section class="bg-body shadow rounded-4 my-4 p-4">
 		<div id="trigger-container" class="d-flex flex-wrap justify-content-center column-gap-5 row-gap-3">{% for p in persona_names %}
-			<button type="button" onclick="personaFocus(event, '{{ p.underscore }}')" class="border border-1 bg-body-tertiary rounded-4 px-4 py-3" id="on_screen_det_trigger-{{p.underscore}}">
+			<input type="radio" class="btn-check" name="on_screen_det_trigger" id="on_screen_det_trigger-{{p.underscore}}" autocomplete="off" onclick="personaFocus(this)" hidden>
+			<label role="button" class="btn btn-outline-success rounded-4 px-4 py-3" for="on_screen_det_trigger-{{p.underscore}}">
 				<div class="d-flex gap-3">
 					<div class="d-flex flex-column align-items-center" id="on_screen_det_trigger_container-{{p.underscore}}">
 						{% with 'assets/characters/profile/'|add:p.underscore|add:'.png' as image_static %}
@@ -70,7 +71,7 @@
 					</div>
 					<div id="quick_emoji-{{p.underscore}}" class="fs-4" style="width: 64px"></div>
 				</div>
-			</button>
+			</label>
 		{% endfor %}</div>
 
 		<div id="persona-container">{% for p in persona_names %}
@@ -111,8 +112,7 @@
 			<table class="table table-sm table-bordered table-hover m-0 position-relative" style="border-width: 2px;">
 				<thead class="sticky-top z-1">
 					<tr>
-						<th scope="col" class="px-2" style="width: 0px;">Method</th>
-						<th scope="col" class="px-2" style="width: 0px;">Vulnerability</th>
+						<th scope="col" class="text-center minimum">Method</th>
 						<th scope="col">Payload</th>
 					</tr>
 				</thead>

@@ -5,6 +5,7 @@ from . import views
 urlpatterns = [
     path("", views.dashboard, name="dashboard"),
     path("backend/", views.backend, name="backend"),
+    path("trash/", views.trash, name="trash"),
 
     re_path(r"^path_tester/(?:(?P<maze_name>[\w-]+)/)?$", views.path_tester, name="path_tester"),
     re_path(r"^pen_testing/(?:(?P<pen_code>[\w-]+)/)?(?:(?P<step>\d+)/)?(?:(?P<speed>\d+)/)?$", views.pen_testing, name="pen_testing"),

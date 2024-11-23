@@ -1,12 +1,18 @@
 {% load static %}
 
 <nav class="fixed-top h-100 bg-body shadow d-flex flex-column overflow-hidden" style="width: var(--nav-width); left: var(--nav-left); transition-property: left, width; transition-duration: var(--nav-duration);">
+	<style type="text/css">
+		body {
+			padding-left: calc((var(--nav-width) + var(--nav-left)) * var(--nav-fold-moving-main));
+			transition: var(--nav-duration) padding-left;
+		}
+	</style>
 	<div style="height: var(--header-height)" class="position-relative">
 		<span class="icon d-flex justify-content-center align-items-center h-100" style="width: var(--nav-min-width);"><img src="{% static 'img/atlas.png' %}" class="img-fluid" alt="atlas" width="24"/></span>
 		<span class="text d-flex align-items-center h-100 position-absolute top-0 fs-5 fw-semibold" style="left: var(--nav-min-width); width: calc(var(--nav-max-width) - var(--nav-min-width));">{{ site.title }}</span>
-		<button type="button" class=" d-lg-none border-0 bg-transparent position-absolute top-50 end-0 translate-middle" onclick="navClose()"><i class="fa-solid fa-xmark fa-2xl"></i></button>
+		<button type="button" class="btn-close d-lg-none position-absolute top-50 end-0 translate-middle" onclick="navClose()"></button>
 	</div>
-	<ul class="navbar-nav border-top border-bottom" style="flex: 1">{% for item in nav %}
+	<ul class="navbar-nav flex-grow-1 border-top border-bottom">{% for item in nav %}
 		<li class="nav-item">
 			<a href="{{ item.href }}" style="height: var(--header-height)" class="position-relative nav-link{% if item.href == request.path %} active" aria-current="page{% endif %}">
 				<span class="icon d-flex justify-content-center align-items-center h-100" style="width: var(--nav-min-width);"><i class="{{ item.icon }} fa-xl"></i></span>

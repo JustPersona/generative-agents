@@ -1,0 +1,116 @@
+{% extends "base.html" %}
+
+{% block content %}
+<section>
+	<table class="table table-sm table-bordered table-hover text-nowrap mb-0">
+		<thead>
+			<tr>
+				<th scope="col" class="text-end minimum">#</th>
+				<th scope="col" class="text-start">Name</th>
+				<th scope="col" class="text-center minimum">Forkable</th>
+				<th scope="col" class="text-center minimum">Compressed</th>
+			</tr>
+		</thead>
+		<tbody class="table-group-divider">{% for pen_code, pen in pen_codes.items %}
+            <tr class="position-relative" pen_code="{{ pen_code }}">
+                <td field="num" class="text-end">{{ forloop.counter }}</td>
+                <td field="pen_code">{{ pen_code }}</td>
+                <td field="forkable" class="text-center">{% if pen.forkable %}
+                    <label role="button" class="link-success text-center" style="width: 1rem" data-bs-toggle="tooltip" data-bs-title="Restore">
+                        <i class="fa-solid fa-trash-arrow-up"></i>
+                        <button type="button" onclick="setTrashModal(event)" data-bs-toggle="modal" data-bs-target="#restoreModal" hidden></button>
+                    </label>
+                    <label role="button" class="link-danger text-center" style="width: 1rem" data-bs-toggle="tooltip" data-bs-title="Delete">
+                        <i class="fa-solid fa-trash"></i>
+                        <button type="button" onclick="setTrashModal(event)" data-bs-toggle="modal" data-bs-target="#restoreModal" hidden></button>
+                    </label>
+                {% endif %}</td>
+                <td field="compressed" class="text-center">{% if pen.compressed %}
+                    <label role="button" class="link-success text-center" style="width: 1rem" data-bs-toggle="tooltip" data-bs-title="Restore">
+                        <i class="fa-solid fa-trash-arrow-up"></i>
+                        <button type="button" onclick="setTrashModal(event)" data-bs-toggle="modal" data-bs-target="#restoreModal" hidden></button>
+                    </label>
+                    <label role="button" class="link-danger text-center" style="width: 1rem" data-bs-toggle="tooltip" data-bs-title="Delete">
+                        <i class="fa-solid fa-trash"></i>
+                        <button type="button" onclick="setTrashModal(event)" data-bs-toggle="modal" data-bs-target="#restoreModal" hidden></button>
+                    </label>
+                {% endif %}</td>
+            </tr>
+        {% endfor %}</tbody>
+	</table>
+
+	<div class="modal fade" id="restoreModal" tabindex="-1" aria-labelledby="restoreModalLabel" aria-hidden="true">
+		<div class="modal-dialog modal-lg modal-dialog-centered">
+			<div class="modal-content">
+                <div class="modal-header pb-0">
+                    <div class="nav nav-tabs w-100 border-0" id="nav-tab" role="tablist">
+                        <button class="nav-link active" id="trash-tab" data-bs-toggle="tab" data-bs-target="#trash" type="button" role="tab" aria-controls="trash" aria-selected="true">Trash</button>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                </div>
+				<div class="modal-body"><div class="tab-content" id="nav-tabContent">
+					<div class="tab-pane fade show active" id="trash" role="tabpanel" aria-labelledby="trash-tab" tabindex="0">
+                        <div class="d-flex flex-column gap-2 mb-2">
+                            <div class="form-floating">
+                                <input type="text" class="form-control" id="modal_mode" disabled>
+                                <label for="modal_mode">Mode</label>
+                            </div>
+                            <div class="form-floating">
+                                <input type="text" class="form-control" id="modal_pen_code" disabled>
+                                <label for="modal_pen_code">Penetration Testing Name</label>
+                            </div>
+                            <div class="form-floating">
+                                <input type="text" class="form-control" id="modal_new_pen_code">
+                                <label for="modal_new_pen_code">Restore Name</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="alert alert-danger mt-3 text-center d-none"></div>
+				</div></div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-danger" onclick="trashPen(this, 'delete')">Delete</button>
+                    <button type="button" class="btn btn-success" onclick="trashPen(this, 'restore')">Restore</button>
+                </div>
+			</div>
+		</div>
+	</div>
+
+    <script type="text/javascript">
+        const modal = document.querySelector(".modal");
+        const alertbox = modal.querySelector(".alert");
+        const setTrashModal = function(e) {
+            const title = e.target.closest("label").getAttribute("data-bs-title").toLowerCase();
+            const mode = e.target.closest("td").getAttribute("field");
+            const pen_code = e.target.closest("tr").getAttribute("pen_code");
+            alertbox.classList.add("d-none");
+
+            modal.querySelector("#modal_mode").value = mode;
+            modal.querySelector("#modal_pen_code").value = pen_code;
+            modal.querySelector("#modal_new_pen_code").value = pen_code;
+            modal.querySelector("#modal_new_pen_code").parentNode.classList.toggle("d-none", title != "restore");
+            modal.querySelector(".modal-footer .btn-success").classList.toggle("d-none", title != "restore");
+            modal.querySelector(".modal-footer .btn-danger").classList.toggle("d-none", title != "delete");
+        }
+
+        const trashPen = function(btn, action) {
+            const mode = modal.querySelector("#modal_mode").value.trim();
+            const pen_code = modal.querySelector("#modal_pen_code").value.trim();
+            const new_pen_code = modal.querySelector("#modal_new_pen_code").value.trim();
+
+            btn.setAttribute("disabled", "");
+            post("./", {mode, pen_code, new_pen_code, action}, function(xhr) {
+                const tr = document.querySelector(`table tbody tr[pen_code=${pen_code}]`);
+                tr.querySelector(`[field=${mode}]`).innerHTML = "";
+                if (!tr.querySelector("button")) tr.remove();
+				modal.querySelector("[aria-label=Close]").click();
+                btn.removeAttribute("disabled");
+            }, function(xhr) {
+                btn.removeAttribute("disabled");
+                alertbox.innerText = xhr.responseText;
+                alertbox.classList.remove("d-none");
+            })
+        }
+    </script>
+</section>
+{% endblock %}

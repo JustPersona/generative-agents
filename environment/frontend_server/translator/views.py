@@ -5,10 +5,12 @@ File: views.py
 """
 
 import sys, json, shutil
-from os import listdir, remove, rename
+from os import listdir, remove
 from os.path import exists, splitext
 from urllib.parse import unquote
 from datetime import datetime, timedelta
+from tempfile import TemporaryDirectory
+
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.views.decorators.http import require_http_methods
@@ -160,7 +162,7 @@ def dashboard(request):
 
 @require_http_methods(["POST"])
 def pen_info(request):
-    pen_code = json.loads(request.body).get("pen_code")
+    pen_code = json.loads(request.body).get("pen_code").strip()
     data = getPen(pen_code)
     if not data:
         return HttpResponse("Not found", status=404)
@@ -168,6 +170,9 @@ def pen_info(request):
 
 @require_http_methods(["POST"])
 def pen_info_update(request):
+    if not request.user.is_staff:
+        return HttpResponse(status=404)
+
     data = json.loads(request.body)
     pen_code = data.get("pen_code", "").strip()
     new_pen_code = data.get("new_pen_code", "").strip()
@@ -188,7 +193,7 @@ def pen_info_update(request):
                 with open(pen_files[mode]["meta"] % curr_pen_code, "w") as f:
                     json.dump(meta, f, indent=2)
             if curr_pen_code == pen_code:
-                rename(pen_files[mode]["root"] % pen_code, pen_files[mode]["root"] % new_pen_code)
+                shutil.move(pen_files[mode]["root"] % pen_code, pen_files[mode]["root"] % new_pen_code)
     return JsonResponse(data)
 
 
@@ -389,7 +394,10 @@ def replay_persona_state(request, pen_code, step, persona_name):
 
 @require_http_methods(["POST"])
 def compress_pen_testing(request):
-    pen_code = json.loads(request.body).get("pen_code")
+    if not request.user.is_staff:
+        return HttpResponse(status=404)
+
+    pen_code = json.loads(request.body).get("pen_code").strip()
     if not pen_code:
         return HttpResponse(status=400)
 
@@ -405,10 +413,14 @@ def compress_pen_testing(request):
         return HttpResponse("Unknown Error", status=500)
     return HttpResponse()
 
+@require_http_methods(["POST"])
 def delete_pen_testing(request):
+    if not request.user.is_staff:
+        return HttpResponse(status=404)
+
     data = json.loads(request.body)
-    pen_code = data.get("pen_code")
-    mode = data.get("mode")
+    pen_code = data.get("pen_code").strip()
+    mode = data.get("mode").strip()
 
     if not pen_code:
         return HttpResponse("Bad Request", status=400)
@@ -424,6 +436,55 @@ def delete_pen_testing(request):
         shutil.rmtree(pen_root)
     except:
         return HttpResponse("Unknown Error", status=500)
+    return HttpResponse()
+
+@require_http_methods(["GET", "POST"])
+def trash(request):
+    if not request.user.is_staff:
+        return HttpResponse(status=404)
+
+    if request.method == "GET":
+        context = {"pen_codes": {}}
+        for file in listdir(pen_files["delete"]["root"]):
+            file, ext = splitext(file)
+            file = file.split("-")
+            pen_code, mode = "-".join(file[:-1]), file[-1]
+            if pen_code not in context["pen_codes"]:
+                context["pen_codes"][pen_code] = dict()
+            context["pen_codes"][pen_code][mode] = True
+        template = "pages/trash.html"
+        return render(request, template, context)
+
+    data = json.loads(request.body)
+    try:
+        pen_code = data["pen_code"].strip()
+        mode = data["mode"].strip()
+        action = data["action"].strip()
+        new_pen_code = data.get("new_pen_code", "").strip() or pen_code
+    except:
+        return HttpResponse(status=400)
+    
+    file = (pen_files["delete"]["name"] % (pen_code, mode)) + ".zip"
+    if not exists(file):
+        return HttpResponse(status=400)
+    elif action not in ["restore", "delete"]:
+        return HttpResponse(status=400)
+    else:
+        if action == "restore":
+            directory = pen_files[mode]["root"] % new_pen_code
+            if exists(directory):
+                return HttpResponse(f"Already exists: {mode}/{new_pen_code}", status=409)
+            with TemporaryDirectory() as dir:
+                try:
+                    shutil.unpack_archive(file, dir, "zip")
+                except:
+                    return HttpResponse("Problems during recovery", status=500)
+                shutil.move(dir, directory)
+        try:
+            remove(file)
+        except:
+            pass
+
     return HttpResponse()
 
 

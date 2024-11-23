@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'sass_processor',
     'translator',
+    "account",
 ]
 
 MIDDLEWARE = [
@@ -49,6 +50,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "custom.LoginCheck",
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -64,7 +66,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
-                'translator.custom.processors',
+                "custom.processors",
             ],
         },
     },
@@ -152,3 +154,11 @@ STATICFILES_FINDERS = [
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
     'sass_processor.finders.CssFinder',
 ]
+
+# Login
+LOGIN_URL = "signin"
+LOGIN_REDIRECT_URL = "dashboard"
+LOGIN_REQUIRED = False
+
+# Mode
+THEME = "auto"  # light, dark, auto

@@ -10,35 +10,35 @@
 	<article class="bg-body shadow rounded-4 my-4 p-3" pen_code="{{ pen.pen_code }}" forked="{{ pen.fork_sim_code }}" mode="{{ pen.mode }}"{% if pen.step == 0 %} hidden{% endif %}>
 		<h3 class="h5 d-flex gap-2">
 			<a class="link-secondary" href="{% url 'pen_testing' pen.pen_code %}" data-bs-toggle="tooltip" data-bs-title="Play"><i class="fa-solid fa-play"></i></a>
-			<span style="flex: 1">{{ pen.pen_code }}</span>
+			<span class="flex-grow-1">{{ pen.pen_code }}</span>
 			<label role="button" class="link-secondary" data-bs-toggle="tooltip" data-bs-title="Information">
 				<i class="fa-solid fa-ellipsis-vertical"></i>
-				<button type="button" class="d-none" onclick="setPenInfoModal(event, this.closest('[mode]'))" data-bs-toggle="modal" data-bs-target="#penInfoModal"></button>
+				<button type="button" onclick="setPenInfoModal(event, this.closest('[mode]'))" data-bs-toggle="modal" data-bs-target="#penInfoModal" hidden></button>
 			</label>
 		</h3>
 		<hr/>
-		{% if not pen.payload %}No Information{% else %}<div>{% for url, items in pen.payload.content.items %}
-			<span>Tool: {% for name in items.tool_name %}{{ name }}{% endfor %}</span><br/>
+		<div>{% if not pen.payload %}
+			No Information
+		{% else %}{% for url, items in pen.payload.content.items %}
+			<span>Tool: {% for name in items.tool_name %}{% if forloop.counter != 1 %}, {% endif %}{{ name }}{% endfor %}</span><br/>
 			<span>URL: <a href="{{ url }}">{{ url }}</a></span><br/>
 			<div class="table-responsive mt-2" style="max-height: 500px;">
 				<table class="table table-sm table-bordered table-hover m-0 position-relative" style="border-width: 2px;">
 					<thead class="sticky-top z-1">
 						<tr>
-							<th scope="col" class="px-2" style="width: 0px;">Method</th>
-							<th scope="col" class="px-2" style="width: 0px;">Vulnerability</th>
+							<th scope="col" class="text-center minimum">Method</th>
 							<th scope="col">Payload</th>
 						</tr>
 					</thead>
 					<tbody>
-						{% for item in items.basic %}<tr>
-							<td field="method">{{ item.method }}</td>
-							<td field="vulnerability" class="text-danger text-center">{% if item.observations == 'exploit_successful' %}<i class="fa-solid fa-check"></i>{% endif %}</td>
+						{% for item in items.basic %}<tr{% if item.observations == 'exploit_successful' %} class="table-danger"{% endif %}>
+							<td field="method" class="text-center">{{ item.method }}</td>
 							<td field="payload">{{ item.payload }}</td>
 						</tr>{% endfor %}
 					</tbody>
 				</table>
 			</div>
-		{% endfor %}</div>{% endif %}
+		{% endfor %}{% endif %}</div>
 	</article>
 {% endfor %}</section>
 {% include 'includes/modals.html' %}

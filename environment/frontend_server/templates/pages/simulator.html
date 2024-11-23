@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% load static %}
+
+
+
+{% block content %}
+
+<div class="d-none" id="temp_focus"></div>
+<section class="bg-body shadow rounded-bottom-4 my-4">
+	<div id="game-container" class="text-center"></div>
+	<div id="controller" class="container-lg p-4">
+		<div class="row g-0">
+			<p class="fs-5 fw-semibold text-center">{{ sim_code }}</p>
+			<div class="col-md-8" id="game-time">
+				<p class="h4">Current Time:</p>
+				<span id="game-time-content" class="h3"></span>
+			</div>
+			<form class="col-md-4" onsubmit="formSubmit(event)">
+				{% if mode == "demo" %}<div class="mb-2 text-end fs-6 fw-semibold">
+					Speed:
+					<input class="text-center" id="speed" type="number" name="speed" autocomplete="off" placeholder="{{ speed }}" value="{{ speed }}" min="1" max="6" oninput="apply_speed(this.value.trim())"/>
+				</div>{% endif %}
+				<div class="mb-2 text-end fs-6 fw-semibold">
+					Step:
+					<input class="text-end" id="curr_step" type="text" name="step" autocomplete="off" placeholder="{{ step }}" value="{{ step }}" size="{{ max_step | stringformat:'d' | length }}" oninput="this.value = this.value.replace(/[^0-9]/g, ''); if (pause) apply_btn.classList.toggle('d-none', this.value == this.placeholder);"/>
+					/{{ max_step }}
+				</div>
+				<div class="d-flex justify-content-end gap-2 mt-2">
+					<button type="submit" class="btn btn-outline-primary fw-semibold d-none" id="apply_btn"><i class="fa-solid fa-paper-plane"></i> Apply</button>
+					<button id="play_button" type="button" class="btn btn-outline-primary fw-semibold" onclick="pause = !pause; for (let x of this.children) x.classList.toggle('d-none'); if (!pause) apply_btn.classList.add('d-none')">
+						<span class="play d-none"><i class="fa-solid fa-play"></i> Play</span>
+						<span class="pause"><i class="fa-solid fa-pause"></i> Pause</span>
+					</button>
+					<button type="button" class="btn btn-outline-primary fw-semibold" onclick="location.reload()"><i class="fa-solid fa-rotate-right"></i> Restart</button>
+				</div>
+			</form>
+		</div>
+	</div>
+</section>
+
+<section class="bg-body shadow rounded-4 my-4 p-4">
+	<div id="trigger-container" class="d-flex flex-wrap justify-content-center column-gap-5 row-gap-3">{% for p in persona_names %}
+		<button type="button" onclick="personaFocus(event, '{{ p.underscore }}')" class="border border-1 bg-body-tertiary rounded-4 px-4 py-3" id="on_screen_det_trigger-{{p.underscore}}">
+			<div class="d-flex gap-3">
+				<div class="d-flex flex-column align-items-center" id="on_screen_det_trigger_container-{{p.underscore}}">
+					{% with 'assets/characters/profile/'|add:p.underscore|add:'.png' as image_static %}
+						<img src="{% static image_static %}" class="p-0" style="width: 46px">
+					{% endwith %}
+					<span>{{ p.initial }}</span>
+				</div>
+				<div id="quick_emoji-{{p.underscore}}" class="fs-4" style="width: 64px"></div>
+			</div>
+		</button>
+	{% endfor %}</div>
+
+	<div id="persona-container">{% for p in persona_names %}
+		<div class="border-top d-flex align-items-center mt-3 pt-3 d-none" id="on_screen_det_content-{{p.underscore}}">
+			<div class="flex-shrink-0 d-none d-sm-block">
+				<div>
+					{% with 'assets/characters/profile/'|add:p.underscore|add:'.png' as image_static %}
+						<img src="{% static image_static %}" style="width: 5em"> 
+					{% endwith %}
+				</div>
+			</div>
+			<div class="flex-grow-1 ps-5">
+				<div class="row">
+					<h2 class="col-md-8 mb-3 fs-2" id="name__{{ p.underscore }}">
+						{{ p.original }}
+						<span class="fs-5">|</span>
+						<a href="{% url 'replay_persona_state' sim_code step p.underscore %}" class="fs-5">State Details</a>
+					</h2>
+				</div>
+				<div class="mt-3">
+					<p class="fs-5"><strong>Current Action:</strong> <br><span id="current_action__{{ p.underscore }}"></span></p>
+					<p class="fs-5"><strong>Location:</strong> <br><span id="target_address__{{ p.underscore }}"></span></p>
+					<p class="fs-5"><strong>Current Conversation:</strong> <br><span id="chat__{{ p.underscore }}"></span></p>
+				</div>
+			</div>
+		</div>
+	{% endfor %}</div>
+</section>
+
+<section id="on_screen_det_content-init" class="py-3 text-center">
+	<em>Click on one of the character sprites to see its current state in more detail. </em>
+</section>
+
+
+{% endblock %}
+
+
+
+{% block js_content %}
+
+<script src='https://cdn.jsdelivr.net/npm/phaser@3.85.2/dist/phaser.js'></script>
+<script type="text/javascript">
+	{% include "includes/simulator.js" %}
+</script>
+
+{% endblock %}

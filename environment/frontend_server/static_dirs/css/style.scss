@@ -1,0 +1,46 @@
+:root {
+  --header-height: 4rem;
+  --nav-min-width: var(--header-height);
+  --nav-max-width: 280px;
+
+  --nav-width: var(--nav-max-width);
+  --nav-left: calc(var(--nav-width) * -1);
+  --nav-duration: .35s;
+  --nav-fold-moving-main: 0;
+
+  &.nav-show {
+    --nav-left: 0px;
+    overflow: hidden;
+  }
+
+  @media (min-width: 992px) {
+    --nav-left: 0px;
+    --nav-fold-moving-main: 1;
+
+    &.nav-fold {
+      --nav-width: var(--nav-min-width);
+      nav button {
+        --deg: 180deg;
+      }
+    }
+  }
+} header {
+  height: var(--header-height);
+} nav ul .nav-link {
+  &:hover {
+    color: green !important;
+  } &.active:after {
+    content: "";
+    display: block;
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    width: 0;
+    border-left: 2px solid green;
+  }
+}
+
+a {
+  text-decoration: none;
+}

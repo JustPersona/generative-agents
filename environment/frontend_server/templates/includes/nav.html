@@ -1,0 +1,58 @@
+{% load static %}
+
+<nav class="fixed-top h-100 bg-body shadow d-flex flex-column overflow-hidden" style="width: var(--nav-width); left: var(--nav-left); transition-property: left, width; transition-duration: var(--nav-duration);">
+	<div style="height: var(--header-height)" class="position-relative">
+		<span class="icon d-flex justify-content-center align-items-center h-100" style="width: var(--nav-min-width);"><img src="{% static 'img/atlas.png' %}" class="img-fluid" alt="atlas" width="24"/></span>
+		<span class="text d-flex align-items-center h-100 position-absolute top-0 fs-5 fw-semibold" style="left: var(--nav-min-width); width: calc(var(--nav-max-width) - var(--nav-min-width));">{{ site.title }}</span>
+		<button type="button" class=" d-lg-none border-0 bg-transparent position-absolute top-50 end-0 translate-middle" onclick="navClose()"><i class="fa-solid fa-xmark fa-2xl"></i></button>
+	</div>
+	<ul class="navbar-nav border-top border-bottom" style="flex: 1">{% for item in nav %}
+		<li class="nav-item">
+			<a href="{{ item.href }}" style="height: var(--header-height)" class="position-relative nav-link{% if item.href == request.path %} active" aria-current="page{% endif %}">
+				<span class="icon d-flex justify-content-center align-items-center h-100" style="width: var(--nav-min-width);"><i class="{{ item.icon }} fa-xl"></i></span>
+				<span class="text d-flex align-items-center h-100 position-absolute top-0" style="left: var(--nav-min-width); width: calc(var(--nav-max-width) - var(--nav-min-width));">{{ item.name }}</span>
+			</a>
+		</li>
+	{% endfor %}</ul>
+	<div class="d-none d-md-block" style="height: 3rem">
+		<button type="button" class="bg-transparent border-0 w-100 h-100" style="transform: rotateY(var(--deg, 0deg)); ;transition: var(--nav-duration) transform;" onclick="navFold()">
+			<i class="fa-solid fa-angles-right"></i>
+		</button>
+	</div>
+	<script type="text/javascript">
+		const navShow = function() {
+			if (document.querySelector("nav").classList.contains("show")) return;
+
+			document.documentElement.classList.add("nav-show");
+			const backdrop = document.createElement("div");
+			document.body.prepend(backdrop);
+			backdrop.id = "backdrop";
+			backdrop.className = "fixed-top h-100 w-100 fade";
+			backdrop.style.background = "#33333333";
+			backdrop.addEventListener("click", navClose);
+			backdrop.classList.add("show");
+		}
+
+		const navClose = function() {
+			const backdrop = document.querySelector("#backdrop");
+			if (!backdrop) return;
+
+			const duration = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--nav-duration")) * 1000;
+			document.documentElement.classList.remove("nav-show");
+			backdrop.classList.remove("show");
+			setTimeout(function() {
+				backdrop.remove();
+			}, duration);
+		}
+
+		const _navFold = function() {
+			return !document.documentElement.classList.toggle('nav-fold');
+		}
+		const navFold = function() {
+			localStorage["nav-fold"] = _navFold();
+		}
+		if (localStorage["nav-fold"] === "false") {
+			_navFold();
+		}
+	</script>
+</nav>

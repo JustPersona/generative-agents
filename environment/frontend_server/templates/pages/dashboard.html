@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+
+
+
+{% block content %}
+
+<style type="text/css">
+	table tbody tr.active td:first-child:before {
+		content: "";
+		display: block;
+		position: absolute;
+		left: 0px;
+		top: -1px;
+		height: calc(100% + 2px);
+		width: 0px;
+		border-left: 2px solid green;
+	}
+</style>
+
+{% if backend.step %}<section class="bg-body shadow rounded-4 my-3 p-3">
+	<div class="text-center">
+		Backend is Running, <a href="{% url 'live' %}">See</a>
+	</div>
+</section>{% endif %}
+
+<section class="bg-body shadow rounded-4 my-3 p-3">
+	<div class="text-end">
+		<a href="{% url 'simulator' %}">Details &gt;</a>
+	</div>
+	<div class="table-responsive mt-2" style="max-height: 500px;">
+			<table class="table table-sm table-bordered table-hover" style="border-width: 2px;">
+					<thead>
+							<tr>
+									<th scope="col" class="text-end" style="width: {{ sim_codes | length | stringformat:'d' | length | add:1 }}rem">#</th>
+									<th scope="col">Name</th>
+									<th scope="col">Step</th>
+									<th scope="col" class="text-center" style="width: 7.5rem;">Compress</th>
+									<th scope="col" class="text-center" style="width: 7.5rem;">Control</th>
+							</tr>
+					</thead>
+					<tbody class="table-group-divider">
+							{% for sim in sim_codes %}<tr class="position-relative" id="{{ sim.sim_code }}" forked="{{ sim.fork_sim_code }}" mode="{{ sim.mode }}">
+									<td field="num" class="text-end">{{ forloop.counter }}</td>
+									<td field="sim_code">{{ sim.sim_code }}</td>
+									<td field="step">{% if not sim.step %}-{% else %}{{ sim.step }}{% endif %}</td>
+									<td field="compress" class="text-center">{% if not sim.step %}-{% elif sim.mode == "demo" %}<i class="fa-solid fa-check"></i>{% endif %}</td>
+									<td field="control">
+										{% if not sim.step %}-{% else %}<div class="d-flex gap-2">
+												<a class="link-secondary" href="{% url 'simulator' sim.sim_code %}" data-bs-toggle="tooltip" data-bs-title="Play"><i class="fa-solid fa-play"></i></a>
+												<a class="link-secondary" href="{% url 'simulator' %}?search={{ sim.sim_code }}" data-bs-toggle="tooltip" data-bs-title="Information"><i class="fa-solid fa-circle-info"></i></a>
+										</div>{% endif %}
+									</td>
+							</tr>{% endfor %}
+					</tbody>
+			</table>
+	</div>
+</section>
+
+<section class="row">
+	<div class="col-md-6">
+		<div class="bg-body shadow rounded-4 my-3 p-3">
+			<canvas id="doughnut-chart" class="w-100" height="300"></canvas>
+			<script type="text/javascript">
+				const randomInt = function() {
+					return Math.round(Math.random() * 8) + 2;
+				}
+
+				const dcanvas = document.querySelector("#doughnut-chart").getContext("2d");
+				const dchart = new Chart(dcanvas, {
+					type: "doughnut",
+					data: {
+						labels: ["Safely", "Suspicious", "Warning", "Danger"],
+						datasets: [{
+							label: "Total",
+							data: [
+								8,
+								5,
+								7,
+								4,
+							],
+							backgroundColor: [
+								"rgb(54, 162, 235)",
+								"rgb(255, 205, 86)",
+								"rgb(255, 159, 64)",
+								"rgb(255, 99, 132)",
+							],
+							hoverOffset: 25,
+						}],
+					},
+				});
+			</script>
+		</div>
+	</div>
+	<div class="col-md-6">
+		<div class="bg-body shadow rounded-4 my-3 p-3">
+			<canvas id="bar-chart"></canvas>
+			<script type="text/javascript">
+				const bcanvas = document.querySelector("#bar-chart").getContext("2d");
+				const bchart = new Chart(bcanvas, {
+					type: "bar",
+					data: {
+						labels: ["SQLi", "XSS", "CSRF", "LFI"],
+						datasets: [{
+							data: [
+								7,
+								10,
+								6,
+								4,
+							],
+							backgroundColor: "rgb(255, 99, 132)",
+						}],
+					},
+					options: {
+						plugins: {
+							title: {
+								text: "Vulnerability by Type",
+								display: true,
+							},
+							legend: {
+								display: false,
+							},
+						},
+						scales: {
+							y: {
+								beginAtZero: true,
+							},
+						},
+					},
+				});
+			</script>
+		</div>
+		<div class="bg-body shadow rounded-4 my-3 p-3">
+			<canvas id="line-chart"></canvas>
+			<script type="text/javascript">
+				const lcanvas = document.querySelector("#line-chart").getContext("2d");
+				const lchart = new Chart(lcanvas, {
+					type: "line",
+					data: {
+						labels: [
+							"2024-09-11",
+							"2024-09-12",
+							"2024-09-13",
+							"2024-09-14",
+							"2024-09-15",
+							"2024-09-16",
+						],
+						datasets: [{
+							data: [
+								4,
+								8,
+								3,
+								4,
+								3,
+								9,
+							],
+							backgroundColor: "rgb(255, 99, 132)",
+						}],
+					},
+					options: {
+						plugins: {
+							title: {
+								text: "Number of simulations",
+								display: true,
+							},
+							legend: {
+								display: false,
+							},
+						},
+						scales: {
+							x: {
+								type: "time",
+								time: {
+									tooltipFormat: "DD",
+									unit: "day",
+								},
+							},
+							y: {
+								beginAtZero: true,
+							},
+						},
+					},
+				});
+			</script>
+		</div>
+	</div>
+</section>
+
+{% endblock %}
+
+
+
+{% block js_content %}
+<script type="text/javascript">
+	const table = document.querySelector("table tbody");
+
+	const activeTree = function(tr, bool=true) {
+		tr?.classList.toggle("active", bool);
+	}
+	const hideTree = function() {
+		for (let tr of table.querySelectorAll("tr")) {
+			activeTree(tr, false);
+		}
+	}
+
+	const showTree = function(tr, type) {
+		if (!tr || tr.tagName != "TR") {
+			return;
+		} else if (type === undefined) {
+			hideTree();
+		}
+		activeTree(tr);
+
+		if (!type || type == "up") for (let x of table.querySelectorAll(`tr#${tr.getAttribute("forked")}:not(#${tr.id})`)) {
+			showTree(x, "up");
+		}
+		if (!type || type == "down") for (let x of table.querySelectorAll(`tr[forked="${tr.id}"]:not(#${tr.id})`)) {
+			showTree(x, "down");
+		}
+	}
+
+	table.addEventListener("mouseover", function(e) {
+		showTree(e.target.closest("tr"));
+	});
+	table.addEventListener("mouseout", hideTree);
+</script>
+{% endblock %}

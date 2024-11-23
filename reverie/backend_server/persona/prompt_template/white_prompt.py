@@ -104,10 +104,8 @@ def run_gpt_patch_instructions(persona, successful_data, vulnerable_file, test_i
         return "ERROR"
     
     def get_vulnerable_file_code(vulnerable_file):
-        base_path = server_path
-        # base_path = "C:/Users/siro/Desktop/evaluating_generative_agents-main/reverie/backend_server"
         file_path = vulnerable_file.get("file_path")
-        absolute_path = os.path.join(base_path, file_path)
+        absolute_path = os.path.join(server_path, file_path)
         file_entry = {"file_path": file_path}
 
         try:

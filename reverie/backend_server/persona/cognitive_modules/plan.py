@@ -303,7 +303,8 @@ def generate_convo_summary(persona, convo):
 
 
 def generate_decide_to_talk(init_persona, target_persona, retrieved): 
-  x =run_gpt_prompt_decide_to_talk(init_persona, target_persona, retrieved)[0]
+  # x =run_gpt_prompt_decide_to_talk(init_persona, target_persona, retrieved)[0]
+  x = "yes"
   if debug: print ("GNS FUNCTION: <generate_decide_to_talk>")
 
   if x == "yes": 

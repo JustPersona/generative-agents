@@ -185,11 +185,11 @@ class ReverieServer:
     reverie_meta["fork_sim_code"] = self.fork_sim_code
     reverie_meta["start_date"] = self.start_time.strftime("%B %d, %Y")
     reverie_meta["curr_time"] = self.curr_time.strftime("%B %d, %Y, %H:%M:%S")
+    reverie_meta["created_at"] = self.created_at.strftime("%B %d, %Y, %H:%M:%S")
     reverie_meta["sec_per_step"] = self.sec_per_step
     reverie_meta["maze_name"] = self.maze.maze_name
     reverie_meta["persona_names"] = list(self.personas.keys())
     reverie_meta["step"] = self.step
-    reverie_meta["created_at"] = self.created_at.strftime("%B %d, %Y, %H:%M:%S")
     reverie_meta_f = f"{sim_folder}/reverie/meta.json"
 
     with open(reverie_meta_f, "w") as outfile:
@@ -432,6 +432,9 @@ class ReverieServer:
                   persona.payload.save_bast_patch(best_patch_data)
                   self.previous_patch_data_hash = patch_data_hash
 
+                  print("### 패치 제안서의 검증이 완료되었습니다. 패치를 진행하세요. ###")
+                  int_counter = 0
+
 
 
 
@@ -458,18 +461,17 @@ class ReverieServer:
             outfile.write(json.dumps(movements, indent=2))
 
           # Without frontend connection
-          if auto_save_next_env_file:
-            next_env_data = dict()
-            for persona_name, persona in self.personas.items():
-              persona_pos = movements["persona"][persona_name]["movement"]
-              next_env_data[persona_name] = {
-                "maze": self.maze.maze_name,
-                "x": persona_pos[0],
-                "y": persona_pos[1],
-              }
-            next_env_file = f"{sim_folder}/environment/{self.step+1}.json"
-            with open(next_env_file, "w") as outfile:
-              outfile.write(json.dumps(next_env_data, indent=2))
+          next_env_data = dict()
+          for persona_name, persona in self.personas.items():
+            persona_pos = movements["persona"][persona_name]["movement"]
+            next_env_data[persona_name] = {
+              "maze": self.maze.maze_name,
+              "x": persona_pos[0],
+              "y": persona_pos[1],
+            }
+          next_env_file = f"{sim_folder}/environment/{self.step+1}.json"
+          with open(next_env_file, "w") as outfile:
+            outfile.write(json.dumps(next_env_data, indent=2))
 
           # After this cycle, the world takes one step forward, and the 
           # current time moves by <sec_per_step> amount. 
@@ -692,14 +694,17 @@ if __name__ == '__main__':
 
   origin = input("Enter the name of the forked simulation: ").strip()
   target = input("Enter the name of the new simulation: ").strip()
-  cookies = login_to_dvwa(target_base)
-  print("cookies :",cookies)
-  # target_url = input("Enter url of the server (default DVWA) : ").strip()
-  # if not target_url:
-  #   target_url = "http://192.168.10.10/dvwa/vulnerabilities/sqli/"
-  #   cookies = login_to_dvwa(target_url)
-  # attack = input("Enter a Web Attack Name (default SQL injection) : ").strip()
-  # if not attack:
-  #   attack = "SQL injection"
+  
+  target_url = input("Enter url of the server (default DVWA-sqli) : ").strip()
+  if not target_url:
+    target_url = dvwa_url + "/vulnerabilities/sqli/"
+  if '/dvwa' in target_url:
+    cookies = login_to_dvwa(dvwa_url)
+    print("DVWA Login! -- cookies :",cookies)
+
+  attack = input("Enter a Web Attack Name (default SQL injection) : ").strip()
+  if not attack:
+    attack = "SQL injection"
+
   rs = ReverieServer(origin, target)
   rs.open_server()

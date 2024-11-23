@@ -19,6 +19,47 @@ from langchain.callbacks.streaming_stdout_final_only import FinalStreamingStdOut
 # ################### [Set LLM] ###################
 # ============================================================================
 
+### **** OpenAI ****
+'''
+from langchain.llms import OpenAI
+llm = OpenAI(temperature=0,model_name="gpt-3.5-turbo-16k")
+'''
+
+### **** Anthropic ****
+'''
+from langchain.chat_models import ChatAnthropic
+llm = ChatAnthropic(model_name="claude-2", temperature=0)
+'''
+
+### *** Llama.cpp ***
+'''
+from langchain.llms import LlamaCpp
+model_path = hf_hub_download(repo_id=model_repo, filename=model_filename)
+
+n_gpu_layers = -1
+n_batch = 2048
+callback_manager = CallbackManager([CallbackHandler()])
+
+llm = LlamaCpp(
+    model_path=model_path,
+    n_gpu_layers=n_gpu_layers,
+    n_batch=n_batch,
+    n_ctx=4096,
+    # f16_kv=True,
+    callback_manager=callback_manager,
+    verbose=True,
+)
+'''
+
+### *** GPT4Alll (nous-hermes-13b) ***
+'''
+from langchain.llms import GPT4All
+model_path = "/Users/rlm/Desktop/Code/gpt4all/models/nous-hermes-13b.ggmlv3.q4_0.bin"
+llm = GPT4All(
+    model=model_path
+)
+'''
+
 ### *** Ollama ***
 llm = OllamaLLM(
     base_url=ollama_url,
@@ -234,6 +275,7 @@ def safe_generate_response_json(prompt,
         llm.format = ""
 
 
+from langchain_community.embeddings import GPT4AllEmbeddings
 def get_embedding(text, model=None):
  # Use GPT4All local embeddings 
  # https://python.langchain.com/docs/integrations/text_embedding/gpt4all

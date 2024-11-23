@@ -175,12 +175,11 @@ def agent_chat_v2(maze, init_persona, target_persona):
     print("July 23")
 
     speaker, receiver = init_persona, target_persona
+    # speaker와 receiver의 payload 데이터 로드
+    speaker_payload = speaker.payload.load()
+    receiver_payload = receiver.payload.load()
 
     for i in range(16):  # TODO: don't limit conversation lengths?
-        # speaker와 receiver의 payload 데이터 로드
-        speaker_payload = speaker.payload.load()
-        receiver_payload = receiver.payload.load()
-
         # receiver에 대한 focal_points 생성
         focal_points = [f"{receiver.scratch.name}"]
         retrieved = new_retrieve(speaker, focal_points, 50)

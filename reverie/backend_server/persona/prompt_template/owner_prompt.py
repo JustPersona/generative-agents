@@ -8,6 +8,8 @@ from global_methods import *
 from persona.prompt_template.gpt_structure import *
 from persona.prompt_template.print_prompt import *
 
+from utils import *
+
 
 
 def run_gpt_prompt_select_best_patch(persona, patch_datas, test_input=None):

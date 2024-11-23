@@ -12,6 +12,8 @@ from global_methods import *
 from persona.prompt_template.gpt_structure import *
 from persona.prompt_template.print_prompt import *
 
+from utils import *
+
 
 def run_gpt_prompt_explanation_of_attack(persona, attack, test_input=None):
     def create_prompt_input(attack, test_input=None): 

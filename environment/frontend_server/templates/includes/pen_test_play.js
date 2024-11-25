@@ -7,7 +7,7 @@ let pause = false;
 const black_hats = {{ black_hats | safe }};
 const white_hats = {{ white_hats | safe }};
 const chatContainer = document.querySelector("section > #chattingbox-container");
-const fullScreen = false;
+const fullScreen = urlParams.fullScreen == "true";
 const mode = ["forkable", "compressed"].includes("{{ mode }}") ? "{{ mode }}" : "preview";
 const canvas_ratio = 8/15;
 const map_width = "{{ map.width }}" * 1;

@@ -1,3 +1,7 @@
+const urlParams = location.search.slice(1).split("&").reduce((a, c) => {a[c.split("=")[0]] = c.split("=")[1];return a;}, {});
+
+
+
 const toLocaleTimeString = function(datetime) {
 	return datetime.toLocaleTimeString("en-US", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 }
@@ -82,7 +86,7 @@ const createPayloadTable = function(pen_code, {style}={}) {
 	table.innerHTML = `
 		<div class="form-check">
 			<input class="form-check-input" type="checkbox" id="only-vuln-${pen_code}" onclick="this.parentNode.classList.toggle('only-vuln', this.checked)">
-			<label class="form-check-label" for="only-vuln-${pen_code}">Only Vulnerabilities</label>
+			<label class="form-check-label" for="only-vuln-${pen_code}">Vulnerabilities</label>
 		</div>
 		<div id="payload-table-${pen_code}" class="table-responsive mt-2 modal-scroll modal-scroll-target">
 			<table class="table table-sm table-bordered table-hover m-0 position-relative text-nowrap" style="border-width: 2px">
@@ -212,8 +216,8 @@ const openPatch = function(btn) {
 const createPatchTable = function(pen_code, {style}={}) {
 	const table = document.createElement("div");
 	table.innerHTML = `
-		<div class="form-check best-suggestion">
-			<input class="form-check-input" type="checkbox" id="best-suggestion-${pen_code}" onclick="this.parentNode.classList.toggle('best-suggestion', this.checked)" checked>
+		<div class="form-check">
+			<input class="form-check-input" type="checkbox" id="best-suggestion-${pen_code}" onclick="this.parentNode.classList.toggle('best-suggestion', this.checked)">
 			<label class="form-check-label" for="best-suggestion-${pen_code}">Best Suggestion</label>
 		</div>
 		<div id="patch-table-${pen_code}" class="table-responsive mt-2 modal-scroll modal-scroll-target">

@@ -4,7 +4,6 @@
 			<form class="modal-content" onsubmit="penInfoUpdate(event);">
 				<div class="modal-header pb-0">
 					<div class="nav nav-tabs w-100 border-0" id="nav-tab" role="tablist">
-						<button class="nav-link disabled" hidden aria-disabled="true" id="pen-chart-tab" data-bs-toggle="tab" data-bs-target="#pen-chart" type="button" role="tab" aria-controls="pen-chart" aria-selected="false">Chart</button>
 						<button class="nav-link" id="pen-payloads-tab" data-bs-toggle="tab" data-bs-target="#pen-payloads" type="button" role="tab" aria-controls="pen-payloads" aria-selected="false">Payloads</button>
 						<button class="nav-link" id="pen-patches-tab" data-bs-toggle="tab" data-bs-target="#pen-patches" type="button" role="tab" aria-controls="pen-patches" aria-selected="false">Patches</button>
 						<button class="nav-link" id="pen-vulnFiles-tab" data-bs-toggle="tab" data-bs-target="#pen-vulnFiles" type="button" role="tab" aria-controls="pen-vulnFiles" aria-selected="false">Vuln Files</button>
@@ -74,11 +73,6 @@
 										<label for="modal_vulnerabilities">Vulnerabilities</label>
 									</div></div>
 								</div>
-							</div>
-						</div>
-						<div class="tab-pane fade" id="pen-chart" role="tabpanel" aria-labelledby="pen-chart-tab" tabindex="0">
-							<div>
-								<canvas id="sub-type-chart"></canvas>
 							</div>
 						</div>
 						<div class="tab-pane fade" id="pen-payloads" role="tabpanel" aria-labelledby="pen-payloads-tab" tabindex="0"></div>
@@ -153,39 +147,6 @@
 		const penModal = document.querySelector("#penInfoModal");
 		const pen_codes = container?.querySelectorAll(`[pen_code]`) || [];
 
-		const sub_type_chart = getCanvas({
-			canvas: document.querySelector("#sub-type-chart"),
-			config: {
-				type: "bar",
-				data: {
-					labels: [],
-					datasets: [{
-						data: [],
-						backgroundColor: "rgb(255, 99, 132)",
-					}],
-				},
-				options: {
-					animation: {
-						duration: 0,
-					},
-					plugins: {
-						title: {
-							text: "Number of Vulnerabilities by Attack",
-							display: true,
-						},
-						legend: {
-							display: false,
-						},
-					},
-					scales: {
-						y: {
-							beginAtZero: true,
-						},
-					},
-				},
-			}
-		});
-
 		const loadding = document.createElement("div");
 		loadding.className = "loadding modal-backdrop bg-transparent h3 text-center text-success mt-5 py-5";
 		loadding.innerHTML = "Loading..."
@@ -259,14 +220,10 @@
 				form.querySelector(".btn-forkable-delete")?.toggleAttribute("disabled", !data.forkable);
 				form.querySelector(".btn-compressed-delete")?.toggleAttribute("disabled", !data.compressed);
 
-				sub_type_chart.data.labels = data.chart?.attack?.labels || [];
-				sub_type_chart.data.datasets[0].data = data.chart?.attack?.datasets || [];
-				sub_type_chart.update();
-
 				const onlyVuln = penModal.querySelector("#only-vuln-modal");
 				if (onlyVuln.checked) onlyVuln.click();
 				const bestSugg = penModal.querySelector("#best-suggestion-modal");
-				if (!bestSugg.checked) bestSugg.click();
+				if (bestSugg.checked) bestSugg.click();
 				payloadTable.querySelector("tbody").innerHTML = "";
 				patchTable.querySelector("tbody").innerHTML = "";
 				penModal.querySelector("#codes-container").innerHTML = "";

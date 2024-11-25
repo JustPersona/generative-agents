@@ -20,10 +20,8 @@ from channels.generic.websocket import AsyncWebsocketConsumer
 
 sys.path.append("..")
 from compress_pen_storage import compress
+from api.views import *
 from utils import *
-
-
-
 
 
 
@@ -250,50 +248,6 @@ def parseChat(personas, curr_datetime, last_chats={}):
             }]
     return data
 
-def getChartData(data=None, *, min=0):
-    if data is None: data = getPens()
-
-    chart_keys = ["url", "attack", "patch"]
-    chart_data = {k: {"labels": [], "datasets": []} for k in chart_keys}
-
-    for x in data:
-        steps = sorted(list(x["payloads"]["data"].keys()) + list(x["patches"]["data"].keys()))
-        for step in steps:
-            for p_name, z in x["payloads"]["data"].get(step, {}).items():
-                url = z.get("url")
-                chart_data["url"] = addChartData(chart_data["url"], url or z["url"], [1, z["observations"] == "exploit_successful", 0, 0])
-                chart_data["attack"] = addChartData(chart_data["attack"], z["attack_name"], z["observations"] == "exploit_successful")
-            for p_name, z in x["patches"]["data"].get(step, {}).items():
-                isBest = z["best"] != []
-                for attack in z["attack"]:
-                    chart_data["patch"] = addChartData(chart_data["patch"], attack, [1, isBest])
-                for url in z["urls"]:
-                    chart_data["url"] = addChartData(chart_data["url"], url, [0, 0, 1, isBest])
-                    # for url in z["urls"]:
-                    #     print( z["count"], flush=True )
-                    #     chart_data["patch"] = addChartData(chart_data["patch"], url, [0, 0, 1])
-
-    for k in chart_keys:
-        a_min = min - len(chart_data[k]["labels"])
-        chart_data[k]["labels"] += [""] * a_min
-        chart_data[k]["datasets"] += [0] * a_min
-
-    return chart_data
-
-def addChartData(data, label, value=0):
-    try:
-        idx = data["labels"].index(label)
-        if type(value) != list:
-            data["datasets"][idx] += value
-        else:
-            for i, x in enumerate(value):
-                data["datasets"][idx][i] += x
-    except:
-        idx = -1
-        data["labels"].append(label)
-        data["datasets"].append(value)
-    return data
-
 
 
 # Views
@@ -311,7 +265,6 @@ def dashboard(request):
         "backend": getBackendInfo(),
         "pen_codes": getPens(),
     }
-    context["chart"] = getChartData(context["pen_codes"], min=4)
     template = "pages/dashboard.html"
     return render(request, template, context)
 
@@ -321,7 +274,6 @@ def pen_info(request):
     data = getPen(pen_code)
     if not data:
         return HttpResponse("Not found", status=404)
-    data["chart"] = getChartData([data], min=4)
     data["chats"] = getChatting(pen_code)
     return JsonResponse(data)
 

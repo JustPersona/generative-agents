@@ -136,32 +136,37 @@
 
 {% block js_content %}
 <script type="text/javascript">
-	const randomInt = function() {
-		return Math.round(Math.random() * 8) + 2;
-	}
-
 	const payload_type_chart = getCanvas({
 		canvas: document.querySelector("#payload-type-chart"),
 		config: {
 			type: "bar",
 			data: {
-				labels: {{ chart.attack.labels | safe }},
+				labels: [],
 				datasets: [{
-					data: {{ chart.attack.datasets | safe }},
-					backgroundColor: "#dc3545",
+					label: "Payloads",
+					data: [],
+					backgroundColor: "rgba(220, 53, 69, .5)",
+				}, {
+					label: "Vulnerabilities",
+					data: [],
+					backgroundColor: "rgba(220, 53, 69, 1)",
 				}],
 			},
 			options: {
 				plugins: {
 					title: {
-						text: "Number of Vulnerabilities by Attack Type",
+						text: "Number of Payloads by Attack Type",
 						display: true,
 					},
 					legend: {
-						display: false,
+						display: true,
+						labels: {},
 					},
 				},
 				scales: {
+					x: {
+						stacked: true,
+					},
 					y: {
 						beginAtZero: true,
 						ticks: {
@@ -179,21 +184,21 @@
 		config: {
 			type: "bar",
 			data: {
-				labels: {{ chart.patch.labels | safe }},
+				labels: [],
 				datasets: [{
 					label: "Patches",
-					data: [{% for x in chart.patch.datasets %}{% if forloop.counter != 1 %}, {% endif %}{{ x.0 }}{% endfor %}],
+					data: [],
 					backgroundColor: "rgba(25,135,84, .5)",
 				}, {
 					label: "Best Patches",
-					data: [{% for x in chart.patch.datasets %}{% if forloop.counter != 1 %}, {% endif %}{{ x.1 }}{% endfor %}],
+					data: [],
 					backgroundColor: "rgba(25,135,84, 1)",
 				}],
 			},
 			options: {
 				plugins: {
 					title: {
-						text: "Number of Patches Suggestion by Attack",
+						text: "Number of Patches Suggestion by Attack Type",
 						display: true,
 					},
 					legend: {
@@ -220,13 +225,34 @@
 
 
 	const urlTable = document.querySelector("#url-table");
-	for (let url of {{ chart.url.labels | safe }}) {
-		const idx = {{ chart.url.labels | safe }}.indexOf(url);
-		try {
-			let [payloads, vulnerabilities, patches, best] = {{ chart.url.datasets | safe }}[idx];
-			insertURLTable(urlTable, {url, data: {payloads, vulnerabilities, patches, best}});
-		} catch {}
+
+
+	const setChartData = async function() {
+		const data = await api("/api/charts");
+		for (let x of data.urls) {
+			let {url, payloads, vulnerabilities, patch_suggestion, best_suggestion} = x;
+			insertURLTable(urlTable, {url, data: {payloads, vulnerabilities, patches: patch_suggestion, best: best_suggestion}})
+		}
+		for (let x of urlTable.querySelectorAll("thead tr:last-child th")) {
+			const field = x.getAttribute("sort");
+			urlTable.querySelector(`tfoot [field="${field}"]`).innerText = [...urlTable.querySelectorAll(`tbody [field="${field}"]`)].map(x => parseInt(x.innerText) || 0).reduce((acc, cur) => acc + cur, 0);
+		}
+
+		while (data.attacks.length < 4) {
+			data.attacks.push({attack_name: "", payload: 0, vulnerabilities: 0, patch_suggestion: 0, best_suggestion:0});
+		}
+		for (let x of data.attacks) {
+			payload_type_chart.data.labels.push(x.attack_name);
+			payload_type_chart.data.datasets[0].data.push(x.payloads);
+			payload_type_chart.data.datasets[1].data.push(x.vulnerabilities);
+			patch_type_chart.data.labels.push(x.attack_name);
+			patch_type_chart.data.datasets[0].data.push(x.patch_suggestion);
+			patch_type_chart.data.datasets[1].data.push(x.best_suggestion);
+		}
+		payload_type_chart.update();
+		patch_type_chart.update();
 	}
+	setChartData();
 
 
 
@@ -249,15 +275,7 @@
 			penTbody.parentNode.querySelector(`tfoot [field="${field}"]`).innerText = counter[field] || 0;
 		}
 	}
-	const urlTableTotal = function() {
-		for (let x of urlTable.querySelectorAll("thead tr:last-child th")) {
-			const field = x.getAttribute("sort");
-			urlTable.querySelector(`tfoot [field="${field}"]`).innerText = [...urlTable.querySelectorAll(`tbody [field="${field}"]`)].map(x => parseInt(x.innerText) || 0).reduce((acc, cur) => acc + cur, 0);
-		}
-		
-	}
 	selectPen("");
-	urlTableTotal();
 
 
 

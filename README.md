@@ -20,6 +20,14 @@
 
 ## Installation
 
+### Docker
+
+[프로젝트 전용 컨테이너](https://github.com/JustPersona/generative-agents-docker)로
+프로젝트 서버를 도커 컨테이너로 쉽게 구축할 수 있습니다.
+자세한 사용법은 해당 저장소를 참고해 주세요.
+
+### Manually
+
 > [!WARNING]
 > 파이썬 버전이 `3.12.5`이 아닐 경우 에러가 발생할 수 있습니다.
 

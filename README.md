@@ -12,7 +12,7 @@
 
 | Component    | Details                                           |
 |--------------|---------------------------------------------------|
-| OS           | `Windows 10`, `WSL(Ubuntu 22.04)`, `Ubuntu 24.04` |
+| OS           | `Windows 11`, `WSL(Ubuntu 22.04)`, `Ubuntu 24.04` |
 | Language     | `Python 3.12.5`                                   |
 | GPU (Memory) | NVIDIA GeForce RTX 3060 (12GB)                    |
 
@@ -20,18 +20,86 @@
 
 ## Installation
 
+도커를 사용하여 안전하게 격리된 환경을 구성하는 것을 권장합니다.
+
+내용 중 `<이 부분>`은 모두 상황에 맞게 수정해 주세요.
+
+
+
 ### Docker
 
-[프로젝트 전용 컨테이너](https://github.com/JustPersona/generative-agents-docker)로
-프로젝트 서버를 도커 컨테이너로 쉽게 구축할 수 있습니다.
-자세한 사용법은 해당 저장소를 참고해 주세요.
+> [!NOTE]
+> 도커 이미지에 대한 자세한 사용법은
+> [프로젝트 전용 이미지](https://github.com/JustPersona/generative-agents-docker)
+> 를 참고해 주세요
+
+도커를 사용하여 프로젝트 서버를 쉽게 구성할 수 있습니다.
+
+새 폴더를 만들고 아래 두 파일을 먼저 생성합니다.
+
+- [docker-compose.yml](https://github.com/JustPersona/generative-agents/blob/main/docker-compose.yml)
+- [.env](https://github.com/JustPersona/generative-agents/blob/main/example.env)
+
+필요한 경우 추가 설정을 하고, 모든 설정을 마쳤다면
+`docker-compose.yml` 파일이 위치한 곳에서 아래 명령어를 실행하여 서버 구성을 시작합니다.
+
+```shell
+docker compose up -d
+```
+
+이 외 다른 명령어는 [여기](https://github.com/JustPersona/generative-agents-docker/#key-commands)를 참고해 주세요.
+
+#### Setup LLM
+
+`.env` 파일 내 환경 변수 `OLLAMA_GGUF_DOWNLOAD_URL` 값을 설정하여 원하는 LLM을 프로젝트에서 사용할 수 있습니다.
+이때 URL은 다운로드 가능한 파일의 URL이여야 합니다.
+
+또는 `share` 폴더 생성 후 GGUF 파일을 직접 다운로드한 후 `OLLAMA_GGUF_PATH` 값을 파일명으로 설정하면
+별도의 다운로드 없이 해당 파일을 사용하여 모델을 생성합니다.
+
+두 방법 모두 `share` 폴더 내 `Modelfile`을 작성하면
+모델 생성 시 같이 적용되어 커스텀 모델을 생성할 수 있습니다.
+
+#### Setup Target Server
+
+도커로 프로젝트 서버 구성 시 기본적으로 타겟 서버는
+[DVWA](https://github.com/digininja/dvwa)가 사용됩니다.
+
+DVWA 외 다른 서버를 타겟 서버로 지정하는 방법은 다음과 같습니다.
+
+1. `docker-compose.yml` 파일 수정
+    - DVWA 관련 설정 모두 삭제
+    - `./source:/source:ro` 부분에서 `./source`를 타겟 서버의 소스코드가 위치한 경로로 변경
+2. 타겟 서버를 구성하는 방법에 따라 설정 방법이 달라집니다.
+    1. 프로젝트 서버와 타겟 서버 컨테이너를 같이 올리는 경우
+        - `docker-compose.yml` 파일 내 서버를 실행하기 위한 설정 추가 작성 및 네트워크에 `generative_agents_internal`를 연결
+    2. 이미 도커로 실행 중인 서버를 타겟 서버로 지정하는 경우
+        - 프로젝트 서버 실행 후 아래 명령어로 타겟 서버 컨테이너를 프로젝트 네트워크와 연결
+
+            ```shell
+            docker network connect generative_agents_internal <container_name>
+            ```
+
+    3. 그 외의 서버를 타겟 서버로 사용하는 경우
+        - `docker-compose.yml` 파일 내 `internal: true` 라인 삭제
+        - 이 경우 프로젝트 서버가 외부로 접근할 수 있기 때문에 보안상 권장하지 않습니다.
+
+#### Setup GPU
+
+제공되는 `docker-compose.yml` 파일에는 기본적으로 GPU를 사용하도록 되어있습니다.
+
+GPU가 없거나 사용하지 않도록 하고자 한다면, `deploy:`부터 `capabilities:` 라인까지 모두 삭제합니다.
+
+만약 여러 개의 GPU를 사용한다면, `driver:` 아래에 `count: 1`과 같이 설정하여 지정된 GPU만 사용하도록 할 수 있습니다.
+
+
 
 ### Manually
 
 > [!WARNING]
 > 파이썬 버전이 `3.12.5`이 아닐 경우 에러가 발생할 수 있습니다.
 
-내용 중 `<이 부분>`은 모두 상황에 맞게 수정해 주세요.
+다음은 도커가 아닌 수동으로 서버를 구성하는 방법입니다.
 
 1. 소스코드 다운로드 후 해당 폴더로 이동
 2. `pip install -Ur requirements.txt` 명령어를 실행하여 필요한 모듈 자동 설치
@@ -55,7 +123,7 @@
     python3 reverie.py
     ```
 
-## utils.py
+### utils.py
 
 백엔드를 실행하기 위해서는 아래와 같이 작성된 `utils.py` 파일을
 `reverie/backend_server` 폴더 내 먼저 생성해아 합니다.
@@ -92,12 +160,12 @@ debug = True
 > [!TIP]
 > <http://frontend_ip:port/api/> 및 하위 경로로 직접 접근할 수 있습니다.
 
-시뮬레이션 정보 조회 기능만 제공합니다.
+시뮬레이션 진행 시 생성된 데이터와 백엔드 상태를 조회하는 기능만 제공합니다.
 
 | 요청 경로                          | 응답 내용                                                |
 |------------------------------------|----------------------------------------------------------|
-| /api                               | API 사용법(변경 예정)                                    |
-| /api/help                          | API 사용법                                               |
+| /api                               | /api/help (변경 예정)                                    |
+| /api/help                          | API 라우팅 경로별 응답 설명                              |
 | /api/running                       | 현재 진행 중인 시뮬레이션 정보                           |
 | /api/pens                          | 시뮬레이션 목록 및 메타 데이터                           |
 | /api/pens/\<pen_code>              | \<pen_code>의 메타 데이터                                |

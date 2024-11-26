@@ -1,0 +1,82 @@
+---
+services:
+  generative_agents_installer:
+    container_name: generative_agents_installer
+    image: ghcr.io/JustPersona/generative-agents-docker:latest
+    restart: on-failure
+    volumes:
+      - ./data:/data
+      - ./source:/dvwa
+      - ./share:/share
+    env_file:
+      - .env
+    environment:
+      FRONTEND_SERVER_ENABLED: false
+    networks:
+      - generative_agents_network
+      - generative_agents_internal
+  generative_agents:
+    container_name: generative_agents
+    image: ghcr.io/JustPersona/generative-agents-docker:latest
+    restart: unless-stopped
+    volumes:
+      - ./data:/data
+      - ./source:/source:ro
+    env_file:
+      - .env
+    environment:
+      DOCKER_VERSION_CHECK_ENABLED: false
+      DVWA_SOURCE_DOWNLOAD_ENABLED: false
+      SERVER_INSTALL_AWAIT: true
+      SERVER_UPDATE_AWAIT: true
+      VENV_INSTALL_AWAIT: true
+      OLLAMA_CONFIG_ENABLED: false
+      DVWA_HOST: dvwa
+    networks:
+      - generative_agents_internal
+  ollama:
+    container_name: ollama
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    volumes:
+      - ./share:/share
+      - ./ollama:/root/.ollama
+    networks:
+      - generative_agents_internal
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [gpu]
+  dvwa:
+    container_name: dvwa
+    image: ghcr.io/digininja/dvwa:latest
+    restart: unless-stopped
+    volumes:
+      - ./source:/var/www/html
+    environment:
+      - DB_SERVER=dvwa-db
+    depends_on:
+      - dvwa-db
+    networks:
+      - generative_agents_internal
+  dvwa-db:
+    container_name: dvwa-db
+    image: mariadb:10
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=dvwa
+      - MYSQL_DATABASE=dvwa
+      - MYSQL_USER=dvwa
+      - MYSQL_PASSWORD=p@ssw0rd
+    volumes:
+      - ./db:/var/lib/mysql
+    networks:
+      - generative_agents_internal
+networks:
+  generative_agents_network:
+    driver: bridge
+  generative_agents_internal:
+    driver: bridge
+    internal: true

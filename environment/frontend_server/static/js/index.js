@@ -155,14 +155,19 @@ const insertPayloadTable = function(table, {url, data, reverse=false}) {
 
 	const target = details.querySelector("[key=reasoning]");
 	const vuln = target.cloneNode(true);
+	const payload = target.cloneNode(true);
 	vuln.setAttribute("key", "vulnerability");
 	vuln.querySelector(".text-capitalize").innerHTML = "Vulnerability";
+	payload.setAttribute("key", "payload");
+	payload.querySelector(".text-capitalize").innerHTML = "Payload";
+	payload.querySelector(".align-middle").innerHTML = data.payload;
 	if (!isVuln) {
 		vuln.querySelector(".align-middle > div").innerHTML = "No";
 	} else {
 		vuln.querySelector(".align-middle > div").innerHTML = `Yes (<label role="button" class="link-success">View Patch Suggestions<button type="button" onclick="openPatch(this)" hidden></button></label>)`;
 	}
 	target.before(vuln);
+	target.before(payload);
 	tr.after(details);
 }
 

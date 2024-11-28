@@ -10,7 +10,6 @@ import time
 import ollama
 
 from utils import *
-from langchain_ollama import OllamaLLM
 from langchain.callbacks.manager import CallbackManager
 from langchain.callbacks.streaming_stdout_final_only import FinalStreamingStdOutCallbackHandler as CallbackHandler
 
@@ -20,19 +19,19 @@ from langchain.callbacks.streaming_stdout_final_only import FinalStreamingStdOut
 
 ### **** OpenAI ****
 '''
-from langchain.llms import OpenAI
+from langchain_community.llms import OpenAI
 llm = OpenAI(temperature=0,model_name="gpt-3.5-turbo-16k")
 '''
 
 ### **** Anthropic ****
 '''
-from langchain.chat_models import ChatAnthropic
+from langchain_community.chat_models import ChatAnthropic
 llm = ChatAnthropic(model_name="claude-2", temperature=0)
 '''
 
 ### *** Llama.cpp ***
 '''
-from langchain.llms import LlamaCpp
+from langchain_community.llms import LlamaCpp
 model_path = hf_hub_download(repo_id=model_repo, filename=model_filename)
 
 n_gpu_layers = -1
@@ -52,7 +51,7 @@ llm = LlamaCpp(
 
 ### *** GPT4Alll (nous-hermes-13b) ***
 '''
-from langchain.llms import GPT4All
+from langchain_community.llms import GPT4All
 model_path = "/Users/rlm/Desktop/Code/gpt4all/models/nous-hermes-13b.ggmlv3.q4_0.bin"
 llm = GPT4All(
     model=model_path
@@ -60,6 +59,7 @@ llm = GPT4All(
 '''
 
 ### *** Ollama ***
+from langchain_ollama import OllamaLLM
 llm = OllamaLLM(
     base_url=ollama_url,
     model=ollama_model,

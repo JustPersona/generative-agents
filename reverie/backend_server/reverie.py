@@ -325,7 +325,7 @@ class ReverieServer:
     # The main while loop of Reverie. 
     while (True): 
       # Done with this iteration if <int_counter> reaches 0. 
-      if int_counter == 0: 
+      if int_counter <= 0: 
         break
 
       # <curr_env_file> file is the file that our frontend outputs. When the

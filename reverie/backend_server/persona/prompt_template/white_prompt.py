@@ -23,7 +23,7 @@ def run_gpt_prompt_identify_vulnerable_files(persona, successful_data, test_inpu
         try:
             response_json = json.loads(llama_response)
             for file_info in response_json.get("vulnerable_files", []):
-                file_info["file_path"] = "persona/server/" + file_info.get("file_path", "").strip().lstrip("/")
+                file_info["file_path"] = file_info.get("file_path", "").strip().lstrip("/")
                 file_info["reason"] = file_info.get("reason", "").strip()
             return response_json
         except json.JSONDecodeError:

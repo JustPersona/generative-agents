@@ -1,6 +1,6 @@
-black_hats = ["Carlos Gomez", "Yuriko Yamamoto"]
-white_hats = ["Abigail Chen", "Arthur Burton"]
-server_owners = ["Isabella Rodriguez"]
+black_hats = ["Beom Jun Choi", "Bo Ram Jung"]
+white_hats = ["Won Hee Park", "Woo Jin Lee"]
+server_owners = ["Seo Yeon Kim"]
 work_areas = ["computer desk", "control screen"]
 
 pen_files = {

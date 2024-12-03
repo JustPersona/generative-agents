@@ -1,9 +1,8 @@
 {
   "hacker Ville": {
-    "White Hackers's apartment": {
-      "Abigail Chen's room": [
+    "Seo Yeon Kim's house": {
+      "bedroom": [
         "closet",
-        "desk",
         "bed"
       ],
       "bathroom": [
@@ -19,16 +18,13 @@
         "kitchen sink",
         "cooking area",
         "refrigerator"
+      ],
+      "workroom": [
+        "computer desk",
+        "server"
       ]
     },
     "The security company": {
-      "serve room": [
-        "server"
-      ],
-      "control room": [
-        "control screen",
-        "computer desk"
-      ],
       "rest area": [
         "coffee machine",
         "cooking area",
@@ -38,9 +34,6 @@
       ],
       "meeting room": [
         "common room table"
-      ],
-      "warehouse": [
-        "shelf"
       ],
       "bathroom": [
         "bathroom sink",

@@ -406,7 +406,8 @@ def pen_test(request, pen_code=None, step=0, speed=2):
     persona_names = [{
         "original": x,
         "underscore": x.replace(" ", "_"),
-        "initial": x[0] + x.split(" ")[-1][0],
+        # "initial": x[0] + x.split(" ")[-1][0],
+        "initial": x[0] + x.split(" ")[1][0],
     } for x in persona_names]
 
     context = {

@@ -665,7 +665,8 @@ const pen_test_play = async function(container) {
 		let rgx = new RegExp(/(\p{L}{1})\p{L}+/, 'gu');
 		let initials = [...curr_persona_name_os.matchAll(rgx)] || [];
 		initials = (
-			(initials.shift()?.[1] || '') + (initials.pop()?.[1] || '')
+			// (initials.shift()?.[1] || '') + (initials.pop()?.[1] || '')
+			(initials.shift()?.[1] || '') + (initials.shift()?.[1] || '')
 		).toUpperCase();
 
 		pronunciatio_content = 0 < vuln_imoji_count[curr_persona_name] ? vuln_imoji : pronunciatio_content;

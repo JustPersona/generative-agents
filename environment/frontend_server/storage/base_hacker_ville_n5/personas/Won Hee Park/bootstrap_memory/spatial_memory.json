@@ -1,8 +1,9 @@
 {
   "hacker Ville": {
-    "Isabella Rodriguez's house": {
-      "bedroom": [
+    "White Hackers's apartment": {
+      "Won Hee Park's room": [
         "closet",
+        "desk",
         "bed"
       ],
       "bathroom": [
@@ -18,13 +19,16 @@
         "kitchen sink",
         "cooking area",
         "refrigerator"
-      ],
-      "workroom": [
-        "computer desk",
-        "server"
       ]
     },
     "The security company": {
+      "serve room": [
+        "server"
+      ],
+      "control room": [
+        "control screen",
+        "computer desk"
+      ],
       "rest area": [
         "coffee machine",
         "cooking area",
@@ -34,6 +38,9 @@
       ],
       "meeting room": [
         "common room table"
+      ],
+      "warehouse": [
+        "shelf"
       ],
       "bathroom": [
         "bathroom sink",

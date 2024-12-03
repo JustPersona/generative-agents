@@ -160,7 +160,7 @@ const insertPayloadTable = function(table, {url, data, reverse=false}) {
 	vuln.querySelector(".text-capitalize").innerHTML = "Vulnerability";
 	payload.setAttribute("key", "payload");
 	payload.querySelector(".text-capitalize").innerHTML = "Payload";
-	payload.querySelector(".align-middle").innerHTML = data.payload;
+	payload.querySelector(".align-middle > div").innerHTML = data.payload;
 	if (!isVuln) {
 		vuln.querySelector(".align-middle > div").innerHTML = "No";
 	} else {
@@ -272,7 +272,7 @@ const insertPatchTable = function(table, {best, data, reverse=false}) {
 		`;
 		box.append(tr);
 
-		if (!document.querySelector(`#vulnerable_files [value="${x.file_path}"]`)) {
+		if (!document.querySelector(`#vulnerable_file_select [value="${x.file_path}"]`)) {
 			const box = document.createElement("div");
 			box.innerHTML = `
 				<option value="${x.file_path}">${x.file_path}</option>
@@ -281,7 +281,7 @@ const insertPatchTable = function(table, {best, data, reverse=false}) {
 			const isFirst = document.querySelector("#codes-container").innerHTML == "";
 			box.querySelector("option").selected = isFirst;
 			box.querySelector("div[file]").classList.toggle("d-none", !isFirst);
-			document.querySelector("#vulnerable_files").append(box.querySelector("option"));
+			document.querySelector("#vulnerable_file_select").append(box.querySelector("option"));
 			document.querySelector("#codes-container").append(box.querySelector("div[file]"));
 			document.querySelector("#codes-container > div:last-child pre").className = "border border-top-0 p-2 modal-scroll";
 		}
@@ -303,7 +303,7 @@ const displayCodeViewer = function(file) {
 		for (let x of document.querySelectorAll(`#pen-vulnFiles [file]`)) {
 			x.classList.toggle('d-none', x.getAttribute('file') != file);
 		}
-		document.querySelector(`#vulnerable_files [value="${file}"]`).selected = true;
+		document.querySelector(`#vulnerable_file_select [value="${file}"]`).selected = true;
 		document.querySelector("#penInfoModal").removeEventListener("shown.bs.modal", codeViewerClick);
 	}
 

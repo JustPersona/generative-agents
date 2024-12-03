@@ -285,15 +285,15 @@ def pen_info_update(request):
     data = json.loads(request.body)
     pen_code = data.get("pen_code", "").strip()
     new_pen_code = data.get("new_pen_code", "").strip()
-    description = data.get("description", "").strip()
+    patches_applied = data.get("patches_applied", 0)
 
-    if not pen_code and not new_pen_code and not description:
+    if not pen_code and not new_pen_code and "patches_applied" not in data:
         return HttpResponse("Bad Request", status=400)
     
     for mode in getMode(pen_code, all=True):
         with open(pen_files[mode]["meta"] % pen_code, "r+") as f:
             meta = json.load(f)
-            meta["description"] = description
+            meta["patches_applied"] = int(patches_applied)
             f.seek(0)
             json.dump(meta, f, indent=2)
             f.truncate()

@@ -62,7 +62,7 @@ class ReverieServer:
     with open(f"{sim_folder}/reverie/meta.json", "w") as outfile: 
       reverie_meta["fork_sim_code"] = fork_sim_code
       reverie_meta["created_at"] = self.created_at.strftime("%B %d, %Y, %H:%M:%S")
-      reverie_meta["description"] = ""
+      reverie_meta["patches_applied"] = reverie_meta.get("patches_applied", 0)
       outfile.write(json.dumps(reverie_meta, indent=2))
 
     # LOADING REVERIE'S GLOBAL VARIABLES
@@ -188,7 +188,7 @@ class ReverieServer:
     reverie_meta["start_date"] = self.start_time.strftime("%B %d, %Y")
     reverie_meta["curr_time"] = self.curr_time.strftime("%B %d, %Y, %H:%M:%S")
     reverie_meta["created_at"] = self.created_at.strftime("%B %d, %Y, %H:%M:%S")
-    reverie_meta["description"] = ""
+    reverie_meta["patches_applied"] = reverie_meta.get("patches_applied", 0)
     reverie_meta["sec_per_step"] = self.sec_per_step
     reverie_meta["maze_name"] = self.maze.maze_name
     reverie_meta["persona_names"] = list(self.personas.keys())

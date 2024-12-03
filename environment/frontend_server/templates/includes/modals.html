@@ -45,10 +45,6 @@
 								<input type="text" class="form-control" id="modal_pen_code" name="new_pen_code"{% if not user.is_staff %} disabled{% endif %}>
 								<label for="modal_pen_code">Penetration Test Name</label>
 							</div>
-							<div class="form-floating">
-								<input type="text" class="form-control" id="modal_pen_description" name="description"{% if not user.is_staff %} disabled{% endif %}>
-								<label for="modal_description">Description</label>
-							</div>
 							<div class="row g-2">
 								<div class="col-6"><div class="form-floating">
 									<button type="button" class="form-control btn btn-outline-secondary text-start text-truncate" id="modal_forked" name="forked" onclick="setPenInfoModal(this)" title="Information"></button>
@@ -60,17 +56,37 @@
 							</div>
 							<div class="d-flex flex-column gap-2">
 								<div class="row g-2">
-									<div class="col-4"><div class="form-floating">
+									<div class="col-3"><div class="form-floating">
 										<input type="number" class="form-control" id="modal_step" name="step" disabled>
 										<label for="modal_step">Last Step</label>
 									</div></div>
-									<div class="col-4"><div class="form-floating">
+									<div class="col-3"><div class="form-floating">
 										<input type="text" class="form-control" id="modal_payloads" name="payloads" disabled>
 										<label for="modal_payloads">Payloads</label>
 									</div></div>
-									<div class="col-4"><div class="form-floating">
+									<div class="col-3"><div class="form-floating">
 										<input type="text" class="form-control" id="modal_vulnerabilities" name="vulnerabilities" disabled>
 										<label for="modal_vulnerabilities">Vulnerabilities</label>
+									</div></div>
+									<div class="col-3"><div class="form-floating">
+										<input type="text" class="form-control" id="modal_vulnerable_files" name="vulnerable_files" disabled>
+										<label for="modal_vulnerable_files">Vulnerable Files</label>
+									</div></div>
+								</div>
+							</div>
+							<div class="d-flex flex-column gap-2">
+								<div class="row g-2">
+									<div class="col-4"><div class="form-floating">
+										<input type="text" class="form-control" id="modal_patches" name="patches" disabled>
+										<label for="modal_patches">Patches</label>
+									</div></div>
+									<div class="col-4"><div class="form-floating">
+										<input type="text" class="form-control" id="modal_best_suggestion" name="best_suggestion" disabled>
+										<label for="modal_best_suggestion">Selected Suggestion</label>
+									</div></div>
+									<div class="col-4"><div class="form-floating">
+										<input type="number" class="form-control" id="modal_patches_applied" name="patches_applied" min="0"{% if not user.is_staff %} disabled{% endif %}>
+										<label for="patches_applied">Patches Applied</label>
 									</div></div>
 								</div>
 							</div>
@@ -78,7 +94,7 @@
 						<div class="tab-pane fade" id="pen-payloads" role="tabpanel" aria-labelledby="pen-payloads-tab" tabindex="0"></div>
 						<div class="tab-pane fade" id="pen-patches" role="tabpanel" aria-labelledby="pen-patches-tab" tabindex="0"></div>
 						<div class="tab-pane fade" id="pen-vulnFiles" role="tabpanel" aria-labelledby="pen-vulnFiles-tab" tabindex="0">
-							<select class="form-select" id="vulnerable_files" onchange="displayCodeViewer(this.value)">
+							<select class="form-select" id="vulnerable_file_select" onchange="displayCodeViewer(this.value)">
 								<option hidden selected>Vulnerable Files</option>
 							</select>
 							<div id="codes-container" class="modal-scroll-target"></div>
@@ -182,7 +198,6 @@
 			const alertbox = form.querySelector(".alert");
 
 			const new_pen_code = form.new_pen_code;
-			const pen_description = form.description;
 			post("{% url 'pen_info' %}", {pen_code: pen_code}, function(xhr) {
 				data = JSON.parse(xhr.responseText);
 
@@ -194,8 +209,6 @@
 				alertbox.classList.add("d-none");
 				new_pen_code.value = pen_code;
 				new_pen_code.setAttribute("placeholder", pen_code);
-				pen_description.value = data?.description || "";
-				pen_description.setAttribute("placeholder", data?.description || "");
 				form.forked.setAttribute("pen_code", data.fork_sim_code);
 				form.forked.innerText = data.fork_sim_code;
 				form.forked.toggleAttribute("disabled", new_pen_code.value.trim() == form.forked.innerText.trim() || !container?.querySelector(`[pen_code="${data.fork_sim_code}"]`));
@@ -213,6 +226,11 @@
 				form.step.value = data.step;
 				form.vulnerabilities.value = data.payloads?.count?.vulnerabilities || 0;
 				form.payloads.value = data.payloads?.count?.payloads || 0;
+				form.vulnerable_files.value = data.patches?.count?.vulnerable_files || 0;
+				form.patches.value = data.patches?.count?.patch_suggestion || 0;
+				form.best_suggestion.value = data.patches?.count?.best_suggestion || 0;
+				form.patches_applied.value = data?.patches_applied || 0;
+				form.patches_applied.setAttribute("placeholder", data?.patches_applied || 0);
 				form.querySelector("[field=forkable] input").checked = data.forkable;
 				form.querySelector("[field=compressed] input").checked = data.compressed;
 				form.querySelector("[field=compressed]").classList.toggle("d-none", !data.compressed);
@@ -227,7 +245,7 @@
 				payloadTable.querySelector("tbody").innerHTML = "";
 				patchTable.querySelector("tbody").innerHTML = "";
 				penModal.querySelector("#codes-container").innerHTML = "";
-				for (let x of penModal.querySelectorAll("#vulnerable_files [value]")) x.remove();
+				for (let x of penModal.querySelectorAll("#vulnerable_file_select [value]")) x.remove();
 
 				const steps = [...new Set([...Object.keys(data.payloads.data), ...Object.keys(data.patches.data)])].sort((a, b) => a - b);
 				for (let step of steps) {
@@ -264,22 +282,22 @@
 			const alertbox = form.querySelector(".alert");
 			const pen_code = form.getAttribute("pen_code").trim();
 			const new_pen_code = form.new_pen_code.value.trim();
-			const description = form.description.value.trim();
+			const patches_applied = form.patches_applied.value.trim() * 1;
 
 			btn.setAttribute("disabled", "");
-			post("{% url 'pen_info_update' %}", {pen_code, new_pen_code, description}, function(xhr) {
+			post("{% url 'pen_info_update' %}", {pen_code, new_pen_code, patches_applied}, function(xhr) {
 				for (let box of pen_codes) {
 					if (box.getAttribute("pen_code") == pen_code) {
 						box.setAttribute("pen_code", new_pen_code);
 						box.querySelector("[field=pen_code]").innerText = new_pen_code;
-						box.querySelector("[field=description]").innerText = description || "-";
+						box.querySelector("[field=patches_applied]").innerText = patches_applied || "-";
 					}
 					if (box.getAttribute("forked") == pen_code) {
 						box.setAttribute("forked", new_pen_code);
 					}
 					form.setAttribute("pen_code", new_pen_code)
 					form.new_pen_code.setAttribute("placeholder", new_pen_code);
-					form.description.setAttribute("placeholder", description);
+					form.patches_applied.setAttribute("placeholder", patches_applied);
 					form.querySelector("button[type=submit]").setAttribute("disabled", "");
 				}
 				btn.removeAttribute("disabled");

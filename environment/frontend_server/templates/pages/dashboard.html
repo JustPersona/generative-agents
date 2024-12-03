@@ -28,8 +28,7 @@
 				<tr>
 					<th scope="col" rowspan="2" class="text-center minimum align-middle sorted" sort="num">#</th>
 					<th scope="col" rowspan="2" class="align-middle" sort="pen_code">Penetration Test Name</th>
-					<th scope="col" rowspan="2" class="align-middle minimum">Description</th>
-					<th scope="col" colspan="6" class="text-center minimum">Number of</th>
+					<th scope="col" colspan="7" class="text-center minimum">Number of</th>
 					<th scope="col" rowspan="2" class="text-center minimum align-middle">Control</th>
 				</tr>
 				<tr>
@@ -38,19 +37,20 @@
 					<th scope="col" class="text-center minimum" sort="vulnerabilities">Vulnerabilities</th>
 					<th scope="col" class="text-center minimum" sort="vulnerable_files">Vulnerable files</th>
 					<th scope="col" class="text-center minimum" sort="patch_suggestion">Patch Suggestion</th>
-					<th scope="col" class="text-center minimum" sort="best_suggestion">Best Suggestion</th>
+					<th scope="col" class="text-center minimum" sort="best_suggestion">Selected Suggestion</th>
+					<th scope="col" class="text-center minimum" sort="patches_applied">Patches Applied</th>
 				</tr>
 			</thead>
 			<tfoot class="sticky-bottom z-1">
 				<tr class="fw-bold">
 					<th scope="col" colspan="2">Total</th>
-					<td></td>
 					<td class="text-center" field="step"></td>
 					<td class="text-center" field="payloads"></td>
 					<td class="text-center" field="vulnerabilities"></td>
 					<td class="text-center" field="vulnerable_files"></td>
 					<td class="text-center" field="patch_suggestion"></td>
 					<td class="text-center" field="best_suggestion"></td>
+					<td class="text-center" field="patches_applied"></td>
 					<td></td>
 				</tr>
 			</tfoot>
@@ -58,13 +58,13 @@
 				{% for pen in pen_codes %}<tr class="position-relative" pen_code="{{ pen.pen_code }}" forked="{{ pen.fork_sim_code }}" mode="{{ pen.mode }}">
 					<th field="num" class="text-end" scope="row"><span{% if backend.pen_code == pen.pen_code %} class="text-success" data-bs-toggle="tooltip" data-bs-title="Running"{% endif %}>{{ forloop.counter }}</span></th>
 					<td field="pen_code">{{ pen.pen_code }}</td>
-					<td field="description">{% if not pen.description %}-{% else %}{{ pen.description }}{% endif %}</td>
 					<td class="text-center" field="step">{% if pen.isBase %}-{% else %}{{ pen.step }}{% endif %}</td>
 					<td class="text-center" field="payloads">{% if not pen.payloads.count.payloads %}-{% else %}{{ pen.payloads.count.payloads }}{% endif %}</td>
 					<td class="text-center" field="vulnerabilities">{% if not pen.payloads.count.vulnerabilities %}-{% else %}{{ pen.payloads.count.vulnerabilities }}{% endif %}</td>
 					<td class="text-center" field="vulnerable_files">{% if not pen.patches.count.vulnerable_files %}-{% else %}{{ pen.patches.count.vulnerable_files }}{% endif %}</td>
 					<td class="text-center" field="patch_suggestion">{% if not pen.patches.count.patch_suggestion %}-{% else %}{{ pen.patches.count.patch_suggestion }}{% endif %}</td>
 					<td class="text-center" field="best_suggestion">{% if not pen.patches.count.best_suggestion %}-{% else %}{{ pen.patches.count.best_suggestion }}{% endif %}</td>
+					<td class="text-center" field="patches_applied">{% if not pen.patches_applied %}-{% else %}{{ pen.patches_applied }}{% endif %}</td>
 					<td field="control"><div class="d-flex gap-2">
 						<a class="link-secondary text-center" style="width: 1rem" href="{% url 'pen_test' pen.pen_code %}" data-bs-toggle="tooltip" data-bs-title="{% if pen.isBase %}Preview{% else %}Play{% endif %}" onclick="event.stopPropagation()">
 							<i class="fa-solid fa-play"></i>

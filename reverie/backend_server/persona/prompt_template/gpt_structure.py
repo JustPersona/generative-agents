@@ -8,6 +8,7 @@ import json
 import random
 import time 
 import ollama
+import requests
 
 from utils import *
 from langchain.callbacks.manager import CallbackManager
@@ -291,14 +292,15 @@ def safe_generate_response_json(prompt,
 # nomic-embed-text       137M   (849 MB)
 # all-minilm           23M
 
+from langchain_ollama import OllamaEmbeddings
 def get_embedding(text, model="mxbai-embed-large"):
     text = text.replace("\n", " ")
     if not text:
         text = "this is blank"
-    if model not in [m['model'].split(':')[0] for m in ollama.list().get('models', [])]:
-        ollama.pull(model)
-    response = ollama.embeddings(model=model, prompt=text)
-    return response['embedding']
+    if model not in [m["model"].split(":")[0] for m in requests.get(f"{ollama_url}/api/tags").json().get("models", [])]:
+        requests.post(f"{ollama_url}/api/pull", json={model: model})
+    response = OllamaEmbeddings(base_url=ollama_url, model="mxbai-embed-large").embed_query(text)
+    return response
 
 
 

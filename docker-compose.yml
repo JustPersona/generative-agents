@@ -2,33 +2,33 @@
 services:
   generative_agents_installer:
     container_name: generative_agents_installer
-    image: ghcr.io/JustPersona/generative-agents-docker:latest
+    image: ghcr.io/justpersona/generative-agents-docker:latest
     restart: on-failure
     volumes:
       - ./data:/data
       - ./source:/dvwa
       - ./share:/share
-    env_file:
-      - .env
     environment:
+      DVWA_SOURCE_DOWNLOAD_ENABLED: true
       FRONTEND_SERVER_ENABLED: false
+      OLLAMA_ACTION: "create"  # pull or create
+      OLLAMA_MODEL_NAME: "model_name"
+      OLLAMA_GGUF_DOWNLOAD_URL: ""  # Use if OLLAMA_ACTION is create
     networks:
-      - generative_agents_network
+      - generative_agents_external
       - generative_agents_internal
   generative_agents:
     container_name: generative_agents
-    image: ghcr.io/JustPersona/generative-agents-docker:latest
+    image: ghcr.io/justpersona/generative-agents-docker:latest
     restart: unless-stopped
     volumes:
       - ./data:/data
       - ./source:/source:ro
-    env_file:
-      - .env
     environment:
       DOCKER_VERSION_CHECK_ENABLED: false
       DVWA_SOURCE_DOWNLOAD_ENABLED: false
       SERVER_INSTALL_AWAIT: true
-      SERVER_UPDATE_AWAIT: true
+      SERVER_UPDATE_ENABLED: false
       VENV_INSTALL_AWAIT: true
       OLLAMA_CONFIG_ENABLED: false
       DVWA_HOST: dvwa
@@ -42,7 +42,7 @@ services:
       - ./share:/share
       - ./ollama:/root/.ollama
     networks:
-      - generative_agents_internal
+      - generative_agents_external
     deploy:
       resources:
         reservations:
@@ -75,7 +75,7 @@ services:
     networks:
       - generative_agents_internal
 networks:
-  generative_agents_network:
+  generative_agents_external:
     driver: bridge
   generative_agents_internal:
     driver: bridge

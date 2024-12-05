@@ -19,6 +19,8 @@ import re
 import requests
 import hashlib
 import json
+import socket
+import ipaddress
 
 from os import listdir
 
@@ -229,10 +231,35 @@ def copyanything(src, dst):
     else: raise
 
 
+
+def target_validation(target_url):
+    """
+    Verify URL is an internal network
+
+    ARGS:
+        target_url: URL to check
+    RETURNS:
+        True: if target_url is internal network
+        False: if target_url is external network
+    """
+    hostname = target_url.split("://")[1].split("/")[0].split(":")[0]
+    return ipaddress.ip_address(socket.gethostbyname(hostname)).is_private
+
+def is_dvwa(target_url):
+    """
+    Verify that it is DVWA Login Page
+
+    ARGS:
+        target_url: URL to check
+    RETURNS:
+        True: if target_url is DVWA Login Page
+        False: if target_url is not DVWA Login Page
+    """
+    return "<title>Login :: Damn Vulnerable Web Application (DVWA)</title>" in requests.get(target_url).text
+
 def login_to_dvwa(dvwa_url, username="admin", password="password", security="low"):
     session = requests.Session()
-    login_page_url = f"{dvwa_url}/login.php"
-    response = session.get(login_page_url)
+    response = session.get(dvwa_url)
     token_match = re.search(r'<input type=\'hidden\' name=\'user_token\' value=\'([^\']+)\'', response.text)
     if token_match:
         user_token = token_match.group(1)
@@ -242,7 +269,7 @@ def login_to_dvwa(dvwa_url, username="admin", password="password", security="low
         'Login': 'Login',
         'user_token': user_token
     }
-    login_response = session.post(login_page_url, data=params)
+    login_response = session.post(dvwa_url, data=params)
     cookies = session.cookies.get_dict()
     cookies['security'] = security
     # print("cookies :", cookies)
@@ -288,7 +315,6 @@ def get_payloads(personas, target_personas, payload_loader):
                 payload_datas.setdefault(key, []).extend(value)
 
     return payload_datas, hash_data(payload_datas) if payload_datas else ([], None if payload_loader == "load_patch_data" else {}, None)
-
 
 
 

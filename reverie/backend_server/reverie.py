@@ -696,7 +696,9 @@ if __name__ == '__main__':
   target_url = input("Enter url of the server (default DVWA-sqli) : ").strip()
   if not target_url:
     target_url = dvwa_url + "/vulnerabilities/sqli/"
-  if '/dvwa' in target_url:
+  if not target_validation(target_url):
+    raise Exception(f"Error: {target_url} is External Network")
+  if is_dvwa(target_url):
     cookies = login_to_dvwa(dvwa_url)
     print("DVWA Login! -- cookies :",cookies)
 

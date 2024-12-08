@@ -8,15 +8,13 @@ services:
       - ./data:/data
       - ./source:/dvwa
       - ./share:/share
+    env_file:
+      - .env
     environment:
-      DVWA_SOURCE_DOWNLOAD_ENABLED: true
       FRONTEND_SERVER_ENABLED: false
-      OLLAMA_ACTION: "create"  # pull or create
-      OLLAMA_MODEL_NAME: "model_name"
-      OLLAMA_GGUF_DOWNLOAD_URL: ""  # Use if OLLAMA_ACTION is create
     networks:
-      - generative_agents_external
-      - generative_agents_internal
+      - generative_agents_public
+      - generative_agents_private
   generative_agents:
     container_name: generative_agents
     image: ghcr.io/justpersona/generative-agents-docker:latest
@@ -24,6 +22,8 @@ services:
     volumes:
       - ./data:/data
       - ./source:/source:ro
+    env_file:
+      - .env
     environment:
       DOCKER_VERSION_CHECK_ENABLED: false
       DVWA_SOURCE_DOWNLOAD_ENABLED: false
@@ -33,7 +33,7 @@ services:
       OLLAMA_CONFIG_ENABLED: false
       DVWA_HOST: dvwa
     networks:
-      - generative_agents_internal
+      - generative_agents_private
   ollama:
     container_name: ollama
     image: ollama/ollama:latest
@@ -42,7 +42,7 @@ services:
       - ./share:/share
       - ./ollama:/root/.ollama
     networks:
-      - generative_agents_external
+      - generative_agents_public
     deploy:
       resources:
         reservations:
@@ -60,7 +60,7 @@ services:
     depends_on:
       - dvwa-db
     networks:
-      - generative_agents_internal
+      - generative_agents_private
   dvwa-db:
     container_name: dvwa-db
     image: mariadb:10
@@ -73,10 +73,10 @@ services:
     volumes:
       - ./db:/var/lib/mysql
     networks:
-      - generative_agents_internal
+      - generative_agents_private
 networks:
-  generative_agents_external:
+  generative_agents_public:
     driver: bridge
-  generative_agents_internal:
+  generative_agents_private:
     driver: bridge
     internal: true

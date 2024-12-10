@@ -58,9 +58,9 @@ def run_gpt_prompt_identify_vulnerable_files(persona, successful_data, test_inpu
       return file_paths
 
     directory_files = generate_file_paths_list(server_path)
-    print("서버 파일 경로 목록 :", directory_files)
+    if debug: print("List of Server File Paths :", directory_files)
     vulnerability_url = list(successful_data.keys())[0]
-    print("취약한 URL :", vulnerability_url)
+    if debug: print("Vulnerable URL :", vulnerability_url)
 
     gpt_param = ''
     prompt_template = "persona/prompt_template/v4/identify_vulnerable_files.txt"
@@ -120,7 +120,7 @@ def run_gpt_patch_instructions(persona, successful_data, vulnerable_file, test_i
         return file_entry
 
     vulnerable_file_code = get_vulnerable_file_code(vulnerable_file)
-    print("취약한 파일 코드:", vulnerable_file_code)
+    if debug: print("Vulnerable file code:", vulnerable_file_code)
 
     gpt_param = ''
     prompt_template = "persona/prompt_template/v4/patch_vulnerabilities.txt"

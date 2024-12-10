@@ -175,30 +175,30 @@ def agent_chat_v2(maze, init_persona, target_persona):
     print("July 23")
 
     speaker, receiver = init_persona, target_persona
-    # speaker와 receiver의 payload 데이터 로드
+    # Load payload data for speaker and receiver
     speaker_payload = speaker.payload.load()
     receiver_payload = receiver.payload.load()
 
     for i in range(16):  # TODO: don't limit conversation lengths?
-        # receiver에 대한 focal_points 생성
+        # Create focal_points for receiver
         focal_points = [f"{receiver.scratch.name}"]
         retrieved = new_retrieve(speaker, focal_points, 50)
         relationship = generate_summarize_agent_relationship(speaker, receiver, retrieved)
         print("-------- relationship:", relationship)
         
-        # 최근 대화 기록을 last_chat에 포함
+        # Include recent conversation history in last_chat
         last_chat = ""
-        for i in curr_chat[-4:]:  # 최근 4개의 발화만 포함
+        for i in curr_chat[-4:]:  # Only the last 4 utterances
             last_chat += f'{i[0]}: {i[1]}\n'
         
-        # 대화에 payload 데이터를 활용해 focal_points 확장
+        # Leverage payload data for conversations to extend local_points
         if last_chat: 
             focal_points = [
                 f"{relationship}", 
                 f"{receiver.scratch.name} is {receiver.scratch.act_description}",
                 last_chat,
-                f"Speaker Payload: {speaker_payload}",  # speaker의 payload 데이터
-                f"Receiver Payload: {receiver_payload}"  # receiver의 payload 데이터
+                f"Speaker Payload: {speaker_payload}",  # payload data from speaker
+                f"Receiver Payload: {receiver_payload}"  # payload data from receiver
             ]
         else: 
             focal_points = [
@@ -208,14 +208,14 @@ def agent_chat_v2(maze, init_persona, target_persona):
                 f"Receiver Payload: {receiver_payload}"
             ]
         
-        # focal_points를 바탕으로 retrieved 업데이트
+        # Update retrieved based on focal_points
         retrieved = new_retrieve(speaker, focal_points, 15)
         
-        # 발화 생성
+        # Generating utterances
         utt, end = generate_one_utterance(maze, speaker, receiver, retrieved, curr_chat)
         curr_chat += [(speaker.scratch.name, utt)]
 
-        # 발화 주체 변경
+        # Change the subject of the utterance
         speaker, receiver = receiver, speaker
         if end:
             break
@@ -342,35 +342,3 @@ def open_convo_session(persona, convo_mode):
     persona.a_mem.add_thought(created, expiration, s, p, o, 
                               thought, keywords, thought_poignancy, 
                               thought_embedding_pair, None)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

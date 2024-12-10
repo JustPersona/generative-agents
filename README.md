@@ -1,9 +1,5 @@
 # LLM을 활용한 해킹 공격 및 방어 시뮬레이션 환경 구축
 
-본 프로젝트는
-[joonspk-research/generative_agents](https://github.com/joonspk-research/generative_agents)
-저장소를 포크하여 진행되었습니다.
-
 ![cover](cover.png)
 
 

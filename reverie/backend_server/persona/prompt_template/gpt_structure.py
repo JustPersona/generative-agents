@@ -262,7 +262,7 @@ def safe_generate_response_json(prompt,
         for i in range(repeat):
             llm.format = "json"
             curr_gpt_response = GPT_request(prompt, gpt_parameter)
-            print('생성한 응답 :',curr_gpt_response)
+            print('Generated Response :',curr_gpt_response)
             if func_validate(curr_gpt_response, prompt=prompt): 
                 return func_clean_up(curr_gpt_response, prompt=prompt)
             if verbose: 

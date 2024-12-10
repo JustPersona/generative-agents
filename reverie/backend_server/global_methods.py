@@ -278,15 +278,15 @@ def login_to_dvwa(dvwa_url, username="admin", password="password", security="low
 
 def get_payloads(personas, target_personas, payload_loader):
     """
-    특정 페르소나 그룹의 데이터를 로드하고 해시화
+    Load and hash data from a particular persona group
 
     input :
-    personas (dict) : 모든 페르소나 정보
-    target_personas (list) : 데이터를 로드할 대상 그룹
-    payload_loader (str) : 데이터를 로드할 메서드 이름 ("load_successful_data", "load_patch_data").
+    personas (dict) : All personas info
+    target_personas (list) : Destination group to load data from
+    payload_loader (str) : The method name to load the data from ("load_successful_data", "load_patch_data").
 
     output :
-    로드한 데이터, 해당 데이터의 해시값
+    Data loaded, hash value of that data
     """
     def hash_data(data):
         return hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()

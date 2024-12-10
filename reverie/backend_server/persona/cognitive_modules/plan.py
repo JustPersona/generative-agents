@@ -532,18 +532,18 @@ def black_hacker(persona, attack, target_url, cookies=None, step=None):
   
   """
   explanation_of_attack = run_gpt_prompt_explanation_of_attack(persona, attack)[0]
-  print("##### 공격설명 :",explanation_of_attack)
+  if debug: print("##### Explanation of the attack :",explanation_of_attack)
   create_payload = run_gpt_prompt_create_payload(persona, attack, explanation_of_attack, target_url, cookies)
-  print("##### 생성한 페이로드 :",create_payload)
+  if debug: print("##### Generated payload :",create_payload)
   method = create_payload[2]
   create_payload = create_payload[0]["payload"]
   response_attack_reasoning = run_gpt_prompt_response_attack_reasoning(persona, attack, explanation_of_attack, target_url, method, create_payload, cookies)
-  print("##### 공격성공유무, 추론 :",response_attack_reasoning)
+  if debug: print("##### Attack Success Status (inference) :",response_attack_reasoning)
   reasoning = response_attack_reasoning[0]["reasoning"]
   observations = response_attack_reasoning[0]["observations"]
   HTML_differences = response_attack_reasoning[2]
-  generate_next_step = run_gpt_prompt_generate_next_step(persona, attack, explanation_of_attack, target_url, create_payload, reasoning, observations, HTML_differences)[0]["next_step"] # 다음스텝
-  print("##### 다음스탭 :",generate_next_step)
+  generate_next_step = run_gpt_prompt_generate_next_step(persona, attack, explanation_of_attack, target_url, create_payload, reasoning, observations, HTML_differences)[0]["next_step"] # Next Step
+  if debug: print("##### Next Step :",generate_next_step)
   step_data = {
     "attack_name": attack,
     "method": method,
@@ -563,7 +563,7 @@ def white_hacker(persona, successful_data, step=None):
   """
   patch_suggestion = []
   identify_vulnerable_files = run_gpt_prompt_identify_vulnerable_files(persona, successful_data)[0]
-  print("##### 취약하다 생각한 파일들 :", identify_vulnerable_files)
+  if debug: print("##### List of vulnerable files (inference) :", identify_vulnerable_files)
   for vulnerable_file in identify_vulnerable_files.get("vulnerable_files", []):
       patch_instructions = run_gpt_patch_instructions(persona, successful_data, vulnerable_file)
       output_patch = patch_instructions[0]
@@ -573,7 +573,7 @@ def white_hacker(persona, successful_data, step=None):
             'vulnerable_file_code': f'```\n{vulnerable_file_code['code']}\n```',
             'patch_instructions': output_patch['patch_instructions']
         })
-  print("##### 파일 패치 내용 :", patch_suggestion)
+  if debug: print("##### File Patch Content :", patch_suggestion)
   patch_data = {
     "proposer": persona.name,
     "successful_data" : successful_data,
@@ -587,9 +587,9 @@ def server_owner(persona, patch_datas, step=None):
   """
   
   """
-  print("##### 패치 데이터들 :",patch_datas)
+  if debug: print("##### Patch datas :",patch_datas)
   select_best_patch = run_gpt_prompt_select_best_patch(persona, patch_datas)[0]
-  print("##### 선택한 패치 데이터 id :",select_best_patch)
+  if debug: print("##### ID of the selected patch data :",select_best_patch)
   best_patch_id = select_best_patch['patch_id']
   reason = select_best_patch['reason']
   if best_patch_id == 0:
@@ -1099,49 +1099,3 @@ def plan(persona, maze, personas, new_day, retrieved):
       persona.scratch.chatting_with_buffer[persona_name] -= 1
 
   return persona.scratch.act_address
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
- 

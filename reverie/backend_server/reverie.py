@@ -158,7 +158,7 @@ class ReverieServer:
     with open(self.curr_step_file, "w+") as outfile:
       outfile.write(json.dumps(curr_step, indent=2))
 
-    # 성공 데이터, 패치 데이터 초기 해시값 설정
+    # Set Initial Hash Value: Success data & Patch data
     _, self.previous_successful_data_hash = get_payloads(self.personas, black_hats, "load_successful_data")
     _, self.previous_patch_data_hash = get_payloads(self.personas, white_hats, "load_patch_data")
 
@@ -326,6 +326,8 @@ class ReverieServer:
     while (True): 
       # Done with this iteration if <int_counter> reaches 0. 
       if int_counter <= 0: 
+        if int_counter == -1:
+          print("### The patch proposal has been verified. Please proceed with the patch. ###")
         break
 
       # <curr_env_file> file is the file that our frontend outputs. When the
@@ -411,7 +413,7 @@ class ReverieServer:
             if description.split(":")[-1].strip() in work_areas:
 
               if persona_name in black_hats:
-                print("#### 블랙해커 공격 중 ~~~~~~~~~!!!!!!!!!!")
+                print("#### Black Hacker on the Attack ~~~~~~~~~!!!!!!!!!!")
                 step_data = black_hacker(persona, attack, target_url, cookies, self.step)
                 persona.payload.save_attack_data(url=target_url, data=step_data)
 
@@ -420,7 +422,7 @@ class ReverieServer:
 
 
               if persona_name in white_hats and successful_data_hash != self.previous_successful_data_hash:
-                  print("#### 화이트해커 방어 중 ~~~~~~~~~!!!!!!!!!!")
+                  print("#### White Hacker on Defense ~~~~~~~~~!!!!!!!!!!")
                   patch_data = white_hacker(persona, successful_datas, self.step)
                   persona.payload.save_patch_data(patch_data)
                   self.previous_successful_data_hash = successful_data_hash
@@ -430,12 +432,10 @@ class ReverieServer:
 
 
               if persona_name in server_owners and patch_data_hash != self.previous_patch_data_hash:
-                  print("#### 서버 주인 검증 중 ~~~~~~~~~!!!!!!!!!!")
+                  print("#### Verifying Server Owner ~~~~~~~~~!!!!!!!!!!")
                   best_patch_data = server_owner(persona, patch_datas, self.step)
                   persona.payload.save_bast_patch(best_patch_data)
                   self.previous_patch_data_hash = patch_data_hash
-
-                  print("### 패치 제안서의 검증이 완료되었습니다. 패치를 진행하세요. ###")
                   int_counter = 0
 
 

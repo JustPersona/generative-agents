@@ -10,7 +10,7 @@
 	<h1 class="fs-5 fw-semibold" pen_code="{{ pen_code }}">
 		<label role="button" class="link-success me-1" data-bs-toggle="tooltip" data-bs-title="Results">
 			<i class="fa-solid fa-square-poll-horizontal"></i>
-			<button type="button" onclick="setPenInfoModal(this.closest('[pen_code]'))" data-bs-toggle="modal" data-bs-target="#penInfoModal" hidden></button>
+			<button type="button" data-bs-toggle="modal" data-bs-target="#penInfoModal" hidden></button>
 		</label>
 		{{ pen_code }}
 	</h1>
@@ -93,7 +93,7 @@
 
 	<div {% if mode == "preview" %} style="--width: 100%"{% endif %}>
 		<section class="tab-pane fade show active bg-body shadow rounded-4 my-3 p-4" id="details-container" role="tabpanel" aria-labelledby="pen-testing-tab" tabindex="0">
-			<form id="trigger-container" class="d-flex flex-column flex-wrap align-items-center column-gap-5 row-gap-3 overflow-auto pb-3" style="max-height: 250px" onsubmit="return false">{% for p in persona_names %}
+			<form id="trigger-container" class="d-flex flex-column flex-wrap align-items-center column-gap-5 row-gap-3 overflow-auto pb-3" style="max-height: 320px" onsubmit="return false">{% for p in persona_names %}
 				<input type="radio" class="btn-check" name="on_screen_det_trigger" id="on_screen_det_trigger-{{p.underscore}}" autocomplete="off" onclick="personaFocus(this)" hidden>
 				<label role="button" class="btn btn-outline-success rounded-4 px-4 py-3" for="on_screen_det_trigger-{{p.underscore}}">
 					<div class="d-flex gap-3">

@@ -13,6 +13,9 @@
 <section class="d-flex justify-content-center align-items-center px-5">{% if not num_of_users %}
 	<div class="text-center fs-5 fw-semibold">
 		To create a superuser, enter the command like:<br/>
+		<br/>
+		<code>docker exec -it generative-agents superuser</code><br/>
+		or<br/>
 		<code>python3 manage.py createsuperuser</code>
 	</div>
 
@@ -39,20 +42,22 @@
 		</form>
 	</div>
 	<script type="text/javascript">
-		const signin = function(e) {
+		const signin = async function(e) {
 			e.preventDefault();
 			const form = e.target;
-			const box = form.querySelector(".alert");
-	
-			post("{% url 'signin' %}", {
+			const btn = form.querySelector("button[type=submit]");
+
+            btn.setAttribute("disabled", "");
+			const ok = await request("{% url 'signin' %}", {method: "post", data: {
 				"username": form.username.value,
 				"password": form.password.value,
-			}, function(xhr) {
+			}});
+			if (ok != true) {
+				msg(ok, "danger");
+			} else {
 				location.reload();
-			}, function(xhr) {
-				box.classList.remove("d-none");
-				box.innerText = xhr.responseText;
-			});
+			}
+            btn.removeAttribute("disabled");
 		}
 	</script>
 {% endif %}</section>

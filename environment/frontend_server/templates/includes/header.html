@@ -21,7 +21,7 @@
 							{% if user.is_superuser %}
 								<li><a href="{% url 'manage' %}" class="dropdown-item">Manage</a></li>
 							{% endif %}
-							<li><button type="button" class="dropdown-item" onclick="post('{% url 'signout' %}', null, function() { location.reload(); })">Sign Out</button></li>
+							<li><button type="button" class="dropdown-item" onclick="signout()">Sign Out</button></li>
 						</ul>
 					</li>
 				{% endif %}

@@ -104,7 +104,6 @@
 									<label for="date_joined">Date Joined</label>
 								</div></div>
 							</div>
-							<div class="valid-feedback px-1 fs-6 fw-semibold text-center"></div>
 						</div>
 					</div>
 				</div>
@@ -128,7 +127,6 @@
 						You can use <span class="fw-semibold">Active</span> instead.<br/>
 						Do you still want to delete it?
 					</div>
-					<div class="alert alert-danger my-3 text-center d-none" role="alert"></div>
 				</div>
 				<div class="modal-footer">
 					<button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#userModal" aria-label="Back">Back</button>
@@ -145,26 +143,24 @@
 		const total = document.querySelector("#total");
 
 		const hideFeedbacks = function() {
-			deleteModal.querySelector(".alert").classList.add("d-none");
 			for (let x of form.querySelectorAll(`[class~=valid-feedback], [class~=invalid-feedback]`)) {
 				x.classList.remove("d-block");
 			}
 		}
 
-		const setUserModal = function(e, request=true) {
+		const setUserModal = async function(e, info=true) {
 			const userid = e.target.closest("tr")?.getAttribute("userid");
 
 			hideFeedbacks();
-			if (!request) {
+			if (!info) {
 				formUpdate();
 			} else {
-				post("{% url 'user' %}", {userid}, function(xhr) {
-					formUpdate(JSON.parse(xhr.responseText));
-				});
+				const data = await request(`{% url 'user' %}/${userid}`);
+				formUpdate(data);
 			}
 		}
 
-		const userUpdate = function(e) {
+		const userUpdate = async function(e) {
 			e.preventDefault();
 
 			const userid = form.getAttribute("userid");
@@ -172,7 +168,8 @@
 			hideFeedbacks();
 
 			btn.setAttribute("disabled", "");
-			post("{% url 'user_update' %}", {
+			console.log( userid == "create" ? "post" : "put" )
+			const data = await request("{% url 'user_update' %}", {method: userid == "create" ? "post" : "put", data: {
 				userid,
 				username: form.username.value.trim(),
 				password: form.password.value.trim(),
@@ -182,25 +179,20 @@
 				is_superuser: form.is_superuser.checked,
 				is_staff: form.is_staff.checked,
 				is_active: form.is_active.checked,
-				update: userid != "create",
-			}, function(xhr) {
-				const data = JSON.parse(xhr.responseText);
-				const feedback = form.querySelector(".valid-feedback");
-				feedback.classList.add("d-block");
-				feedback.innerText = "Successfully";
+			}});
+			if (data.id) {
+				msg("Successfully");
 				pageUpdate([data]);
 				formUpdate(data);
-				btn.removeAttribute("disabled");
-			}, function(xhr) {
-				btn.removeAttribute("disabled");
-				const data = JSON.parse(xhr.responseText);
+			} else {
 				for (let key in data) {
 					const feedback = form[key]?.parentNode?.querySelector(".invalid-feedback");
 					if (!feedback) continue;
 					feedback.classList.add("d-block");
 					feedback.innerText = data[key];
 				}
-			});
+			}
+			btn.removeAttribute("disabled");
 		}
 
 		const pageUpdate = function(data) {
@@ -268,19 +260,16 @@
 			deleteModal.querySelector(".username").innerText = form.querySelector("#user-info-tab").innerText;
 		}
 
-		const userDelete = function() {
+		const userDelete = async function() {
 			const userid = form.getAttribute("userid");
-			post("{% url 'user_delete' %}", {
-				userid
-			}, function(xhr) {
-				userTable.querySelector(`tr[userid="${JSON.parse(xhr.responseText)?.id}"]`)?.remove();
-				bootstrap.Modal.getInstance(deleteModal).hide();
-				total.innerText = total.innerText*1 - 1;
-			}, function(xhr) {
-				const box = deleteModal.querySelector(".alert");
-				box.classList.remove("d-none");
-				box.innerText = xhr.responseText;
-			});
+			const ok = await request("{% url 'user_delete' %}", {method: "delete", data: {userid}});
+			if (ok) {
+				userTable.querySelector(`tr[userid="${userid}"]`)?.remove();
+			} else {
+				msg("Already Deleted", "danger");
+			}
+			bootstrap.Modal.getInstance(deleteModal).hide();
+			total.innerText = total.innerText*1 - 1;
 		}
 
 		pageUpdate({{ users | safe }});

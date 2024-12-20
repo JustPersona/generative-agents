@@ -6,6 +6,7 @@ let pause = false;
 
 const black_hats = {{ black_hats | safe }};
 const white_hats = {{ white_hats | safe }};
+const server_owners = {{ server_owners | safe }};
 const chatContainer = document.querySelector("section > #chattingbox-container");
 const fullScreen = urlParams.fullScreen == "true";
 const mode = ["forkable", "compressed"].includes("{{ mode }}") ? "{{ mode }}" : "preview";
@@ -83,24 +84,15 @@ const personaFocus = function(radio) {
 
 
 const pen_test_play = async function(container) {
-	document.querySelector("#on_screen_det_trigger-Isabella_Rodriguez")?.click();
+	document.querySelector(`#on_screen_det_trigger-${ server_owners[0].replace(/ /g, "_") }`)?.click();
 
 	let isRunning = "{{ running }}".toLowerCase() == "true";
 	const maze_name = "{{ maze_name }}";
-
-	const sec_per_step = "{{ sec_per_step }}" * 1;
 
 	let max_step = "{{ max_step }}" * 1;
 	const player_width = 40;
 	const playerDepth = -1;
 
-	let payloads = {}
-	let patches = {};
-	{% if mode != "preview" %}
-		const init_response = await asyncPost("{% url 'pen_info' %}", {pen_code: "{{ pen_code }}"});
-		payloads = init_response.payloads.data;
-		patches = init_response.patches.data;
-	{% endif %}
 	const vuln_imoji = "\u2757\u2757";
 	let imoji_bak = {};
 	let vuln_imoji_count = {};
@@ -128,7 +120,6 @@ const pen_test_play = async function(container) {
 	// a step. We use this to link the steps in the backend.
 	let step = "{{ step }}" * 1;
 	const pen_code = "{{ pen_code }}";
-	const step_size = (sec_per_step || 10) * 1000; // 10 seconds = 10000
 
 
 
@@ -162,9 +153,7 @@ const pen_test_play = async function(container) {
 	};
 
 
-	// Creating the game instance and setting up the main Phaser variables that
-	// will be used in it.
-	const game = new Phaser.Game(config);
+	// Setting up the main Phaser variables game will be used in it.
 	let cursors;
 	let player;
 
@@ -176,7 +165,22 @@ const pen_test_play = async function(container) {
 	// for (let key in persona_names) {
 	// 	spawn_tile_loc[key] = persona_names[key];
 	// }
-	const spawn_tile_loc = {{ persona_init_pos | safe }};
+	const {meta} = await request(`/api/pens/${pen_code}`);
+	let all_movement = {};
+	let spawn_tile_loc = {};
+	{% if mode == "preview" %}
+		spawn_tile_loc = await request(`/api/pens/${pen_code}/spawn`);
+		for (let p_name in spawn_tile_loc) spawn_tile_loc[p_name] = {"movement": spawn_tile_loc[p_name]};
+	{% else %}
+		[all_movement, spawn_tile_loc] = await Promise.all([
+			`/api/pens/${pen_code}/datas`,
+			`/api/pens/${pen_code}/datas/${step}`,
+		].map(url => request(url)));
+		all_movement[step] = spawn_tile_loc;
+	{% endif %}
+
+	const sec_per_step = meta.sec_per_step;
+	const step_size = sec_per_step * 1000; // 10 seconds = 10000
 
 	let personas = {};
 	let speech_bubbles = {};
@@ -197,7 +201,7 @@ const pen_test_play = async function(container) {
 	let timer = timer_max;
 
 	// <phase> -- there are three phases: "update", "await" and "execute".
-	let phase = "update"; // or "await" or "execute"
+	let phase; // undefined or "update" or "await"
 
 	// Variables for storing movements that are sent from the backend server.
 	let execute_movement;
@@ -205,12 +209,13 @@ const pen_test_play = async function(container) {
 	// let execute_count = execute_count_max;
 	execute_count = execute_count_max;
 	let movement_target = {};
-	const all_movement = {{ all_movement | safe }};
-	const chats = {{ chats | safe }};
 
-	let start_datetime = new Date(Date.parse("{{ start_datetime }}"));
-	if (mode != "preview" && start_datetime) {
-		timebox.value = toLocaleTimeString(start_datetime);
+	let start_datetime = getDateObject(`${meta.start_date}, 00:00:00`);
+	let curr_datetime = addDateTime(start_datetime, step_size*step);
+	if (mode != "preview" && curr_datetime) {
+		const timeString = toLocaleTimeString(curr_datetime);
+		timebox.value = timeString;
+		timebox.placeholder = timeString;
 	}
 
 
@@ -265,12 +270,12 @@ const pen_test_play = async function(container) {
 		//       Also IMPORTANT: when you create a tileset in Tiled, always be
 		//       sure to check the "embedded" option.
 		for (let tileset of tilesets) {
-			this.load.image(tileset.name, static + "assets/{{ maze_name }}/visuals/" + tileset.path);
+			this.load.image(tileset.name, static + `assets/${maze_name}/visuals/${tileset.path}`);
 		}
 
 
 		// Joon: This is the export json file you get from Tiled.
-		this.load.tilemapTiledJSON("map", static + "assets/{{ maze_name }}/visuals/{{ maze_name }}.json");
+		this.load.tilemapTiledJSON("map", static + `assets/${maze_name}/visuals/${maze_name}.json`);
 
 		// An atlas is a way to pack multiple images together into one texture. I'm
 		// using it to load all the player animations (walking left, walking right,
@@ -287,6 +292,7 @@ const pen_test_play = async function(container) {
 		);
 
 		for (let p_name in spawn_tile_loc) {
+			p_name = p_name.replace(/ /g, "_");
 			this.load.atlas(
 				p_name,
 				static + `assets/characters/${p_name}.png`,
@@ -374,12 +380,13 @@ const pen_test_play = async function(container) {
 		// We start by creating the game sprite objects.
 		for (let i=0; i<Object.keys(spawn_tile_loc).length; i++) {
 			let persona_name = Object.keys(spawn_tile_loc)[i];
+			let persona_name_os = persona_name.replace(/ /g, "_");
 			let start_pos = [
-				spawn_tile_loc[persona_name][0] * tile_width,
-				spawn_tile_loc[persona_name][1] * tile_width,
+				spawn_tile_loc[persona_name].movement[0] * tile_width,
+				spawn_tile_loc[persona_name].movement[1] * tile_width,
 			];
 
-			let new_sprite = this.physics.add.sprite(start_pos[0], start_pos[1], persona_name, "down").setOffset(offsets["persona"][0], offsets["persona"][1]);
+			let new_sprite = this.physics.add.sprite(start_pos[0], start_pos[1], persona_name_os, "down").setOffset(offsets["persona"][0], offsets["persona"][1]);
 			// Scale up the sprite
 			new_sprite.displayWidth = player_width;
 			new_sprite.scaleY = new_sprite.scaleX;
@@ -406,16 +413,16 @@ const pen_test_play = async function(container) {
 				},
 			).setDepth(3);
 
-			personas[persona_name] = new_sprite;
-			speech_bubbles[persona_name] = new_speech_bubble;
-			pronunciatios[persona_name] = new_pronunciatios;
+			personas[persona_name_os] = new_sprite;
+			speech_bubbles[persona_name_os] = new_speech_bubble;
+			pronunciatios[persona_name_os] = new_pronunciatios;
 		}
 
 		// Create the player's walking animations from the texture atlas. These are
 		// stored in the global animation manager so any sprite can access them.
 		const anims = this.anims;
 		for (let i=0; i<Object.keys(spawn_tile_loc).length; i++) {
-			let persona_name = Object.keys(spawn_tile_loc)[i];
+			let persona_name = Object.keys(spawn_tile_loc)[i].replace(/ /g, "_");
 			let left_walk_name = persona_name + "-left-walk";
 			let right_walk_name = persona_name + "-right-walk";
 			let down_walk_name = persona_name + "-down-walk";
@@ -542,9 +549,13 @@ const pen_test_play = async function(container) {
 		}
 
 		// Run a separate function for each mode
-		if (mode in updates) {
-			if (pause === false || (mode == "forkable" && phase != "update")) {
-				updates[mode]();
+		if (pause === false && mode != "preview") {
+			if (execute_count <= 0) curr_datetime = addDateTime(curr_datetime, step_size);
+			if (phase !== undefined || (step == max_step - 1 && mode === "forkable")) {
+				if (phase === undefined) phase = "update";
+				updates_forkable();
+			} else {
+				action(all_movement[step], curr_datetime);
 			}
 		}
 	}
@@ -589,71 +600,51 @@ const pen_test_play = async function(container) {
 	}
 	ws = mode == "forkable" ? ws_connection() : undefined;
 
-	const updates = {
-		compressed: function() {
-			// *** MOVING PERSONAS ***
-			if (execute_count <= 0) start_datetime = new Date(start_datetime.getTime() + step_size);
-			action(all_movement[step], chats[step], payloads[step], patches[step], start_datetime);
-		},
-
-
-		forkable: function() {
-			// *** MOVE PERSONAS ***
-			// Moving personas take place in three distinct phases: "update" "await"
-			// and "execute". These phases are determined by the value of <phase>.
-			// Only one of the three phases is incurred in each update cycle.
-			if (phase == "update") {
-				if (ws_connected !== true) return;
-				// Update is where we * wait * for the backend server to finish
-				// computing about what the personas will do next given their current
-				// situation.
-				// We do this by continuously asking the backend server if it is ready.
-				// The backend server is ready when it returns a json that has a key-val
-				// pair with "<move>": true.
-				// Note that we do not want to overburden the backend too much by
-				// over-querying; so, we have a timer set so we only query it once every
-				// timer_max cycles.
-				if (timer <= 0) {
-					const data = {
-						"step": step,
-						"pen_code": pen_code,
-						"running": isRunning,
-					}
-					ws_send("update_environment", data);
-					phase = "await";
+	const updates_forkable = function() {
+		// *** MOVE PERSONAS ***
+		// Moving personas take place in three distinct phases: "update" "await"
+		// and "execute". These phases are determined by the value of <phase>.
+		// Only one of the three phases is incurred in each update cycle.
+		if (phase == "update") {
+			if (ws_connected !== true) return;
+			// Update is where we * wait * for the backend server to finish
+			// computing about what the personas will do next given their current
+			// situation.
+			// We do this by continuously asking the backend server if it is ready.
+			// The backend server is ready when it returns a json that has a key-val
+			// pair with "<move>": true.
+			// Note that we do not want to overburden the backend too much by
+			// over-querying; so, we have a timer set so we only query it once every
+			// timer_max cycles.
+			if (timer <= 0) {
+				const data = {
+					"step": step,
+					"pen_code": pen_code,
 				}
-				timer -= 1;
-			} else if (phase === "await") {
-				// Wait for a response from the WebSocket.
-				const data = ws_responses["update_environment"];
-				if (data?.step !== undefined) {
-					if (isRunning && data?.running !== true) {
-						isRunning = false;
-						play_button.click();
-						if (backend_state) {
-							backend_state.classList.add("text-danger");
-							backend_state.innerHTML = `Backend is Stopped`;
-						}
-					} else if (data.step == -1) {
-						phase = "update";
-					} else if (data.step === step) {
-						execute_movement = data;
-						max_step = data?.max_step || max_step;
-						phase = "execute";
-					}
-				}
-				timer = timer_max;
-			} else { // phase == execute
-				// This is where we actually move the personas in the visual world. Each
-				// backend computation in execute_movement moves each persona by one tile
-				// (or some personas might not move if they choose not to).
-				// The execute_count_max is computed by tile_width/movement_speed, which
-				// defines a one step sequence in this world.
-				let curr_time = new Date(execute_movement["meta"]["curr_time"]);
-				action(execute_movement["persona"], execute_movement["chats"], execute_movement["payload"], execute_movement["patch"], curr_time);
+				ws_send("update_movement", data);
+				phase = "await";
 			}
-		},
-	};
+			timer -= 1;
+		} else if (phase === "await") {
+			// Wait for a response from the WebSocket.
+			const data = ws_responses["update_movement"];
+			if (data) {
+				delete ws_responses["update_movement"];
+				if (isRunning && data.running !== true) {
+					isRunning = false;
+					play_button.click();
+					if (backend_state) {
+						backend_state.classList.add("text-danger");
+						backend_state.innerHTML = `Backend is Stopped`;
+					}
+				}
+				all_movement = data.data;
+				max_step = Object.keys(all_movement).length;
+				phase = undefined;
+			}
+			timer = timer_max;
+		}
+	}
 
 
 
@@ -675,21 +666,13 @@ const pen_test_play = async function(container) {
 	}
 
 
-	const action = function(movements, curr_chat, curr_payload, curr_patch, curr_time) {
+	const action = function(movements, curr_time) {
 		if (!movements) return;
 
 		if (curr_time) {
 			const time = toLocaleTimeString(curr_time);
 			timebox.placeholder = time;
 			timebox.value = time;
-		}
-		if (execute_count == 0) {
-			for (let p_name of black_hats) {
-				setPayloadByStep(p_name, curr_payload?.[p_name], movements?.[p_name]?.["pronunciatio"]);
-			}
-			for (let p_name of white_hats) {
-				setPatchByStep(curr_patch?.[p_name] );
-			}
 		}
 		for (let i=0; i<Object.keys(personas).length; i++) {
 			let curr_persona_name_os = Object.keys(personas)[i];
@@ -726,23 +709,26 @@ const pen_test_play = async function(container) {
 					document.getElementById("current_action__" + curr_persona_name_os).value = description_content.split("@")[0];
 					document.getElementById("target_address__" + curr_persona_name_os).value = description_content.split("@")[1].split(":").slice(1).join(' > ');
 					document.getElementById("chat__" + curr_persona_name_os).value = chat_content;
-					insertChatting(chatContainer, pen_code, curr_chat, {focus: curr_focused_persona, time: curr_time, suffix: "-play"});
+					insertChatting(chatContainer, pen_code, p_movement.chat, {focus: curr_focused_persona, time: curr_time, suffix: "-play"});
+					setPayloadByStep(curr_persona_name, p_movement.payload, p_movement.pronunciatio);
+					setPatchByStep(curr_persona_name, p_movement.patch);
 				}
 
 				if (execute_count > 0) {
-					if (!animation.start(curr_persona, curr_speech_bubble, curr_pronunciatio, curr_persona_name_os) && mode != "compressed") {
-						animation.stop(curr_persona, curr_persona_name_os);
-					};
+					animation.start(curr_persona, curr_speech_bubble, curr_pronunciatio, curr_persona_name_os);
+					// if (!animation.start(curr_persona, curr_speech_bubble, curr_pronunciatio, curr_persona_name_os) && mode != "compressed") {
+					// 	animation.stop(curr_persona, curr_persona_name_os);
+					// };
 				} else if (mode != "compressed") {
-					move_personas();
-					phase = "update";
+					// move_personas();
+					// phase = "update";
 				}
 			} else {
 				animation.stop(curr_persona, curr_persona_name_os);
 			}
 		}
 
-		if (mode == "compressed" && execute_count <= 0) {
+		if (execute_count <= 0) {
 			move_personas();
 		}
 
@@ -829,27 +815,25 @@ const pen_test_play = async function(container) {
 
 		imoji_bak[p_name] = pronunciatio_content || imoji_bak[p_name] || "";
 		if (vuln_imoji_count[p_name] != -1) setPronunciatio_content(p_name, imoji_bak[p_name]);
-		insertPayloadTable(document.querySelector(`#payload-table-container table`), {url: data?.url, data, reverse: true});
+		insertPayloadTable(document.querySelector(`#payload-table-container table`), {data, reverse: true});
 	}
 
-	const setPatchByStep = function(data) {
-		if (!data) return;
-		insertPatchTable(document.querySelector(`#patch-table-container table`), {best: data.best, data: data.suggestion, reverse: true});
+	const setPatchByStep = function(p_name, data) {
+		insertPatchTable(document.querySelector(`#patch-table-container table`), {data, reverse: true});
 	}
 
 	for (let i=1; i<step; i++) {
-		for (let p_name in payloads[i]) {
-			const x = payloads[i][p_name];
-			insertPayloadTable(document.querySelector(`#payload-table-container table`), {url: x?.url, data: x, reverse: true});
+		for (let p_name in all_movement[i]) {
+			insertChatting(chatContainer, pen_code, all_movement[i][p_name].chat, {focus: curr_focused_persona, time: addDateTime(start_datetime, step_size*i), suffix: "-play"});
+			insertPayloadTable(document.querySelector(`#payload-table-container table`), {data: all_movement[i][p_name].payload, reverse: true});
+			insertPatchTable(document.querySelector(`#patch-table-container table`), {data: all_movement[i][p_name].patch, reverse: true});
 		}
-		for (let p_name in patches[i]) {
-			const x = patches[i][p_name];
-			insertPatchTable(document.querySelector(`#patch-table-container table`), {best: x.best, data: x.suggestion, reverse: true});
-		}
-		insertChatting(chatContainer, pen_code, chats[i], {focus: curr_focused_persona, suffix: "-play"});
 	}
 
-	return game;
+
+
+	// Creating the game instance.
+	return new Phaser.Game(config);
 }
 
 

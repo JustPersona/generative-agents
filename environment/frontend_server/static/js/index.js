@@ -2,47 +2,36 @@ const urlParams = location.search.slice(1).split("&").reduce((a, c) => {a[c.spli
 
 
 
+const getDateObject = function(datetime) {
+	return new Date(Date.parse(datetime));
+}
+const addDateTime = function(datetime, x) {
+	return new Date(datetime.getTime() + x);
+}
 const toLocaleTimeString = function(datetime) {
 	return datetime.toLocaleTimeString("en-US", { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 }
 
-const post = function(url, data, callback1, callback2) {
-	let json = JSON.stringify(data);
-	let xhr = new XMLHttpRequest();
-	xhr.overrideMimeType("application/json");
-	xhr.open('POST', url, true);
-	xhr.setRequestHeader("X-CSRFToken", document.querySelector("input[name=csrfmiddlewaretoken]")?.value);
-	xhr.addEventListener("load", function() {
-		if (this.readyState === 4) {
-			if (200 <= xhr.status && xhr.status < 300) {
-				if (typeof callback1 === "function") {
-					callback1(xhr);
-				}
-			} else {
-				if (typeof callback2 === "function") {
-					callback2(xhr);
-				}
-			}
-		}
-	});
-	xhr.send(json);
+const initBsTooltip = function(box=document) {
+	[...box.querySelectorAll('[data-bs-toggle="tooltip"]')].map(x => new bootstrap.Tooltip(x));
 }
 
-const asyncPost = async function(url, data={}) {
+const signout = async function() {
+	await request("/signout", {method: "post"});
+	location.reload();
+}
+
+const request = async function(url, {method="get", data={}}={}) {
 	const response = await fetch(url, {
-		method: "POST",
+		method,
 		headers: {
 			"Content-Type": "application/json",
 			"X-CSRFToken": document.querySelector("input[name=csrfmiddlewaretoken]")?.value,
 		},
-		body: JSON.stringify(data),
+		body: method.toLowerCase() == "get" ? null : JSON.stringify(data),
 	});
-	return await response.json();
-}
-
-const api = async function(url="/api/") {
-	const response = await fetch(url);
-	return await response.json();
+	const clone = response.clone();
+	return await response.json().catch(async () => await clone.text() || clone.ok);
 }
 
 const sortBtnClick = function(btn) {
@@ -112,10 +101,11 @@ const createPayloadTable = function(pen_code, {style}={}) {
 	return table;
 }
 
-const insertPayloadTable = function(table, {url, data, reverse=false}) {
+const insertPayloadTable = function(table, {data, reverse=false}) {
 	if (!data) return;
 
 	const num = table.querySelectorAll("& > tbody > tr:not(.details)")?.length + 1;
+	const url = data.url;
 	const origin = new URL(url);
 	const isVuln = data.observations == "exploit_successful";
 	const tr = document.createElement("tr");
@@ -133,11 +123,7 @@ const insertPayloadTable = function(table, {url, data, reverse=false}) {
 	tr.querySelector("[field=payload]").innerText = data.payload;
 	new bootstrap.Tooltip(tr.querySelector("td[field=url] a"));
 
-	if (reverse) {
-		table.querySelector("tbody")?.prepend(tr);
-	} else {
-		table.querySelector("tbody")?.append(tr);
-	}
+	table.querySelector("tbody")?.[reverse ? "prepend" : "append"]?.(tr);
 
 	const details = document.createElement("tr");
 	details.className = "details";
@@ -171,9 +157,9 @@ const insertPayloadTable = function(table, {url, data, reverse=false}) {
 	tr.after(details);
 }
 
-const createSubTable = function(data, {border=true, index=true, isMarkdown=true, elem=true}={}) {
+const createSubTable = function(data, {border=true, index=true, elem=true}={}) {
 	if (typeof data === "string") {
-		return isMarkdown ? mdToHTML(data) : data;
+		return mdToHTML(data);
 	}
 
 	const disabled = ["step", "payload", "attack_name", "method", "observations", "timestamp", "url", "file_path", "vulnerable_file_code"];
@@ -196,9 +182,9 @@ const createSubTable = function(data, {border=true, index=true, isMarkdown=true,
 		`;
 		if (typeof data[key] !== "object") {
 			tr.querySelector("td:last-child").innerHTML = `<div class="px-2 py-1"></div>`;
-			tr.querySelector("td:last-child div").innerText = isMarkdown ? mdToHTML(data[key]) : data[key];
+			tr.querySelector("td:last-child div").innerHTML = key === "content" ? `<pre><code>${data[key].replace(/</g, "&lt;")}</code></pre>` : mdToHTML(data[key]);
 		} else {
-			tr.querySelector("td:last-child").append(createSubTable(data[key], {border: false}));
+			tr.querySelector("td:last-child").append(createSubTable(data[key], {border: false, index}));
 		}
 	}
 	return elem ? table : table.outerHTML;
@@ -210,12 +196,12 @@ const displayPayloadDetails = function(e) {
 }
 
 const openPatch = function(btn) {
-	// btn.closest("[pen_code]").querySelector("#pen-patches-tab").click();
+	// btn.closest("[pen_code]").querySelector("#modal-pen-patches-tab").click();
 	const modal = document.querySelector("#penInfoModal");
 	if (!modal?.classList.contains("show")) {
 		document.querySelector(`[data-bs-target="#penInfoModal"]`)?.click();
 	}
-	modal?.querySelector("#pen-patches-tab")?.click();
+	modal?.querySelector("#modal-pen-patches-tab")?.click();
 }
 
 const createPatchTable = function(pen_code, {style}={}) {
@@ -247,20 +233,22 @@ const createPatchTable = function(pen_code, {style}={}) {
 	return table;
 }
 
-const insertPatchTable = function(table, {best, data, reverse=false}) {
+const insertPatchTable = function(table, {data, reverse=false}) {
 	if (!data) return;
 
 	const box = document.createElement("div");
 	const num = table.querySelectorAll("th[field=num]")?.length + 1;
+	const best_reason = data.best_reason;
+	const suggestion = data.suggestion;
 
-	const length = Object.keys(data).length;
-	for (let idx in data) {
-		const x = data[reverse ? length-1-idx : idx];
+	const length = Object.keys(suggestion).length;
+	for (let idx in suggestion) {
+		const x = suggestion[reverse ? length-1-idx : idx];
 		const tr = document.createElement("tr");
-		const bestHTML = Object.values(best).map(x => `${mdToHTML(x)}`).join("");
+		const bestHTML = best_reason.map(x => `${mdToHTML(x)}`).join("");
 		if (bestHTML) tr.className = "best table-success";
 		tr.innerHTML += `
-			${reverse && idx == length-1 || !reverse && idx == 0 ? '<th field="num" class="text-end minimum" scope="row" rowspan="' + data.length + '">' + num + '</th>' : ""}
+			${reverse && idx == length-1 || !reverse && idx == 0 ? '<th field="num" class="text-end minimum" scope="row" rowspan="' + suggestion.length + '">' + num + '</th>' : ""}
 			<td field="file" class="text-start minimum"><label role="button" class="link-success" data-bs-toggle="tooltip" data-bs-title="${x.file_path}">
 				${x.file_path.split("/").reverse()[0]}
 				<button type="button" onclick="displayCodeViewer('${x.file_path}')" hidden></button>
@@ -300,7 +288,7 @@ const insertPatchTable = function(table, {best, data, reverse=false}) {
 
 const displayCodeViewer = function(file) {
 	const codeViewerClick = function() {
-		for (let x of document.querySelectorAll(`#pen-vulnFiles [file]`)) {
+		for (let x of document.querySelectorAll(`#modal-pen-vulnFiles [file]`)) {
 			x.classList.toggle('d-none', x.getAttribute('file') != file);
 		}
 		document.querySelector(`#vulnerable_file_select [value="${file}"]`).selected = true;
@@ -308,11 +296,11 @@ const displayCodeViewer = function(file) {
 	}
 
 	if (document.querySelector("#penInfoModal").classList.contains("show")) {
-		document.querySelector("#penInfoModal #pen-vulnFiles-tab").click();
+		document.querySelector("#penInfoModal #modal-pen-vulnFiles-tab").click();
 		codeViewerClick();
 	} else {
 		document.querySelector(`[data-bs-target="#penInfoModal"]`).click()
-		document.querySelector("#penInfoModal #pen-vulnFiles-tab").click();
+		document.querySelector("#penInfoModal #modal-pen-vulnFiles-tab").click();
 		document.querySelector("#penInfoModal").addEventListener("shown.bs.modal", codeViewerClick);
 	}
 }

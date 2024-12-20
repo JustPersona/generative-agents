@@ -55,26 +55,6 @@
 				</tr>
 			</tfoot>
 			<tbody class="table-group-divider">
-				{% for pen in pen_codes %}<tr class="position-relative" pen_code="{{ pen.pen_code }}" forked="{{ pen.fork_sim_code }}" mode="{{ pen.mode }}">
-					<th field="num" class="text-end" scope="row"><span{% if backend.pen_code == pen.pen_code %} class="text-success" data-bs-toggle="tooltip" data-bs-title="Running"{% endif %}>{{ forloop.counter }}</span></th>
-					<td field="pen_code">{{ pen.pen_code }}</td>
-					<td class="text-center" field="step">{% if pen.isBase %}-{% else %}{{ pen.step }}{% endif %}</td>
-					<td class="text-center" field="payloads">{% if not pen.payloads.count.payloads %}-{% else %}{{ pen.payloads.count.payloads }}{% endif %}</td>
-					<td class="text-center" field="vulnerabilities">{% if not pen.payloads.count.vulnerabilities %}-{% else %}{{ pen.payloads.count.vulnerabilities }}{% endif %}</td>
-					<td class="text-center" field="vulnerable_files">{% if not pen.patches.count.vulnerable_files %}-{% else %}{{ pen.patches.count.vulnerable_files }}{% endif %}</td>
-					<td class="text-center" field="patch_suggestion">{% if not pen.patches.count.patch_suggestion %}-{% else %}{{ pen.patches.count.patch_suggestion }}{% endif %}</td>
-					<td class="text-center" field="best_suggestion">{% if not pen.patches.count.best_suggestion %}-{% else %}{{ pen.patches.count.best_suggestion }}{% endif %}</td>
-					<td class="text-center" field="patches_applied">{% if not pen.patches_applied %}-{% else %}{{ pen.patches_applied }}{% endif %}</td>
-					<td field="control"><div class="d-flex gap-2">
-						<a class="link-secondary text-center" style="width: 1rem" href="{% url 'pen_test' pen.pen_code %}" data-bs-toggle="tooltip" data-bs-title="{% if pen.isBase %}Preview{% else %}Play{% endif %}" onclick="event.stopPropagation()">
-							<i class="fa-solid fa-play"></i>
-						</a>
-						<label role="button" class="link-secondary text-center{% if pen.isBase %} invisible{% endif %}" style="width: 1rem" data-bs-toggle="tooltip" data-bs-title="Results">
-							<i class="fa-solid fa-square-poll-horizontal"></i>
-							<button type="button" onclick="event.stopPropagation(); setPenInfoModal(this.closest('[mode]'))" data-bs-toggle="modal" data-bs-target="#penInfoModal" hidden></button>
-						</label>
-					</div></td>
-				</tr>{% endfor %}
 			</tbody>
 		</table>
 	</div>
@@ -136,6 +116,7 @@
 
 {% block js_content %}
 <script type="text/javascript">
+	// Configure Graph Charts
 	const payload_type_chart = getCanvas({
 		canvas: document.querySelector("#payload-type-chart"),
 		config: {
@@ -224,45 +205,12 @@
 
 
 
-	const urlTable = document.querySelector("#url-table");
-
-
-	const setChartData = async function() {
-		const data = await api("/api/charts");
-		for (let x of data.urls) {
-			let {url, payloads, vulnerabilities, patch_suggestion, best_suggestion} = x;
-			insertURLTable(urlTable, {url, data: {payloads, vulnerabilities, patches: patch_suggestion, best: best_suggestion}})
-		}
-		for (let x of urlTable.querySelectorAll("thead tr:last-child th")) {
-			const field = x.getAttribute("sort");
-			urlTable.querySelector(`tfoot [field="${field}"]`).innerText = [...urlTable.querySelectorAll(`tbody [field="${field}"]`)].map(x => parseInt(x.innerText) || 0).reduce((acc, cur) => acc + cur, 0);
-		}
-
-		while (data.attacks.length < 4) {
-			data.attacks.push({attack_name: "", payload: 0, vulnerabilities: 0, patch_suggestion: 0, best_suggestion:0});
-		}
-		for (let x of data.attacks) {
-			payload_type_chart.data.labels.push(x.attack_name);
-			payload_type_chart.data.datasets[0].data.push(x.payloads);
-			payload_type_chart.data.datasets[1].data.push(x.vulnerabilities);
-			patch_type_chart.data.labels.push(x.attack_name);
-			patch_type_chart.data.datasets[0].data.push(x.patch_suggestion);
-			patch_type_chart.data.datasets[1].data.push(x.best_suggestion);
-		}
-		payload_type_chart.update();
-		patch_type_chart.update();
-	}
-	setChartData();
-
-
-
+	// Search in Pen Table
 	const penTbody = document.querySelector("table#pen_code_container tbody");
-	const trs = penTbody.querySelectorAll("tr");
 	const numberOf = penTbody.parentNode.querySelectorAll("thead > tr:last-child th");
-
 	const selectPen = function(input) {
 		const counter = {};
-		for (let box of trs) {
+		for (let box of penTbody.querySelectorAll("tr")) {
 			if (!box.classList.toggle("d-none", !box.getAttribute("pen_code").toLowerCase().trim().includes(input.toLowerCase().trim()))) {
 				for (let x of numberOf) {
 					const field = x.getAttribute("sort");
@@ -270,15 +218,17 @@
 				}
 			}
 		}
+
+		// Change Total Data
 		for (let x of numberOf) {
 			const field = x.getAttribute("sort");
 			penTbody.parentNode.querySelector(`tfoot [field="${field}"]`).innerText = counter[field] || 0;
 		}
 	}
-	selectPen("");
 
 
 
+	// Display a Tree in Pen Table when mouseover
 	const activeTree = function(tr, isActive=true) {
 		tr?.classList.toggle("active", isActive);
 	}
@@ -287,7 +237,6 @@
 			activeTree(tr, false);
 		}
 	}
-
 	const showTree = function(tr, type) {
 		if (!tr || tr.tagName != "TR") {
 			return;
@@ -304,10 +253,87 @@
 			showTree(x, "down");
 		}
 	}
-
 	penTbody.addEventListener("mouseover", function(e) {
 		showTree(e.target.closest("tr"));
 	});
 	penTbody.addEventListener("mouseout", hideTree);
+
+
+
+	// Initial Table and Chart Data
+	const urlTable = document.querySelector("#url-table");
+	const initChartData = async function() {
+		const [data, backend] = await Promise.all(["/api/charts", "/api/running"].map(url => request(url)));
+
+		// Pen Table
+		for (let idx in data.pens) {
+			const {pen_code, chart} = data.pens[idx];
+			const {modes, base, meta} = await request(`/api/pens/${pen_code}`);
+			const tr = document.createElement("tr");
+			tr.className = "position-relative";
+			tr.setAttribute("pen_code", pen_code);
+			tr.setAttribute("forked", meta.fork_sim_code);
+			tr.setAttribute("mode", modes[0]);
+			tr.innerHTML = `
+				<th field="num" class="text-end" scope="row"><span>${idx*1+1}</span></th>
+				<td field="pen_code">${pen_code}</td>
+				<td class="text-center" field="step">${!base ? chart.step : "-"}</td>
+				<td class="text-center" field="payloads">${chart.payloads || "-"}</td>
+				<td class="text-center" field="vulnerabilities">${chart.vulnerabilities || "-"}</td>
+				<td class="text-center" field="vulnerable_files">${chart.vulnerable_files || "-"}</td>
+				<td class="text-center" field="patch_suggestion">${chart.patch_suggestion || "-"}</td>
+				<td class="text-center" field="best_suggestion">${chart.best_suggestion || "-"}</td>
+				<td class="text-center" field="patches_applied">${chart.patches_applied || "-"}</td>
+				<td field="control"><div class="d-flex gap-2">
+					<a class="link-secondary text-center" style="width: 1rem" href="{% url 'pen_test' %}${pen_code}" data-bs-toggle="tooltip" data-bs-title="${base ? "Preview" : "Play"}">
+						<i class="fa-solid fa-play"></i>
+					</a>
+					<label role="button" class="link-secondary text-center" style="width: 1rem" data-bs-toggle="tooltip" data-bs-title="Results">
+						<i class="fa-solid fa-square-poll-horizontal"></i>
+						<button type="button" data-bs-toggle="modal" data-bs-target="#penInfoModal" hidden></button>
+					</label>
+				</div></td>
+			`;
+			if (backend.running && backend.pen_code == pen_code) {
+				tr.querySelector("[field=num] span").classList.add("text-success");
+				tr.querySelector("[field=num] span").setAttribute("data-bs-toggle", "tooltip");
+				tr.querySelector("[field=num] span").setAttribute("data-bs-title", "Running");
+			}
+			if (base) {
+				for (let x of tr.querySelectorAll(".d-none-base")) {
+					x.classList.add("d-none");
+				}
+			}
+			penTbody.append(tr);
+		}
+		initBsTooltip(penTbody);
+		selectPen("");
+
+		// URL Table
+		for (let x of data.urls) {
+			let {url, payloads, vulnerabilities, patch_suggestion, best_suggestion} = x;
+			insertURLTable(urlTable, {url, data: {payloads, vulnerabilities, patches: patch_suggestion, best: best_suggestion}})
+		}
+		for (let x of urlTable.querySelectorAll("thead tr:last-child th")) {
+			const field = x.getAttribute("sort");
+			urlTable.querySelector(`tfoot [field="${field}"]`).innerText = [...urlTable.querySelectorAll(`tbody [field="${field}"]`)].map(x => parseInt(x.innerText) || 0).reduce((acc, cur) => acc + cur, 0);
+		}
+
+		// Attack Type Graph Charts
+		while (data.attacks.length < 4) {
+			data.attacks.push({attack_name: "", payload: 0, vulnerabilities: 0, patch_suggestion: 0, best_suggestion:0});
+		}
+		for (let x of data.attacks) {
+			payload_type_chart.data.labels.push(x.attack_name);
+			payload_type_chart.data.datasets[0].data.push(x.payloads);
+			payload_type_chart.data.datasets[1].data.push(x.vulnerabilities);
+			patch_type_chart.data.labels.push(x.attack_name);
+			patch_type_chart.data.datasets[0].data.push(x.patch_suggestion);
+			patch_type_chart.data.datasets[1].data.push(x.best_suggestion);
+		}
+		payload_type_chart.update();
+		patch_type_chart.update();
+	}
+	window.addEventListener("DOMContentLoaded", initChartData);
 </script>
 {% endblock %}

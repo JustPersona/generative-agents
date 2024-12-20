@@ -1,0 +1,27 @@
+<div id="msgbox-container" class="fixed-top w-100 d-flex flex-column-reverse align-items-center justify-content-end px-2" style="height: 0px">
+	<script type="text/javascript">
+		const msg = function(text, type="success") {
+			const idx = document.querySelector("#msgbox-container").getAttribute("count") * 1 + 1;
+			document.querySelector("#msgbox-container").setAttribute("count", idx);
+			const box = document.createElement("div");
+			box.className = "msgbox d-flex align-items-end";
+			box.innerHTML = `
+				<div class="shadow bg-${type}-subtle border border-${type} rounded px-4 py-2 fs-6 w-100 text-center" style="z-index: ${idx}">
+					${text}
+				</div>
+			`;
+			document.querySelector("#msgbox-container").append(box);
+
+			box.style.setProperty("--height", box.children[0].offsetHeight + "px");
+			setTimeout(function() {
+				box.classList.add("show");
+			}, 10);
+			setTimeout(function() {
+				box.classList.remove("show");
+				setTimeout(function() {
+					box.remove();
+				}, 500);
+			}, 3500);
+		}
+	</script>
+</div>

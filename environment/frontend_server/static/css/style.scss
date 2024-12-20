@@ -76,6 +76,32 @@
 
 
 
+/* msgbox */
+#msgbox-container {
+	--margin: 1rem;
+	z-index: 99999;
+
+	.msgbox {
+		margin: 0px;
+		height: 0px;
+		min-width: 10rem;
+		opacity: 0;
+		transition-property: margin, height, opacity;
+		transition-duration: .15s;
+		transition-timing-function: ease-in-out;
+
+		&.show {
+			margin-top: var(--margin);
+			height: var(--height, 3rem);
+			opacity: 1;
+		} .border {
+			max-width: 1080px;
+		}
+	}
+}
+
+
+
 /* modal */
 #penInfoModal {
 	.modal-scroll {

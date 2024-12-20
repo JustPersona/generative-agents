@@ -70,7 +70,7 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     <button type="button" class="btn btn-danger" onclick="trashPen(this, 'delete')">Delete</button>
-                    <button type="button" class="btn btn-success" onclick="trashPen(this, 'restore')">Restore</button>
+                    <button type="button" class="btn btn-success" onclick="trashPen(this, 'post')">Restore</button>
                 </div>
 			</div>
 		</div>
@@ -93,23 +93,22 @@
             modal.querySelector(".modal-footer .btn-danger").classList.toggle("d-none", title != "delete");
         }
 
-        const trashPen = function(btn, action) {
+        const trashPen = async function(btn, method) {
             const mode = modal.querySelector("#modal_mode").value.trim();
             const pen_code = modal.querySelector("#modal_pen_code").value.trim();
             const new_pen_code = modal.querySelector("#modal_new_pen_code").value.trim();
 
             btn.setAttribute("disabled", "");
-            post("./", {mode, pen_code, new_pen_code, action}, function(xhr) {
+            const ok = await request("{% url 'trash' %}", {method, data: {mode, pen_code, new_pen_code}});
+            if (ok != true) {
+                msg(ok, "danger");
+            } else {
                 const tr = document.querySelector(`table tbody tr[pen_code="${pen_code}"]`);
                 tr.querySelector(`[field="${mode}"]`).innerHTML = "";
                 if (!tr.querySelector("button")) tr.remove();
 				modal.querySelector("[aria-label=Close]").click();
-                btn.removeAttribute("disabled");
-            }, function(xhr) {
-                btn.removeAttribute("disabled");
-                alertbox.innerText = xhr.responseText;
-                alertbox.classList.remove("d-none");
-            })
+            }
+            btn.removeAttribute("disabled");
         }
     </script>
 </section>

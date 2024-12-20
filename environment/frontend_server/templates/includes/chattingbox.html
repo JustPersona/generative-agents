@@ -67,9 +67,9 @@
 	}
 
 	function insertChatting(container, pen_code, data, {focus=false, time=undefined, suffix=""}={}) {
-		if (!data) return;
+		if (!data || data.length == 0) return;
 		for (let c_content of data) {
-			const {name, chat, datetime} = c_content;
+			const [name, chat] = c_content;
 			setChatting_content(container, pen_code, name, chat, time || (typeof datetime !== "string" ? datetime : new Date(Date.parse(datetime))), {mychat: name == focus?.replace?.(/_/g, " "), suffix});
 		}
 	}

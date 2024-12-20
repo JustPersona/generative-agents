@@ -1,23 +1,20 @@
 <div id="modal-container">
 	<div class="modal fade" id="penInfoModal" tabindex="-1" aria-labelledby="penInfoModalLabel" aria-hidden="true">
 		<div class="modal-dialog modal-xl">
-			<form class="modal-content" onsubmit="penInfoUpdate(event);">
+			<form class="modal-content" onsubmit="updatePenInfo(event);">
 				<div class="modal-header pb-0">
 					<div class="nav nav-tabs w-100 border-0" id="nav-tab" role="tablist">
-						<button class="nav-link" id="pen-payloads-tab" data-bs-toggle="tab" data-bs-target="#pen-payloads" type="button" role="tab" aria-controls="pen-payloads" aria-selected="false">Payloads</button>
-						<button class="nav-link" id="pen-patches-tab" data-bs-toggle="tab" data-bs-target="#pen-patches" type="button" role="tab" aria-controls="pen-patches" aria-selected="false">Patches</button>
-						<button class="nav-link" id="pen-vulnFiles-tab" data-bs-toggle="tab" data-bs-target="#pen-vulnFiles" type="button" role="tab" aria-controls="pen-vulnFiles" aria-selected="false">Vuln Files</button>
-						<button class="nav-link" id="pen-chats-tab" data-bs-toggle="tab" data-bs-target="#pen-chats" type="button" role="tab" aria-controls="pen-chats" aria-selected="false">Chats</button>
+						<button class="nav-link" id="modal-pen-payloads-tab" data-bs-toggle="tab" data-bs-target="#modal-pen-payloads" type="button" role="tab" aria-controls="modal-pen-payloads" aria-selected="false">Payloads</button>
+						<button class="nav-link" id="modal-pen-patches-tab" data-bs-toggle="tab" data-bs-target="#modal-pen-patches" type="button" role="tab" aria-controls="modal-pen-patches" aria-selected="false">Patches</button>
+						<button class="nav-link" id="modal-pen-vulnFiles-tab" data-bs-toggle="tab" data-bs-target="#modal-pen-vulnFiles" type="button" role="tab" aria-controls="modal-pen-vulnFiles" aria-selected="false">Vuln Files</button>
+						<button class="nav-link" id="modal-pen-chats-tab" data-bs-toggle="tab" data-bs-target="#modal-pen-chats" type="button" role="tab" aria-controls="modal-pen-chats" aria-selected="false">Chats</button>
 						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 					</div>
 				</div>
 				<div class="modal-body">
-					<div class="tab-content" id="nav-tabContent">
+					<div class="tab-content d-none" id="nav-tabContent">
 						<div class="d-flex flex-column gap-2 mb-2">
 							<div class="d-flex gap-2 px-1">
-								<a field="preview" href="#" class="me-1 link-success text-center" style="width: 1rem" data-bs-toggle="tooltip" data-bs-title="Preview">
-									<i class="fa-solid fa-play"></i>
-								</a>
 								<a field="play" href="#" class="me-1 link-success text-center" style="width: 1rem" data-bs-toggle="tooltip" data-bs-title="Play">
 									<i class="fa-solid fa-play"></i>
 								</a>
@@ -42,15 +39,15 @@
 								</div>{% endif %}
 							</div>
 							<div class="form-floating">
-								<input type="text" class="form-control" id="modal_pen_code" name="new_pen_code"{% if not user.is_staff %} disabled{% endif %}>
+								<input type="text" class="form-control" id="modal_pen_code" name="new_pen_code" onblur="this.classList.remove('form-danger')"{% if not user.is_staff %} disabled{% endif %}>
 								<label for="modal_pen_code">Penetration Test Name</label>
 							</div>
 							<div class="row g-2">
 								<div class="col-6"><div class="form-floating">
-									<button type="button" class="form-control btn btn-outline-secondary text-start text-truncate" id="modal_forked" name="forked" onclick="setPenInfoModal(this)" title="Information"></button>
+									<input type="button" class="form-control btn btn-outline-secondary text-start text-truncate" id="modal_forked" name="forked" onclick="initPenModal(this.value)" title="Information"/>
 									<label for="modal_forked">Forked from</label>
 								</div></div>
-								<div class="col-6"><select class="form-select h-100" aria-label="Large select example" onchange="setPenInfoModal(this.selectedOptions[0])">
+								<div class="col-6"><select id="modal_forks" name="forks" class="form-select h-100" aria-label="Large select example" onchange="initPenModal(this.selectedOptions[0].value)">
 									<option selected hidden>Forked by</option>
 								</select></div>
 							</div>
@@ -77,8 +74,8 @@
 							<div class="d-flex flex-column gap-2">
 								<div class="row g-2">
 									<div class="col-4"><div class="form-floating">
-										<input type="text" class="form-control" id="modal_patches" name="patches" disabled>
-										<label for="modal_patches">Patches</label>
+										<input type="text" class="form-control" id="modal_patch_suggestion" name="patch_suggestion" disabled>
+										<label for="modal_patch_suggestion">Patches</label>
 									</div></div>
 									<div class="col-4"><div class="form-floating">
 										<input type="text" class="form-control" id="modal_best_suggestion" name="best_suggestion" disabled>
@@ -91,19 +88,19 @@
 								</div>
 							</div>
 						</div>
-						<div class="tab-pane fade" id="pen-payloads" role="tabpanel" aria-labelledby="pen-payloads-tab" tabindex="0"></div>
-						<div class="tab-pane fade" id="pen-patches" role="tabpanel" aria-labelledby="pen-patches-tab" tabindex="0"></div>
-						<div class="tab-pane fade" id="pen-vulnFiles" role="tabpanel" aria-labelledby="pen-vulnFiles-tab" tabindex="0">
+						<div class="tab-pane fade" id="modal-pen-payloads" role="tabpanel" aria-labelledby="modal-pen-payloads-tab" tabindex="0"></div>
+						<div class="tab-pane fade" id="modal-pen-patches" role="tabpanel" aria-labelledby="modal-pen-patches-tab" tabindex="0"></div>
+						<div class="tab-pane fade" id="modal-pen-vulnFiles" role="tabpanel" aria-labelledby="modal-pen-vulnFiles-tab" tabindex="0">
 							<select class="form-select" id="vulnerable_file_select" onchange="displayCodeViewer(this.value)">
 								<option hidden selected>Vulnerable Files</option>
 							</select>
 							<div id="codes-container" class="modal-scroll-target"></div>
 						</div>
-						<div class="tab-pane fade" id="pen-chats" role="tabpanel" aria-labelledby="pen-chats-tab" tabindex="0">
+						<div class="tab-pane fade" id="modal-pen-chats" role="tabpanel" aria-labelledby="modal-pen-chats-tab" tabindex="0">
 							{% include 'includes/chattingbox.html' with type="modal" %}
 						</div>
 					</div>
-					<div class="alert alert-danger mt-3 text-center d-none"></div>
+					<div class="loading h4 text-center text-secondary pt-3">Loading...</div>
 				</div>
 				{% if user.is_staff %}<div class="modal-footer">
 					<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -122,7 +119,6 @@
 				</div>
 				<div class="modal-body">
 					<span class="pen_code"></span>
-					<div class="alert alert-danger mt-3 text-center d-none"></div>
 				</div>
 				<div class="modal-footer">
 					<button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#penInfoModal" aria-label="Back">Back</button>
@@ -141,7 +137,6 @@
 				</div>
 				<div class="modal-body">
 					<span class="pen_code"></span> (<span class="mode"></span>)
-					<div class="alert alert-danger mt-3 text-center d-none"></div>
 				</div>
 				<div class="modal-footer">
 					<button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#penInfoModal" aria-label="Back">Back</button>
@@ -154,138 +149,122 @@
 
 
 	<script type="text/javascript">
-		document.querySelector(`#pen-payloads`).append(createPayloadTable("modal"));
-		document.querySelector(`#pen-patches`).append(createPatchTable("modal"));
-		const payloadTable = document.querySelector(`#pen-payloads table`);
-		const patchTable = document.querySelector("#pen-patches table");
+		document.querySelector(`#modal-pen-payloads`).append(createPayloadTable("modal"));
+		document.querySelector(`#modal-pen-patches`).append(createPatchTable("modal"));
+		const payloadTable = document.querySelector(`#modal-pen-payloads table`);
+		const patchTable = document.querySelector("#modal-pen-patches table");
 
 		const container = document.querySelector("#pen_code_container");
 		const penModal = document.querySelector("#penInfoModal");
-		const pen_codes = container?.querySelectorAll(`[pen_code]`) || [];
+		const form = penModal.querySelector("form");
+		const selectbox = form.querySelector(`[name=forks]`);
 
-		const loadding = document.createElement("div");
-		loadding.className = "loadding modal-backdrop bg-transparent h3 text-center text-success mt-5 py-5";
-		loadding.innerHTML = "Loading..."
-		loadding.style.zIndex = "calc(var(--bs-backdrop-zindex) + 1)";
-		penModal.addEventListener("show.bs.modal", function(e) {
-			document.querySelector("body").append(loadding);
-			if (!e.relatedTarget.closest(".modal")) {
-				penModal.querySelector("#nav-tab > button:not(.disabled)").click();
+		const modalLoading = async function(e, toggle=undefined) {
+			const pen_code = e.relatedTarget?.closest("[pen_code]").getAttribute("pen_code");
+
+			if (!e?.relatedTarget?.closest(".modal")) {
+				await initPenModal(pen_code);
+				form.querySelector("#nav-tab > button:not(.disabled)").click();
 			}
-		});
-		penModal.addEventListener("shown.bs.modal", function(e) {
-			loadding.remove();
-		});
-
+			if (toggle === undefined) toggle = ["show", "shown"].includes(e.type.split(".")[0]);
+			form.querySelector(".loading").classList.toggle("d-none", toggle);
+			form.querySelector("#nav-tabContent").classList.toggle("d-none", !toggle);
+			penModalAutoHeight();
+		}
 		const penModalAutoHeight = function(e) {
 			const height = penInfoModal.querySelector(".modal-content").clientHeight;
-			for (let box of penModal.querySelectorAll(".modal-scroll-target")) {
+			for (let box of form.querySelectorAll(".modal-scroll-target")) {
 				box.style.setProperty("--height", `${height - box.clientHeight}px`);
 			}
 		}
-		penModal.addEventListener("shown.bs.modal", penModalAutoHeight);
-		for (let x of penModal.querySelectorAll("#nav-tab button")) {
-			x.addEventListener("shown.bs.tab", penModalAutoHeight);
+
+		const initPenModal = async function(pen_code) {
+			if (!pen_code) return;
+			const pen_codes = container?.querySelectorAll(`[pen_code]`) || [];
+
+			const [chart, {base, meta, modes}, data] = await Promise.all([
+				`/api/charts/pens/${pen_code}`,
+				`/api/pens/${pen_code}`,
+				`/api/pens/${pen_code}/datas`,
+			].map(url => request(url)));
+
+			const playBtn = form.querySelector("[field=play]");
+			playBtn.setAttribute("data-bs-title", base ? "Preview" : "Play");
+			playBtn.href = "{% url 'pen_test' %}" + pen_code;
+			new bootstrap.Tooltip(playBtn);
+
+			const isForkable = modes.includes("forkable");
+			const isCompressed = modes.includes("compressed");
+			form.querySelector("[field=forkable] input").checked = isForkable;
+			form.querySelector("[field=compressed] input").checked = isCompressed;
+			form.querySelector("[field=compress]")?.classList.toggle("d-none", meta.step == 0 || isCompressed);
+			form.querySelector(".btn-forkable-delete")?.toggleAttribute("disabled", !isForkable);
+			form.querySelector(".btn-compressed-delete")?.toggleAttribute("disabled", !isCompressed);
+
+			form.setAttribute("pen_code", pen_code);
+			form.new_pen_code.value = pen_code;
+			form.new_pen_code.placeholder = pen_code;
+
+			form.forked.setAttribute("pen_code", meta.fork_sim_code);
+			form.forked.value = meta.fork_sim_code;
+			form.forked.toggleAttribute("disabled", form.forked.value.trim() == pen_code || !container?.querySelector(`[pen_code="${meta.fork_sim_code}"]`));
+
+			while (1 < selectbox.children.length) selectbox.children[1].remove();
+			for (let box of pen_codes) {
+				if (box.getAttribute("forked").trim() == pen_code && box.getAttribute("pen_code").trim() != pen_code) {
+					const option = document.createElement("option");
+					option.setAttribute("pen_code", box.getAttribute("pen_code"));
+					option.innerText = box.getAttribute("pen_code");
+					selectbox.append(option);
+				}
+			}
+			selectbox.toggleAttribute("disabled", selectbox.children.length <= 1);
+
+			form.step.value = meta.step;
+			for (let key of ["payloads", "vulnerabilities", "vulnerable_files", "patch_suggestion", "best_suggestion", "patches_applied"]) {
+				form[key].value = chart[key];
+			}
+
+			const onlyVuln = form.querySelector("#only-vuln-modal");
+			const bestSugg = form.querySelector("#best-suggestion-modal");
+			if (onlyVuln.checked) onlyVuln.click();
+			if (bestSugg.checked) bestSugg.click();
+			payloadTable.querySelector("tbody").innerHTML = "";
+			patchTable.querySelector("tbody").innerHTML = "";
+			form.querySelector("#codes-container").innerHTML = "";
+			for (let x of form.querySelectorAll("#vulnerable_file_select [value]")) x.remove();
+			for (let x of form.querySelectorAll("#chattingbox-container article ul")) x.innerHTML = "";
+
+			const start_datetime = getDateObject(`${meta.start_date}, 00:00:00`);
+			const sec_per_step = meta.sec_per_step;
+			for (let step in data) {
+				for (let p_name in data[step]) {
+					const {payload, patch, chat} = data[step][p_name];
+					insertChatting(form.querySelector("#chattingbox-container"), pen_code, chat, {time: addDateTime(start_datetime, sec_per_step * step), suffix: "-modal"});
+					insertPayloadTable(payloadTable, {data: payload});
+					insertPatchTable(patchTable, {data: patch});
+				}
+			}
 		}
 
-		const setPenInfoModal = function(target) {
-			if (!target) return;
-
-			const pen_code = target.getAttribute("pen_code");
-			const form = penModal.querySelector("form");
-			const selectbox = form.querySelector(`select`);
-			const options = selectbox.querySelectorAll(`option[pen_code]`);
-			const alertbox = form.querySelector(".alert");
-
-			const new_pen_code = form.new_pen_code;
-			post("{% url 'pen_info' %}", {pen_code: pen_code}, function(xhr) {
-				data = JSON.parse(xhr.responseText);
-
-				penModal.querySelector("[field=preview]").classList.toggle("d-none", !data.isBase);
-				penModal.querySelector("[field=play]").classList.toggle("d-none", data.isBase);
-				penModal.querySelector(`[field="${data.isBase ? "preview" : "play"}"]`).href = "{% url 'pen_test' %}" + pen_code;
-
-				form.setAttribute("pen_code", pen_code);
-				alertbox.classList.add("d-none");
-				new_pen_code.value = pen_code;
-				new_pen_code.setAttribute("placeholder", pen_code);
-				form.forked.setAttribute("pen_code", data.fork_sim_code);
-				form.forked.innerText = data.fork_sim_code;
-				form.forked.toggleAttribute("disabled", new_pen_code.value.trim() == form.forked.innerText.trim() || !container?.querySelector(`[pen_code="${data.fork_sim_code}"]`));
-				selectbox.setAttribute("disabled", "");
-				for (let option of options) option.remove();
-				for (let box of pen_codes) {
-					if (box.getAttribute("forked") == pen_code && box.getAttribute("pen_code") != pen_code) {
-						const option = document.createElement("option");
-						option.setAttribute("pen_code", box.getAttribute("pen_code"));
-						option.innerText = box.getAttribute("pen_code");
-						selectbox.append(option);
-						selectbox.removeAttribute("disabled");
-					}
-				}
-				form.step.value = data.step;
-				form.vulnerabilities.value = data.payloads?.count?.vulnerabilities || 0;
-				form.payloads.value = data.payloads?.count?.payloads || 0;
-				form.vulnerable_files.value = data.patches?.count?.vulnerable_files || 0;
-				form.patches.value = data.patches?.count?.patch_suggestion || 0;
-				form.best_suggestion.value = data.patches?.count?.best_suggestion || 0;
-				form.patches_applied.value = data?.patches_applied || 0;
-				form.patches_applied.setAttribute("placeholder", data?.patches_applied || 0);
-				form.querySelector("[field=forkable] input").checked = data.forkable;
-				form.querySelector("[field=compressed] input").checked = data.compressed;
-				form.querySelector("[field=compressed]").classList.toggle("d-none", !data.compressed);
-				form.querySelector("[field=compress]")?.classList.toggle("d-none", data.step == 0 || data.compressed === true);
-				form.querySelector(".btn-forkable-delete")?.toggleAttribute("disabled", !data.forkable);
-				form.querySelector(".btn-compressed-delete")?.toggleAttribute("disabled", !data.compressed);
-
-				const onlyVuln = penModal.querySelector("#only-vuln-modal");
-				if (onlyVuln.checked) onlyVuln.click();
-				const bestSugg = penModal.querySelector("#best-suggestion-modal");
-				if (bestSugg.checked) bestSugg.click();
-				payloadTable.querySelector("tbody").innerHTML = "";
-				patchTable.querySelector("tbody").innerHTML = "";
-				penModal.querySelector("#codes-container").innerHTML = "";
-				for (let x of penModal.querySelectorAll("#vulnerable_file_select [value]")) x.remove();
-
-				const steps = [...new Set([...Object.keys(data.payloads.data), ...Object.keys(data.patches.data)])].sort((a, b) => a - b);
-				for (let step of steps) {
-					const payload_data = data.payloads.data[step];
-					if (!payload_data) continue;
-					for (let p_name in payload_data) {
-						const x = payload_data[p_name];
-						insertPayloadTable(payloadTable, {url: x.url, data: x});
-					}
-
-					const patch_data = data.patches.data[step];
-					if (!patch_data) continue;
-					for (let p_name in patch_data) {
-						const data = patch_data[p_name];
-						insertPatchTable(patchTable, {best: data.best, data: data?.suggestion});
-					}
-				}
-
-				for (let x of penModal.querySelectorAll("#chattingbox-container article ul")) x.innerHTML = "";
-				for (let i in data.chats) {
-					insertChatting(penModal.querySelector("#chattingbox-container"), pen_code, data.chats[i], {suffix: "-modal"});
-				}
-			}, function(xhr) {
-				alertbox.innerText = xhr.responseText;
-				alertbox.classList.remove("d-none");
-			});
-		}
-
-		const penInfoUpdate = function(e) {
+		const updatePenInfo = async function(e) {
 			e.preventDefault();
 
 			const form = e.target;
 			const btn = form.querySelector("button[type=submit]");
-			const alertbox = form.querySelector(".alert");
 			const pen_code = form.getAttribute("pen_code").trim();
 			const new_pen_code = form.new_pen_code.value.trim();
 			const patches_applied = form.patches_applied.value.trim() * 1;
+			const pen_codes = container?.querySelectorAll(`[pen_code]`) || [];
 
 			btn.setAttribute("disabled", "");
-			post("{% url 'pen_info_update' %}", {pen_code, new_pen_code, patches_applied}, function(xhr) {
+			form.new_pen_code.classList.remove("form-danger");
+			const ok = await request("{% url 'pen_info_update' %}", {method: "patch", data: {pen_code, new_pen_code, patches_applied}});
+			if (!ok) {
+				form.new_pen_code.classList.add("form-danger");
+				form.new_pen_code.focus();
+				msg("Already Exists", "danger");
+			} else {
 				for (let box of pen_codes) {
 					if (box.getAttribute("pen_code") == pen_code) {
 						box.setAttribute("pen_code", new_pen_code);
@@ -300,12 +279,9 @@
 					form.patches_applied.setAttribute("placeholder", patches_applied);
 					form.querySelector("button[type=submit]").setAttribute("disabled", "");
 				}
-				btn.removeAttribute("disabled");
-			}, function(xhr) {
-				btn.removeAttribute("disabled");
-				alertbox.innerText = xhr.responseText;
-				alertbox.classList.remove("d-none");
-			})
+				msg("Successfully");
+			}
+			btn.removeAttribute("disabled");
 		}
 
 		const setSubModal = function(e, target) {
@@ -314,54 +290,57 @@
 			const btns = modal.querySelectorAll(".modal-footer .btn-secondary");
 			modal.setAttribute("pen_code", pen_code);
 			modal.querySelector(`.pen_code`).innerText = pen_code;
-			modal.querySelector(".alert").classList.add("d-none");
 			if (modal.querySelector(`.mode`)) {
 				modal.setAttribute("mode", e.target.innerText.toLowerCase());
 				modal.querySelector(`.mode`).innerText = e.target.innerText;
 			}
 		}
 
-		const compressPenTest = function(e) {
+		const compressPenTest = async function(e) {
 			const btn = e.target.closest("button");
 			const modal = e.target.closest(".modal");
-			const alertbox = modal.querySelector(".alert");
 			const pen_code = modal.getAttribute("pen_code");
-			const form = penModal.querySelector("form");
 
 			btn.setAttribute("disabled", "");
-			post("{% url 'compress_pen_test' %}", {pen_code}, function(xhr) {
+			const ok = await request("{% url 'compress_pen_test' %}", {method: "post", data: {pen_code}});
+			if (ok != true) {
+				msg(ok, "danger");
+			} else {
 				form.querySelector("[field=compress]").classList.add("d-none");
 				form.querySelector("[field=compressed]").classList.remove("d-none");
+				form.querySelector("[field=compressed] input").checked = true;
 				form.querySelector(".btn-compressed-delete").removeAttribute("disabled");
 				modal.querySelector(`[aria-label=Back`).click();
-				btn.removeAttribute("disabled");
-			}, function(xhr) {
-				btn.removeAttribute("disabled");
-				alertbox.innerText = xhr.responseText;
-				alertbox.classList.remove("d-none");
-			});
+			}
+			btn.removeAttribute("disabled");
 		}
 
-		const deletePenTest = function(e) {
+		const deletePenTest = async function(e) {
 			const btn = e.target.closest("button");
 			const modal = e.target.closest(".modal");
-			const alertbox = modal.querySelector(".alert");
 			const pen_code = modal.getAttribute("pen_code");
 			const mode = modal.getAttribute("mode");
 			const form = penModal.querySelector("form");
 
 			btn.setAttribute("disabled", "");
-			post("{% url 'delete_pen_test' %}", {pen_code, mode}, function(xhr) {
-				form.querySelector(`[field=compress]`).classList.toggle("d-none", mode === "compressed");
-				form.querySelector(`[field="${mode}"]`).classList.add("d-none");
+			const ok = await request("{% url 'delete_pen_test' %}", {method: "delete", data: {pen_code, mode}});
+			if (ok != true) {
+				msg(ok, "danger");
+			} else {
+				form.querySelector(`[field=compress]`).classList.toggle("d-none", mode !== "compressed");
+				form.querySelector(`[field="${mode}"] input`).checked = false;
 				form.querySelector(`.btn-${mode}-delete`).setAttribute("disabled", "");
-				modal.querySelector(`[aria-label="${form.querySelectorAll('[class$=-delete]:not([disabled])').length ? 'Back' : 'Close'}"]`).click();
-				btn.removeAttribute("disabled");
-			}, function(xhr) {
-				btn.removeAttribute("disabled");
-				alertbox.innerText = xhr.responseText;
-				alertbox.classList.remove("d-none");
-			});
+				const back = form.querySelectorAll('[class$=-delete]:not([disabled])').length;
+				modal.querySelector(`[aria-label="${back ? 'Back' : 'Close'}"]`).click();
+				if (!back) container.querySelector(`[pen_code="${pen_code}"]`).remove();
+			}
+			btn.removeAttribute("disabled");
+		}
+
+		penModal.addEventListener("shown.bs.modal", modalLoading);
+		penModal.addEventListener("hidden.bs.modal", modalLoading);
+		for (let x of penModal.querySelectorAll("#nav-tab button")) {
+			x.addEventListener("shown.bs.tab", penModalAutoHeight);
 		}
 	</script>
 </div>

@@ -68,12 +68,12 @@ DVWA 외 다른 서버를 타겟 서버로 지정하는 방법은 다음과 같�
     - `./source:/source:ro` 부분에서 `./source`를 타겟 서버의 소스코드가 위치한 경로로 변경
 2. 타겟 서버를 구성하는 방법에 따라 설정 방법이 달라집니다.
     1. 프로젝트 서버와 타겟 서버 컨테이너를 같이 올리는 경우
-        - `docker-compose.yml` 파일 내 서버를 실행하기 위한 설정 추가 작성 및 네트워크에 `generative_agents_internal`를 연결
+        - `docker-compose.yml` 파일 내 서버를 실행하기 위한 설정 추가 작성 및 네트워크에 `generative-agents-internal`를 연결
     2. 이미 도커로 실행 중인 서버를 타겟 서버로 지정하는 경우
         - 프로젝트 서버 실행 후 아래 명령어로 타겟 서버 컨테이너를 프로젝트 네트워크와 연결
 
             ```shell
-            docker network connect generative_agents_internal <container_name>
+            docker network connect generative-agents-internal <container_name>
             ```
 
     3. 그 외의 서버를 타겟 서버로 사용하는 경우
@@ -140,9 +140,9 @@ env_visuals = f"{maze_assets_loc}/%s/visuals"
 fs_storage = "../../environment/frontend_server/storage"
 fs_temp_storage = "../../environment/frontend_server/temp_storage"
 
-black_hats = ["Carlos Gomez", "Yuriko Yamamoto"]
-white_hats = ["Abigail Chen", "Arthur Burton"]
-server_owners = ["Isabella Rodriguez"]
+black_hats = ["Beom Jun Choi", "Bo Ram Jung"]
+white_hats = ["Won Hee Park", "Woo Jin Lee"]
+server_owners = ["Seo Yeon Kim"]
 work_areas = ["computer desk", "control screen"]
 
 # Verbose
@@ -158,24 +158,33 @@ debug = True
 
 시뮬레이션 진행 시 생성된 데이터와 백엔드 상태를 조회하는 기능만 제공합니다.
 
-| 요청 경로                          | 응답 내용                                                |
-|------------------------------------|----------------------------------------------------------|
-| /api                               | /api/help (변경 예정)                                    |
-| /api/help                          | API 라우팅 경로별 응답 설명                              |
-| /api/running                       | 현재 진행 중인 시뮬레이션 정보                           |
-| /api/pens                          | 시뮬레이션 목록 및 메타 데이터                           |
-| /api/pens/\<pen_code>              | \<pen_code>의 메타 데이터                                |
-| /api/pens/\<pen_code>/\<step>      | \<pen_code>의 스텝이 \<step>일 때 에이전트들의 행동 정보 |
-| /api/pens/\<pen_code>/-1           | \<pen_code>의 모든 스텝에 대한 에이전트들의 행동 정보    |
-| /api/pens/\<pen_code>/payloads     | \<pen_code>에서 생성된 페이로드 목록                     |
-| /api/pens/\<pen_code>/patches      | \<pen_code>에서 생성된 모든 패치 제안 목록               |
-| /api/pens/\<pen_code>/best         | \<pen_code>에서 생성된 선택된 패치 제안 목록             |
-| /api/charts                        | 대시보드에서 제공되는 모든 차트 데이터                   |
-| /api/charts/pens                   | 대시보드에서 제공되는 시뮬레이션별 데이터                |
-| /api/charts/pens/\<pen_code>       | 대시보드에서 제공되는 \<pen_code> 데이터                 |
-| /api/charts/urls                   | 대시보드에서 제공되는 URL별 차트 데이터                  |
-| /api/charts/attacks                | 대시보드에서 제공되는 공격 유형별 차트 데이터            |
-| /api/charts/attacks/\<attack_name> | 대시보드에서 제공되는 \<attack_name> 데이터              |
+| 요청 경로                                 | 응답 내용                                                                                 |
+|-------------------------------------------|-------------------------------------------------------------------------------------------|
+| /api                                      | /api/help (변경 예정)                                                                     |
+| /api/help                                 | API 라우팅 경로별 응답 설명                                                               |
+| /api/running                              | 현재 진행 중인 시뮬레이션 정보                                                            |
+| /api/pens                                 | 시뮬레이션 목록 및 메타 데이터                                                            |
+| /api/pens/:pen_code                       | :pen_code의 메타 데이터                                                                   |
+| /api/pens/:pen_code/spawn                 | :pen_code 내 모든 에이전트의 스폰 좌표                                                    |
+| /api/pens/:pen_code/:step                 | :pen_code의 스텝이 :step일 때 생성된 에이전트들의 행동 정보, :step이 -1일 경우 모든 스텝  |
+| /api/pens/:pen_code/datas/:step           | :pen_code의 스텝이 :step일 때 생성된 모든 데이터 목록, :step 생략 시 모든 스텝            |
+| /api/pens/:pen_code/movements/:step       | :pen_code의 스텝이 :step일 때 생성된 모든 페르소나의 이동 정보, :step 생략 시 모든 스텝   |
+| /api/pens/:pen_code/pronunciation/:step   | :pen_code의 스텝이 :step일 때 생성된 모든 페르소나의 이모지, :step 생략 시 모든 스텝      |
+| /api/pens/:pen_code/descriptions/:step    | :pen_code의 스텝이 :step일 때 생성된 모든 페르소나의 행동 설명, :step 생략 시 모든 스텝   |
+| /api/pens/:pen_code/chats/:step           | :pen_code의 스텝이 :step일 때 생성된 모든 페르소나의 대화 정보, :step 생략 시 모든 스텝   |
+| /api/pens/:pen_code/payloads/:step        | :pen_code의 스텝이 :step일 때 생성된 페이로드 목록, :step 생략 시 모든 스텝               |
+| /api/pens/:pen_code/vulnerabilities/:step | :pen_code의 스텝이 :step일 때 취약하다고 판단한 페이로드, 목록, :step 생략 시 모든 스텝   |
+| /api/pens/:pen_code/patches/:step         | :pen_code의 스텝이 :step일 때 생성된 패치 제안 목록, :step 생략 시 모든 스텝              |
+| /api/pens/:pen_code/best/:step            | :pen_code의 스텝이 :step일 때 생성된 선택된 패치 제안 목록, :step 생략 시 모든 스텝       |
+| /api/pens/:pen_code/files                 | :pen_code에서 생성한 취약한 파일 목록                                                     |
+| /api/charts                               | 대시보드에서 제공되는 모든 차트 데이터                                                    |
+| /api/charts/pens                          | 대시보드에서 제공되는 시뮬레이션별 데이터                                                 |
+| /api/charts/pens/:pen_code                | 대시보드에서 제공되는 :pen_code 데이터                                                    |
+| /api/charts/urls                          | 대시보드에서 제공되는 URL별 차트 데이터                                                   |
+| /api/charts/attacks                       | 대시보드에서 제공되는 공격 유형별 차트 데이터                                             |
+| /api/charts/attacks/:attack_name          | 대시보드에서 제공되는 :attack_name 데이터                                                 |
+
+\+ `/api/pens/:pen_code/:step`: movements, pronunciation, descriptions, chats 데이터만 포함됩니다.
 
 
 

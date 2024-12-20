@@ -60,7 +60,7 @@ def signin(request):
         return HttpResponse("Authentication failed", status=401)
 
     login(request, user)
-    return HttpResponse()
+    return HttpResponse(status=200)
 
 
 @login_required(login_url=settings.LOGIN_URL)
@@ -76,27 +76,26 @@ def manage(request):
     }
     return render(request, "pages/manage.html", context)
 
-@require_http_methods(["POST"])
-def user(request):
+@require_http_methods(["GET"])
+def user(request, userid=None):
     if not request.user.is_superuser:
         return HttpResponse(status=404)
-
-    data = json.loads(request.body)
+    elif userid is None:
+        return HttpResponse(status=400)
 
     try:
-        user = User.objects.get(id=data["userid"].strip())
+        user = User.objects.get(id=int(userid))
         user = user_to_dict(user, curr_user=request.user)
         return JsonResponse(user)
     except:
         return HttpResponse(status=400)
 
-@require_http_methods(["POST"])
+@require_http_methods(["POST", "PUT"])
 def user_update(request):
     if not request.user.is_superuser:
         return HttpResponse(status=404)
 
     data = json.loads(request.body)
-    update = data.get("update") is not False
 
     userid = data.get("userid", "").strip()
     username = data.get("username", "").strip()
@@ -104,7 +103,7 @@ def user_update(request):
     email = data.get("email", "").strip()
 
     try:
-        if update:
+        if request.method == "PUT":
             if not userid:
                 return HttpResponse(status=400)
             user = User.objects.get(id=userid)
@@ -145,10 +144,11 @@ def user_update(request):
     user.is_staff = user.is_superuser or is_staff
     user.save()
 
+    status = 200 + (request.method == "POST")
     user = user_to_dict(user, curr_user=request.user)
-    return JsonResponse(user)
+    return JsonResponse(user, status=status)
 
-@require_http_methods(["POST"])
+@require_http_methods(["DELETE"])
 def user_delete(request):
     if not request.user.is_superuser:
         return HttpResponse(status=404)
@@ -159,5 +159,5 @@ def user_delete(request):
             user = User.objects.get(id=userid)
             user.delete()
     except:
-        return HttpResponse(status=500)
-    return JsonResponse({"id": userid})
+        return HttpResponse(status=404)
+    return HttpResponse(status=204)

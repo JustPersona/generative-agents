@@ -7,7 +7,6 @@ urlpatterns = [
     path("robots.txt", views.robots, name="robots"),
 
     path("pens/trash/", views.trash, name="trash"),
-    path("pens/info/", views.pen_info, name="pen_info"),
     path("pens/info/update/", views.pen_info_update, name="pen_info_update"),
     path("pens/compress/", views.compress_pen_test, name="compress_pen_test"),
     path("pens/delete/", views.delete_pen_test, name="delete_pen_test"),

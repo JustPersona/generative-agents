@@ -24,7 +24,7 @@ pen_files = {
     },
     "delete": {
         "root": "../trash",
-        "name": "../trash/%s-%s",
+        "name": "../trash/%s-%s.zip",
     },
     "temp": {
         "root": "temp_storage",

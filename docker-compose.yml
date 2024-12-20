@@ -1,7 +1,7 @@
 ---
 services:
-  generative_agents_installer:
-    container_name: generative_agents_installer
+  generative-agents-installer:
+    container_name: generative-agents-installer
     image: ghcr.io/justpersona/generative-agents-docker:latest
     restart: on-failure
     volumes:
@@ -13,10 +13,10 @@ services:
     environment:
       FRONTEND_SERVER_ENABLED: false
     networks:
-      - generative_agents_public
-      - generative_agents_private
-  generative_agents:
-    container_name: generative_agents
+      - generative-agents-public
+      - generative-agents-private
+  generative-agents:
+    container_name: generative-agents
     image: ghcr.io/justpersona/generative-agents-docker:latest
     restart: unless-stopped
     volumes:
@@ -33,7 +33,7 @@ services:
       OLLAMA_CONFIG_ENABLED: false
       DVWA_HOST: dvwa
     networks:
-      - generative_agents_private
+      - generative-agents-private
   ollama:
     container_name: ollama
     image: ollama/ollama:latest
@@ -42,7 +42,7 @@ services:
       - ./share:/share
       - ./ollama:/root/.ollama
     networks:
-      - generative_agents_public
+      - generative-agents-public
     deploy:
       resources:
         reservations:
@@ -60,7 +60,7 @@ services:
     depends_on:
       - dvwa-db
     networks:
-      - generative_agents_private
+      - generative-agents-private
   dvwa-db:
     container_name: dvwa-db
     image: mariadb:10
@@ -73,10 +73,10 @@ services:
     volumes:
       - ./db:/var/lib/mysql
     networks:
-      - generative_agents_private
+      - generative-agents-private
 networks:
-  generative_agents_public:
+  generative-agents-public:
     driver: bridge
-  generative_agents_private:
+  generative-agents-private:
     driver: bridge
     internal: true

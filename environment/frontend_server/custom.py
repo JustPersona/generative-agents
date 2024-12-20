@@ -2,7 +2,7 @@ from django.shortcuts import redirect
 from django.conf import settings
 from django.urls import reverse, resolve
 
-from utils import black_hats, white_hats
+from utils import black_hats, white_hats, server_owners
 
 
 
@@ -37,6 +37,7 @@ def processors(request):
         ],
         "black_hats": black_hats,
         "white_hats": white_hats,
+        "server_owners": server_owners,
     }
 
 

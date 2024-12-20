@@ -28,6 +28,7 @@
 	<script type="text/javascript" src="{% static 'js/index.js' %}?v={% now 'U' %}"></script>
 </head>
 <body class="bg-body-tertiary">
+	{% include "includes/msgbox.html" %}
 	{% if not site.hide %}
 		{% include "includes/nav.html" %}
 		{% include "includes/header.html" %}
@@ -38,8 +39,7 @@
 	</main>
 	{% block js_content %}{% endblock %}
 	<script type="text/javascript">
-		const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-		const tooltipList = [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
+		initBsTooltip();
 	</script>
 </body>
 </html>

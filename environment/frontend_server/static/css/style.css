@@ -32,6 +32,15 @@ table .minimum { width: 0; }
 
 pre, p { margin: 0; }
 
+/* msgbox */
+#msgbox-container { --margin: 1rem; z-index: 99999; }
+
+#msgbox-container .msgbox { margin: 0px; height: 0px; min-width: 10rem; opacity: 0; transition-property: margin, height, opacity; transition-duration: .15s; transition-timing-function: ease-in-out; }
+
+#msgbox-container .msgbox.show { margin-top: var(--margin); height: var(--height, 3rem); opacity: 1; }
+
+#msgbox-container .msgbox .border { max-width: 1080px; }
+
 /* modal */
 #penInfoModal .modal-scroll { max-height: calc(100svh - var(--bs-modal-margin)*2 - var(--height) - .5rem); }
 
